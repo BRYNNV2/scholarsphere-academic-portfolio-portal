@@ -65,19 +65,19 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField control={form.control} name="title" render={({ field }) => (
-          <FormItem><FormLabel>Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormMessage>
+          <FormItem><FormLabel>Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
         )} />
         <FormField control={form.control} name="description" render={({ field }) => (
-          <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormMessage>
+          <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
         )} />
         <FormField control={form.control} name="role" render={({ field }) => (
-          <FormItem><FormLabel>Your Role</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormMessage>
+          <FormItem><FormLabel>Your Role</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
         )} />
         <FormField control={form.control} name="year" render={({ field }) => (
-          <FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormMessage>
+          <FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
         <FormField control={form.control} name="url" render={({ field }) => (
-          <FormItem><FormLabel>URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormMessage>
+          <FormItem><FormLabel>URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
         )} />
         <DialogFooter>
           <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
