@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/sonner';
 import { BookOpenCheck } from 'lucide-react';
 import { MOCK_LECTURERS } from '@shared/mock-data';
+import { LecturerProfile } from '@shared/types';
 export function LoginPage() {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
@@ -19,7 +20,7 @@ export function LoginPage() {
     setIsLoading(true);
     try {
       // We fetch the user profile to simulate a real login process
-      const userToLogin = await api(`/api/lecturers/${MOCK_LECTURERS[0].id}`);
+      const userToLogin = await api<LecturerProfile>(`/api/lecturers/${MOCK_LECTURERS[0].id}`);
       login(userToLogin);
       toast.success(`Welcome back, ${userToLogin.name}!`);
       navigate('/dashboard');
