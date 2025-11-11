@@ -38,7 +38,7 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
     },
   });
   const mutation = useMutation({
-    mutationFn: (data: Omit<ResearchProject, 'id' | 'type'> & { lecturerId?: string }) =>
+    mutationFn: (data: Omit<ResearchProject, 'id' | 'type' | 'lecturerId'> & { lecturerId?: string }) =>
       api(project ? `/api/projects/${project.id}` : '/api/projects', {
         method: project ? 'PUT' : 'POST',
         body: JSON.stringify(data),

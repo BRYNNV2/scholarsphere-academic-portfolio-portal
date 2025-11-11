@@ -7,6 +7,7 @@ export type AcademicWork = Publication | ResearchProject;
 export interface Publication {
   id: string;
   type: 'publication';
+  lecturerId: string;
   title: string;
   authors: string[];
   journal: string;
@@ -16,6 +17,7 @@ export interface Publication {
 export interface ResearchProject {
   id: string;
   type: 'project';
+  lecturerId: string;
   title: string;
   description: string;
   role: string;
@@ -23,7 +25,7 @@ export interface ResearchProject {
   url?: string;
 }
 export interface LecturerProfile {
-  id: string;
+  id:string;
   name: string;
   title: string; // e.g., "Professor of Computer Science"
   university: string;

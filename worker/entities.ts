@@ -27,6 +27,7 @@ export class PublicationEntity extends IndexedEntity<Publication> {
   static readonly initialState: Publication = {
     id: "",
     type: 'publication',
+    lecturerId: '',
     title: "",
     authors: [],
     journal: "",
@@ -41,6 +42,7 @@ export class ResearchProjectEntity extends IndexedEntity<ResearchProject> {
   static readonly initialState: ResearchProject = {
     id: "",
     type: 'project',
+    lecturerId: '',
     title: "",
     description: "",
     role: "",
