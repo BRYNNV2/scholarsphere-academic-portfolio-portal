@@ -26,7 +26,7 @@ type PublicationFormData = z.infer<typeof publicationSchema>;
 function PublicationForm({ publication, onFinished }: { publication?: Publication, onFinished: () => void }) {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
-  const form = useForm<PublicationFormData>({
+  const form = useForm({
     resolver: zodResolver(publicationSchema),
     defaultValues: {
       title: publication?.title || '',
