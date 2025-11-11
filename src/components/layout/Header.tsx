@@ -5,10 +5,8 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuthStore } from '@/stores/auth-store';
 export function Header() {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuthStore((state) => ({
-    isAuthenticated: state.isAuthenticated,
-    logout: state.logout,
-  }));
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const logout = useAuthStore((state) => state.logout);
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -36,11 +34,21 @@ export function Header() {
           <div className="flex items-center gap-2">
             <ThemeToggle className="relative top-0 right-0" />
             {isAuthenticated ? (
-              <Button variant="outline" onClick={handleLogout}>Logout</Button>
+              <>
+                <Button variant="outline" asChild>
+                  <Link to="/dashboard">Dashboard</Link>
+                </Button>
+                <Button onClick={handleLogout}>Logout</Button>
+              </>
             ) : (
-              <Button asChild>
-                <Link to="/login">Login</Link>
-              </Button>
+              <>
+                <Button variant="ghost" asChild>
+                  <Link to="/login">Login</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/register">Sign Up</Link>
+                </Button>
+              </>
             )}
           </div>
         </div>

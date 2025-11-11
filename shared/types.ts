@@ -33,6 +33,7 @@ export interface LecturerProfile {
   bio: string;
   photoUrl: string;
   email: string;
+  password?: string;
   specializations: string[];
   publicationIds: string[];
   projectIds: string[];

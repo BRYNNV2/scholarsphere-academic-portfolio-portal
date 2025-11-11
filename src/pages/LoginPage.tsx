@@ -8,25 +8,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/sonner';
 import { BookOpenCheck } from 'lucide-react';
-import { MOCK_LECTURERS } from '@shared/mock-data';
 import { LecturerProfile } from '@shared/types';
 export function LoginPage() {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
   const [isLoading, setIsLoading] = useState(false);
-  // In a real app, this would be a form with username/password.
-  // For this mock, we'll just "log in" as the first mock user.
-  const handleLogin = async () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     try {
-      // We fetch the user profile to simulate a real login process
-      const userToLogin = await api<LecturerProfile>(`/api/lecturers/${MOCK_LECTURERS[0].id}`);
-      login(userToLogin);
-      toast.success(`Welcome back, ${userToLogin.name}!`);
+      const response = await api<{ user: LecturerProfile; token: string }>('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      login(response.user, response.token);
+      toast.success(`Welcome back, ${response.user.name}!`);
       navigate('/dashboard');
     } catch (error) {
-      toast.error('Login failed. Please try again.');
-      console.error(error);
+      toast.error((error as Error).message || 'Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }
@@ -45,21 +46,39 @@ export function LoginPage() {
             <CardTitle className="text-2xl">Login</CardTitle>
             <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value="e.reed@stanford.edu" readOnly />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value="●●●●●●●●" readOnly />
-            </div>
-            <p className="text-xs text-center text-muted-foreground pt-2">
-              (Demo login with pre-filled credentials)
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="e.g., e.reed@stanford.edu"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" disabled={isLoading} className="w-full">
+                {isLoading ? 'Signing In...' : 'Sign In'}
+              </Button>
+            </form>
+            <p className="text-center text-sm text-muted-foreground mt-4">
+              Don't have an account?{' '}
+              <Link to="/register" className="underline hover:text-primary">
+                Sign up
+              </Link>
             </p>
-            <Button onClick={handleLogin} disabled={isLoading} className="w-full">
-              {isLoading ? 'Signing In...' : 'Sign In'}
-            </Button>
           </CardContent>
         </Card>
       </div>

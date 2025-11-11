@@ -14,6 +14,7 @@ export class LecturerProfileEntity extends IndexedEntity<LecturerProfile> {
     bio: "",
     photoUrl: "",
     email: "",
+    password: "",
     specializations: [],
     publicationIds: [],
     projectIds: [],
