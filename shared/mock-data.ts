@@ -1,15 +1,98 @@
-import type { User, Chat, ChatMessage } from './types';
-
-export const MOCK_USERS: User[] = [
-  { id: 'u1', name: 'User A' },
-  { id: 'u2', name: 'User B' }
+import type { LecturerProfile, Publication, ResearchProject } from './types';
+export const MOCK_PUBLICATIONS: Publication[] = [
+  { id: 'pub1', type: 'publication', title: 'The Future of Distributed Systems', authors: ['Dr. Evelyn Reed', 'Dr. Kenji Tanaka'], journal: 'Journal of Advanced Computing', year: 2023, url: '#' },
+  { id: 'pub2', type: 'publication', title: 'Machine Learning in Bioinformatics', authors: ['Dr. Evelyn Reed'], journal: 'Nature Informatics', year: 2022, url: '#' },
+  { id: 'pub3', type: 'publication', title: 'Quantum Computing Algorithms', authors: ['Dr. Ben Carter'], journal: 'Physics Review', year: 2023, url: '#' },
+  { id: 'pub4', type: 'publication', title: 'Ethical AI Frameworks', authors: ['Dr. Aisha Khan'], journal: 'Journal of AI Ethics', year: 2021, url: '#' },
+  { id: 'pub5', type: 'publication', title: 'Advanced Nanotechnology Materials', authors: ['Dr. Maria Garcia'], journal: 'Materials Science Today', year: 2022, url: '#' },
+  { id: 'pub6', type: 'publication', title: 'The Human Brain Mapping', authors: ['Dr. Samuel Chen'], journal: 'NeuroScience', year: 2023, url: '#' },
+  { id: 'pub7', type: 'publication', title: 'Deep Learning for Image Recognition', authors: ['Dr. Kenji Tanaka'], journal: 'IEEE Transactions on Pattern Analysis', year: 2021, url: '#' },
 ];
-
-export const MOCK_CHATS: Chat[] = [
-  { id: 'c1', title: 'General' },
+export const MOCK_PROJECTS: ResearchProject[] = [
+  { id: 'proj1', type: 'project', title: 'Project Phoenix: Scalable Cloud Architectures', description: 'Developing next-generation cloud infrastructure for high-performance computing.', role: 'Lead Architect', year: 2022, url: '#' },
+  { id: 'proj2', type: 'project', title: 'AI for Drug Discovery', description: 'Utilizing machine learning models to accelerate the discovery of new pharmaceuticals.', role: 'Principal Investigator', year: 2021, url: '#' },
+  { id: 'proj3', type: 'project', title: 'Quantum Supremacy Simulation', description: 'A project to simulate quantum algorithms on classical supercomputers.', role: 'Lead Researcher', year: 2023, url: '#' },
+  { id: 'proj4', type: 'project', title: 'AI Ethics Initiative', description: 'Establishing guidelines for the responsible development and deployment of artificial intelligence.', role: 'Project Lead', year: 2020, url: '#' },
+  { id: 'proj5', type: 'project', title: 'Graphene-based Supercapacitors', description: 'Research into energy storage solutions using novel nanomaterials.', role: 'Senior Researcher', year: 2021, url: '#' },
+  { id: 'proj6', type: 'project', title: 'Cognitive Neuroscience Models', description: 'Building computational models of human cognition and decision-making.', role: 'Principal Investigator', year: 2022, url: '#' },
 ];
-
-export const MOCK_CHAT_MESSAGES: ChatMessage[] = [
-  { id: 'm1', chatId: 'c1', userId: 'u1', text: 'Hello', ts: Date.now() },
+export const MOCK_LECTURERS: LecturerProfile[] = [
+  {
+    id: 'l1',
+    name: 'Dr. Evelyn Reed',
+    title: 'Professor of Computer Science',
+    university: 'Stanford University',
+    department: 'Computer Science',
+    bio: 'Dr. Evelyn Reed is a leading expert in distributed systems and cloud computing. Her work focuses on building scalable and resilient software architectures. She has published over 50 papers and holds 5 patents in the field.',
+    photoUrl: 'https://i.pravatar.cc/300?u=evelyn',
+    email: 'e.reed@stanford.edu',
+    specializations: ['Distributed Systems', 'Cloud Computing', 'Machine Learning'],
+    publicationIds: ['pub1', 'pub2'],
+    projectIds: ['proj1', 'proj2'],
+  },
+  {
+    id: 'l2',
+    name: 'Dr. Ben Carter',
+    title: 'Associate Professor of Physics',
+    university: 'MIT',
+    department: 'Physics',
+    bio: 'Dr. Ben Carter specializes in quantum mechanics and theoretical physics. His research explores the potential of quantum computing to solve complex problems intractable for classical computers.',
+    photoUrl: 'https://i.pravatar.cc/300?u=ben',
+    email: 'b.carter@mit.edu',
+    specializations: ['Quantum Computing', 'Theoretical Physics', 'Algorithm Design'],
+    publicationIds: ['pub3'],
+    projectIds: ['proj3'],
+  },
+  {
+    id: 'l3',
+    name: 'Dr. Aisha Khan',
+    title: 'Professor of Philosophy',
+    university: 'University of Oxford',
+    department: 'Philosophy',
+    bio: 'Dr. Aisha Khan is a renowned philosopher focusing on the ethics of artificial intelligence. She works with policymakers and technologists to ensure AI is developed and used responsibly.',
+    photoUrl: 'https://i.pravatar.cc/300?u=aisha',
+    email: 'a.khan@ox.ac.uk',
+    specializations: ['AI Ethics', 'Moral Philosophy', 'Technology Policy'],
+    publicationIds: ['pub4'],
+    projectIds: ['proj4'],
+  },
+  {
+    id: 'l4',
+    name: 'Dr. Maria Garcia',
+    title: 'Professor of Materials Science',
+    university: 'Caltech',
+    department: 'Materials Science',
+    bio: 'Dr. Maria Garcia\'s research is at the forefront of nanotechnology and materials science. She engineers novel materials with applications in energy storage, electronics, and medicine.',
+    photoUrl: 'https://i.pravatar.cc/300?u=maria',
+    email: 'm.garcia@caltech.edu',
+    specializations: ['Nanotechnology', 'Materials Science', 'Energy Storage'],
+    publicationIds: ['pub5'],
+    projectIds: ['proj5'],
+  },
+  {
+    id: 'l5',
+    name: 'Dr. Samuel Chen',
+    title: 'Professor of Neuroscience',
+    university: 'Johns Hopkins University',
+    department: 'Neuroscience',
+    bio: 'Dr. Samuel Chen is a neuroscientist whose work involves mapping the human brain and understanding the neural basis of consciousness. He uses advanced imaging techniques and computational models.',
+    photoUrl: 'https://i.pravatar.cc/300?u=samuel',
+    email: 's.chen@jhu.edu',
+    specializations: ['Neuroscience', 'Cognitive Science', 'Brain Mapping'],
+    publicationIds: ['pub6'],
+    projectIds: ['proj6'],
+  },
+  {
+    id: 'l6',
+    name: 'Dr. Kenji Tanaka',
+    title: 'Assistant Professor of AI',
+    university: 'Carnegie Mellon University',
+    department: 'Machine Learning',
+    bio: 'Dr. Kenji Tanaka is a rising star in the field of artificial intelligence, with a focus on deep learning and computer vision. His algorithms have set new benchmarks in image recognition tasks.',
+    photoUrl: 'https://i.pravatar.cc/300?u=kenji',
+    email: 'k.tanaka@cmu.edu',
+    specializations: ['Artificial Intelligence', 'Deep Learning', 'Computer Vision'],
+    publicationIds: ['pub1', 'pub7'],
+    projectIds: [],
+  },
 ];
-  
