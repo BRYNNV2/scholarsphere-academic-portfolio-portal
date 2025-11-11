@@ -27,7 +27,7 @@ type ProjectFormData = z.infer<typeof projectSchema>;
 function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFinished: () => void }) {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
-  const form = useForm<ProjectFormData>({
+  const form = useForm({
     resolver: zodResolver(projectSchema),
     defaultValues: {
       title: project?.title || '',
