@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { toast } from '@/components/ui/sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/stores/auth-store';
@@ -21,7 +21,14 @@ const profileSchema = z.object({
   email: z.string().email('Invalid email address'),
   bio: z.string().min(10, 'Biography must be at least 10 characters'),
   photoUrl: z.string().url('Invalid URL'),
+  specializations: z.string().min(1, 'At least one specialization is required'),
+  socialLinks: z.object({
+    twitter: z.string().url().optional().or(z.literal('')),
+    linkedin: z.string().url().optional().or(z.literal('')),
+    github: z.string().url().optional().or(z.literal('')),
+  }).optional(),
 });
+type ProfileFormData = z.infer<typeof profileSchema>;
 export function DashboardProfilePage() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
@@ -31,7 +38,7 @@ export function DashboardProfilePage() {
     queryFn: () => api(`/api/lecturers/${userId}`),
     enabled: !!userId, // Only run query if userId is available
   });
-  const form = useForm<z.infer<typeof profileSchema>>({
+  const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: '',
@@ -41,15 +48,29 @@ export function DashboardProfilePage() {
       email: '',
       bio: '',
       photoUrl: '',
+      specializations: '',
+      socialLinks: {
+        twitter: '',
+        linkedin: '',
+        github: '',
+      },
     },
   });
   useEffect(() => {
     if (profile) {
-      form.reset(profile);
+      form.reset({
+        ...profile,
+        specializations: profile.specializations.join(', '),
+        socialLinks: {
+          twitter: profile.socialLinks?.twitter || '',
+          linkedin: profile.socialLinks?.linkedin || '',
+          github: profile.socialLinks?.github || '',
+        }
+      });
     }
   }, [profile, form]);
   const mutation = useMutation({
-    mutationFn: (data: z.infer<typeof profileSchema>) =>
+    mutationFn: (data: Partial<LecturerProfile>) =>
       api(`/api/lecturers/${userId}`, {
         method: 'PUT',
         body: JSON.stringify(data),
@@ -62,8 +83,12 @@ export function DashboardProfilePage() {
       toast.error(`Failed to update profile: ${error.message}`);
     },
   });
-  const onSubmit = (data: z.infer<typeof profileSchema>) => {
-    mutation.mutate(data);
+  const onSubmit = (data: ProfileFormData) => {
+    const payload = {
+      ...data,
+      specializations: data.specializations.split(',').map(s => s.trim()).filter(Boolean),
+    };
+    mutation.mutate(payload);
   };
   if (isLoading) {
     return (
@@ -104,55 +129,44 @@ export function DashboardProfilePage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="name" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="title" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl><Input placeholder="e.g., Professor of Computer Science" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <FormItem><FormLabel>Title</FormLabel><FormControl><Input placeholder="e.g., Professor of Computer Science" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="university" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>University</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <FormItem><FormLabel>University</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="department" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Department</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <FormItem><FormLabel>Department</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
               </div>
               <FormField control={form.control} name="email" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl><Input type="email" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
+                <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="photoUrl" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Photo URL</FormLabel>
-                  <FormControl><Input placeholder="https://..." {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
+                <FormItem><FormLabel>Photo URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="bio" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Biography</FormLabel>
-                  <FormControl><Textarea rows={5} {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
+                <FormItem><FormLabel>Biography</FormLabel><FormControl><Textarea rows={5} {...field} /></FormControl><FormMessage /></FormItem>
               )} />
+              <FormField control={form.control} name="specializations" render={({ field }) => (
+                <FormItem><FormLabel>Specializations</FormLabel><FormControl><Input {...field} /></FormControl><FormDescription>Enter a comma-separated list of your specializations.</FormDescription><FormMessage /></FormItem>
+              )} />
+              <div>
+                <h3 className="text-lg font-medium">Social Links</h3>
+                <div className="space-y-4 mt-2">
+                  <FormField control={form.control} name="socialLinks.twitter" render={({ field }) => (
+                    <FormItem><FormLabel>Twitter URL</FormLabel><FormControl><Input placeholder="https://twitter.com/username" {...field} /></FormControl><FormMessage /></FormItem>
+                  )} />
+                  <FormField control={form.control} name="socialLinks.linkedin" render={({ field }) => (
+                    <FormItem><FormLabel>LinkedIn URL</FormLabel><FormControl><Input placeholder="https://linkedin.com/in/username" {...field} /></FormControl><FormMessage /></FormItem>
+                  )} />
+                  <FormField control={form.control} name="socialLinks.github" render={({ field }) => (
+                    <FormItem><FormLabel>GitHub URL</FormLabel><FormControl><Input placeholder="https://github.com/username" {...field} /></FormControl><FormMessage /></FormItem>
+                  )} />
+                </div>
+              </div>
               <Button type="submit" disabled={mutation.isPending}>
                 {mutation.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
