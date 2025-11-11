@@ -1,40 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth-store';
-import { api } from "../lib/api-client-fixed";
+import { api } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/sonner';
 import { BookOpenCheck } from 'lucide-react';
-import { UserProfile } from '@shared/types';
+import { MOCK_LECTURERS } from '@shared/mock-data';
 export function LoginPage() {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // In a real app, this would be a form with username/password.
+  // For this mock, we'll just "log in" as the first mock user.
+  const handleLogin = async () => {
     setIsLoading(true);
     try {
-      const response = await api.post<{user: UserProfile;token: string;}>('/api/auth/login', {
-        email,
-        password
-      });
-      login(response.user, response.token);
-      toast.success(`Welcome back, ${response.user.name}!`);
+      // We fetch the user profile to simulate a real login process
+      const userToLogin = await api(`/api/lecturers/${MOCK_LECTURERS[0].id}`);
+      login(userToLogin);
+      toast.success(`Welcome back, ${userToLogin.name}!`);
+      navigate('/dashboard');
     } catch (error) {
-      toast.error((error as Error).message || 'Login failed. Please check your credentials.');
+      toast.error('Login failed. Please try again.');
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -53,47 +44,24 @@ export function LoginPage() {
             <CardTitle className="text-2xl">Login</CardTitle>
             <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="e.g., e.reed@stanford.edu"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required />
-
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required />
-
-              </div>
-              <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading ? 'Signing In...' : 'Sign In'}
-              </Button>
-            </form>
-            <p className="text-center text-sm text-muted-foreground mt-4">
-              Don't have an account?{' '}
-              <Link to="/register" className="underline hover:text-primary">
-                Sign up
-              </Link>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" value="e.reed@stanford.edu" readOnly />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" value="●●●●●●●●" readOnly />
+            </div>
+            <p className="text-xs text-center text-muted-foreground pt-2">
+              (Demo login with pre-filled credentials)
             </p>
-            <p className="text-center text-sm text-muted-foreground mt-2">
-              <Link to="/" className="underline hover:text-primary">
-                Back to Home
-              </Link>
-            </p>
+            <Button onClick={handleLogin} disabled={isLoading} className="w-full">
+              {isLoading ? 'Signing In...' : 'Sign In'}
+            </Button>
           </CardContent>
         </Card>
       </div>
-    </div>);
-
+    </div>
+  );
 }

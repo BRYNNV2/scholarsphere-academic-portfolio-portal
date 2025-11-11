@@ -44,7 +44,7 @@ const projectSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(1, 'Description is required'),
   role: z.string().min(1, 'Role is required'),
-  year: z.coerce.number().min(1900, 'Invalid year').max(new Date().getFullYear() + 5),
+  year: z.coerce.number().int().min(1900, 'Invalid year').max(new Date().getFullYear() + 5, 'Invalid year'),
   url: z.string().url('Invalid URL').optional().or(z.literal('')),
 });
 type ProjectFormData = z.infer<typeof projectSchema>;
@@ -61,7 +61,7 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
     },
   });
   const mutation = useMutation({
-    mutationFn: (data: ResearchProject) => 
+    mutationFn: (data: Omit<ResearchProject, 'id'> | ResearchProject) =>
       api(project ? `/api/projects/${project.id}` : '/api/projects', {
         method: project ? 'PUT' : 'POST',
         body: JSON.stringify(data),
@@ -80,7 +80,11 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
       ...data,
       type: 'project' as const,
     };
-    mutation.mutate(project ? { ...payload, id: project.id } : payload as any);
+    if (project) {
+      mutation.mutate({ ...payload, id: project.id });
+    } else {
+      mutation.mutate(payload);
+    }
   };
   return (
     <Form {...form}>
