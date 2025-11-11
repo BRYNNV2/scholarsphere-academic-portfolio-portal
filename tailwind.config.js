@@ -91,6 +91,11 @@ export default {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+        brand: {
+          navy: 'hsl(235 62% 21%)',
+          amber: 'hsl(45 100% 51%)',
+          'off-white': 'hsl(0 0% 98%)',
+        },
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			muted: {
@@ -98,8 +103,8 @@ export default {
   				foreground: 'hsl(var(--muted-foreground))'
   			},
   			primary: {
-  				DEFAULT: 'hsl(var(--primary))',
-  				foreground: 'hsl(var(--primary-foreground))'
+  				DEFAULT: 'hsl(235 62% 21%)',
+  				foreground: 'hsl(0 0% 98%)'
   			},
   			border: 'hsl(var(--border))',
   			ring: 'hsl(var(--ring))',
@@ -116,8 +121,8 @@ export default {
   				foreground: 'hsl(var(--secondary-foreground))'
   			},
   			accent: {
-  				DEFAULT: 'hsl(var(--accent))',
-  				foreground: 'hsl(var(--accent-foreground))'
+  				DEFAULT: 'hsl(45 100% 51%)',
+  				foreground: 'hsl(235 62% 21%)'
   			},
   			destructive: {
   				DEFAULT: 'hsl(var(--destructive))',

@@ -19,17 +19,14 @@ export function Footer() {
             <ul className="space-y-2">
               <li><Link to="/" className="text-sm text-muted-foreground hover:text-primary">Home</Link></li>
               <li><Link to="/directory" className="text-sm text-muted-foreground hover:text-primary">Directory</Link></li>
-              <li><Link to="/publications" className="text-sm text-muted-foreground hover:text-primary">Publications</Link></li>
-              <li><Link to="/research" className="text-sm text-muted-foreground hover:text-primary">Research</Link></li>
-              <li><Link to="/portfolio" className="text-sm text-muted-foreground hover:text-primary">Portfolio</Link></li>
               <li><Link to="/dashboard" className="text-sm text-muted-foreground hover:text-primary">Dashboard</Link></li>
             </ul>
           </div>
           <div>
             <h3 className="font-semibold text-foreground mb-4">Legal</h3>
             <ul className="space-y-2">
-              <li><Link to="/terms-of-service" className="text-sm text-muted-foreground hover:text-primary">Terms of Service</Link></li>
-              <li><Link to="/privacy-policy" className="text-sm text-muted-foreground hover:text-primary">Privacy Policy</Link></li>
+              <li><a href="#" className="text-sm text-muted-foreground hover:text-primary">Terms of Service</a></li>
+              <li><a href="#" className="text-sm text-muted-foreground hover:text-primary">Privacy Policy</a></li>
             </ul>
           </div>
           <div>
