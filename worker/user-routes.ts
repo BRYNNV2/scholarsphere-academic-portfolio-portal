@@ -70,6 +70,21 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     await lecturer.patch(body);
     return ok(c, await lecturer.getState());
   });
+  secured.delete('/lecturers/:id', async (c) => {
+    const { id } = c.req.param();
+    const lecturerEntity = new LecturerProfileEntity(c.env, id);
+    if (!(await lecturerEntity.exists())) return notFound(c, 'Lecturer not found');
+    const lecturer = await lecturerEntity.getState();
+    // Cascading delete
+    if (lecturer.publicationIds.length > 0) {
+      await PublicationEntity.deleteMany(c.env, lecturer.publicationIds);
+    }
+    if (lecturer.projectIds.length > 0) {
+      await ResearchProjectEntity.deleteMany(c.env, lecturer.projectIds);
+    }
+    const deleted = await LecturerProfileEntity.delete(c.env, id);
+    return ok(c, { id, deleted });
+  });
   secured.post('/publications', async (c) => {
     const body = await c.req.json<PublicationCreatePayload>();
     const { lecturerId, ...pubData } = body;
