@@ -1,33 +1,25 @@
-import { useAuthStore } from '@/stores/auth-store';
-import { LecturerDashboard } from './dashboard/LecturerDashboard';
-import { StudentDashboard } from './dashboard/StudentDashboard';
-import { Skeleton } from '@/components/ui/skeleton';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 export function DashboardPage() {
-  const user = useAuthStore((state) => state.user);
-  if (!useAuthStore.persist.hasHydrated() || !user) {
-    return (
-      <div className="space-y-8">
-        <Skeleton className="h-10 w-1/3" />
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
-        </div>
-        <Skeleton className="h-40 w-full" />
-      </div>
-    );
-  }
-  if (user.role === 'lecturer') {
-    return <LecturerDashboard />;
-  }
-  if (user.role === 'student') {
-    return <StudentDashboard />;
-  }
   return (
-    <div>
-      <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-      <p className="text-muted-foreground">Invalid user role.</p>
-    </div>
+    <AppLayout container>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">Welcome back! Manage your academic portfolio here.</p>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Portfolio Overview</CardTitle>
+            <CardDescription>
+              This is where your portfolio management tools will live. Use the sidebar to navigate between sections.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p>Content management forms and tables for publications, projects, and profile details will be implemented in the next phase.</p>
+          </CardContent>
+        </Card>
+      </div>
+    </AppLayout>
   );
 }
