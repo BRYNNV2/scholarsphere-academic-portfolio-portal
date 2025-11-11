@@ -21,6 +21,8 @@ import { DashboardPublicationsPage } from '@/pages/dashboard/DashboardPublicatio
 import { DashboardResearchPage } from '@/pages/dashboard/DashboardResearchPage';
 import { AppLayout } from './components/layout/AppLayout';
 import { Toaster } from "@/components/ui/sonner"
+import { LoginPage } from './pages/LoginPage';
+import { ProtectedRoute } from './components/ProtectedRoute';
 const queryClient = new QueryClient();
 const DashboardLayout = () => (
   <AppLayout container>
@@ -31,6 +33,11 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <HomePage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/login",
+    element: <LoginPage />,
     errorElement: <RouteErrorBoundary />,
   },
   {
@@ -45,7 +52,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/dashboard",
-    element: <DashboardLayout />,
+    element: (
+      <ProtectedRoute>
+        <DashboardLayout />
+      </ProtectedRoute>
+    ),
     errorElement: <RouteErrorBoundary />,
     children: [
       {
