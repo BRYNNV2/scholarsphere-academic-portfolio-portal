@@ -41,8 +41,8 @@ export function HomePage() {
               <Button size="lg" asChild>
                 <Link to="/directory">Explore Directory <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
-              <Button size="lg" variant="outline">
-                Get Started
+              <Button size="lg" variant="outline" asChild>
+                <Link to="/login">Get Started</Link>
               </Button>
             </div>
           </motion.div>
@@ -142,6 +142,22 @@ export function HomePage() {
                 </motion.div>
               ))
             )}
+          </div>
+        </div>
+      </div>
+      {/* CTA Section */}
+      <div className="bg-muted/40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+          <div className="text-center">
+            <h2 className="text-3xl font-display font-bold text-foreground">Ready to Build Your Legacy?</h2>
+            <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
+              Join ScholarSphere today and create a professional portfolio that truly represents your academic contributions and expertise.
+            </p>
+            <div className="mt-8">
+              <Button size="lg" asChild>
+                <Link to="/login">Create Your Portfolio <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

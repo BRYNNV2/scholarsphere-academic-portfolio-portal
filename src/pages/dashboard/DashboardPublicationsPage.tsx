@@ -1,39 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { api } from '@/lib/api-client';
-import { Publication } from '@shared/types';
+import { Publication, LecturerProfile } from '@shared/types';
+import { useAuthStore } from '@/stores/auth-store';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-} from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from '@/components/ui/sonner';
@@ -49,6 +25,7 @@ const publicationSchema = z.object({
 type PublicationFormData = z.infer<typeof publicationSchema>;
 function PublicationForm({ publication, onFinished }: { publication?: Publication, onFinished: () => void }) {
   const queryClient = useQueryClient();
+  const currentUser = useAuthStore((state) => state.user);
   const form = useForm<PublicationFormData>({
     resolver: zodResolver(publicationSchema),
     defaultValues: {
@@ -60,7 +37,7 @@ function PublicationForm({ publication, onFinished }: { publication?: Publicatio
     },
   });
   const mutation = useMutation({
-    mutationFn: (data: Omit<Publication, 'id'> | Publication) =>
+    mutationFn: (data: Omit<Publication, 'id' | 'type'> & { lecturerId?: string }) =>
       api(publication ? `/api/publications/${publication.id}` : '/api/publications', {
         method: publication ? 'PUT' : 'POST',
         body: JSON.stringify(data),
@@ -68,6 +45,7 @@ function PublicationForm({ publication, onFinished }: { publication?: Publicatio
     onSuccess: () => {
       toast.success(`Publication ${publication ? 'updated' : 'added'} successfully!`);
       queryClient.invalidateQueries({ queryKey: ['publications'] });
+      queryClient.invalidateQueries({ queryKey: ['lecturer', currentUser?.id] });
       onFinished();
     },
     onError: (error) => {
@@ -77,13 +55,12 @@ function PublicationForm({ publication, onFinished }: { publication?: Publicatio
   const onSubmit = (data: PublicationFormData) => {
     const payload = {
       ...data,
-      type: 'publication' as const,
       authors: data.authors.split(',').map(a => a.trim()),
     };
     if (publication) {
       mutation.mutate({ ...payload, id: publication.id });
     } else {
-      mutation.mutate(payload);
+      mutation.mutate({ ...payload, lecturerId: currentUser?.id });
     }
   };
   return (
@@ -117,15 +94,29 @@ export function DashboardPublicationsPage() {
   const [isAlertOpen, setAlertOpen] = useState(false);
   const [selectedPub, setSelectedPub] = useState<Publication | undefined>(undefined);
   const queryClient = useQueryClient();
-  const { data: publications, isLoading } = useQuery<Publication[]>({
+  const currentUser = useAuthStore((state) => state.user);
+  const userId = currentUser?.id;
+  const { data: profile, isLoading: isLoadingProfile } = useQuery<LecturerProfile>({
+    queryKey: ['lecturer', userId],
+    queryFn: () => api(`/api/lecturers/${userId}`),
+    enabled: !!userId,
+  });
+  const { data: allPublications, isLoading: isLoadingPubs } = useQuery<Publication[]>({
     queryKey: ['publications'],
     queryFn: () => api('/api/publications'),
   });
+  const userPublications = useMemo(() => {
+    if (!profile || !allPublications) return [];
+    const userPubIds = new Set(profile.publicationIds);
+    return allPublications.filter(pub => userPubIds.has(pub.id));
+  }, [profile, allPublications]);
+  const isLoading = isLoadingProfile || isLoadingPubs;
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api(`/api/publications/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       toast.success('Publication deleted successfully!');
       queryClient.invalidateQueries({ queryKey: ['publications'] });
+      queryClient.invalidateQueries({ queryKey: ['lecturer', userId] });
     },
     onError: (error) => {
       toast.error(`Failed to delete publication: ${error.message}`);
@@ -184,8 +175,8 @@ export function DashboardPublicationsPage() {
                   <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
                 </TableRow>
               ))
-            ) : publications?.length ? (
-              publications.map((pub) => (
+            ) : userPublications.length ? (
+              userPublications.map((pub) => (
                 <TableRow key={pub.id}>
                   <TableCell className="font-medium">{pub.title}</TableCell>
                   <TableCell>{pub.journal}</TableCell>
