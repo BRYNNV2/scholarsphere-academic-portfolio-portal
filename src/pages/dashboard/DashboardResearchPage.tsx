@@ -1,39 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { api } from '@/lib/api-client';
-import { ResearchProject } from '@shared/types';
+import { ResearchProject, LecturerProfile } from '@shared/types';
+import { useAuthStore } from '@/stores/auth-store';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-} from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -50,6 +26,7 @@ const projectSchema = z.object({
 type ProjectFormData = z.infer<typeof projectSchema>;
 function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFinished: () => void }) {
   const queryClient = useQueryClient();
+  const currentUser = useAuthStore((state) => state.user);
   const form = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
@@ -61,7 +38,7 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
     },
   });
   const mutation = useMutation({
-    mutationFn: (data: Omit<ResearchProject, 'id'> | ResearchProject) =>
+    mutationFn: (data: Omit<ResearchProject, 'id' | 'type'> & { lecturerId?: string }) =>
       api(project ? `/api/projects/${project.id}` : '/api/projects', {
         method: project ? 'PUT' : 'POST',
         body: JSON.stringify(data),
@@ -69,6 +46,7 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
     onSuccess: () => {
       toast.success(`Project ${project ? 'updated' : 'added'} successfully!`);
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['lecturer', currentUser?.id] });
       onFinished();
     },
     onError: (error) => {
@@ -76,14 +54,11 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
     },
   });
   const onSubmit = (data: ProjectFormData) => {
-    const payload = {
-      ...data,
-      type: 'project' as const,
-    };
+    const payload = { ...data };
     if (project) {
       mutation.mutate({ ...payload, id: project.id });
     } else {
-      mutation.mutate(payload);
+      mutation.mutate({ ...payload, lecturerId: currentUser?.id });
     }
   };
   return (
@@ -117,15 +92,29 @@ export function DashboardResearchPage() {
   const [isAlertOpen, setAlertOpen] = useState(false);
   const [selectedProj, setSelectedProj] = useState<ResearchProject | undefined>(undefined);
   const queryClient = useQueryClient();
-  const { data: projects, isLoading } = useQuery<ResearchProject[]>({
+  const currentUser = useAuthStore((state) => state.user);
+  const userId = currentUser?.id;
+  const { data: profile, isLoading: isLoadingProfile } = useQuery<LecturerProfile>({
+    queryKey: ['lecturer', userId],
+    queryFn: () => api(`/api/lecturers/${userId}`),
+    enabled: !!userId,
+  });
+  const { data: allProjects, isLoading: isLoadingProjs } = useQuery<ResearchProject[]>({
     queryKey: ['projects'],
     queryFn: () => api('/api/projects'),
   });
+  const userProjects = useMemo(() => {
+    if (!profile || !allProjects) return [];
+    const userProjIds = new Set(profile.projectIds);
+    return allProjects.filter(proj => userProjIds.has(proj.id));
+  }, [profile, allProjects]);
+  const isLoading = isLoadingProfile || isLoadingProjs;
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api(`/api/projects/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       toast.success('Project deleted successfully!');
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['lecturer', userId] });
     },
     onError: (error) => {
       toast.error(`Failed to delete project: ${error.message}`);
@@ -184,8 +173,8 @@ export function DashboardResearchPage() {
                   <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
                 </TableRow>
               ))
-            ) : projects?.length ? (
-              projects.map((proj) => (
+            ) : userProjects.length ? (
+              userProjects.map((proj) => (
                 <TableRow key={proj.id}>
                   <TableCell className="font-medium">{proj.title}</TableCell>
                   <TableCell>{proj.role}</TableCell>
