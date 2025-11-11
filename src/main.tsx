@@ -6,7 +6,6 @@ import { createRoot } from 'react-dom/client'
 import {
   createBrowserRouter,
   RouterProvider,
-  Outlet,
 } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -20,16 +19,12 @@ import { DashboardProfilePage } from '@/pages/dashboard/DashboardProfilePage';
 import { DashboardPublicationsPage } from '@/pages/dashboard/DashboardPublicationsPage';
 import { DashboardResearchPage } from '@/pages/dashboard/DashboardResearchPage';
 import { AdminManagementPage } from '@/pages/dashboard/AdminManagementPage';
-import { AppLayout } from './components/layout/AppLayout';
 import { Toaster } from "@/components/ui/sonner"
 import { LoginPage } from './pages/LoginPage';
+import { RegistrationPage } from './pages/RegistrationPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { DashboardLayout } from './components/layout/DashboardLayout';
 const queryClient = new QueryClient();
-const DashboardLayout = () => (
-  <AppLayout container>
-    <Outlet />
-  </AppLayout>
-);
 const router = createBrowserRouter([
   {
     path: "/",
@@ -39,6 +34,11 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/register",
+    element: <RegistrationPage />,
     errorElement: <RouteErrorBoundary />,
   },
   {
