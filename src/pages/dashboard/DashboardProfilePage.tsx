@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from '@/components/ui/sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuthStore } from '@/stores/auth-store';
 const profileSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   title: z.string().min(1, 'Title is required'),
@@ -21,13 +22,14 @@ const profileSchema = z.object({
   bio: z.string().min(10, 'Biography must be at least 10 characters'),
   photoUrl: z.string().url('Invalid URL'),
 });
-// For this phase, we'll hardcode the user ID. Auth will come later.
-const MOCK_USER_ID = 'l1';
 export function DashboardProfilePage() {
   const queryClient = useQueryClient();
+  const currentUser = useAuthStore((state) => state.user);
+  const userId = currentUser?.id;
   const { data: profile, isLoading, isError } = useQuery<LecturerProfile>({
-    queryKey: ['lecturer', MOCK_USER_ID],
-    queryFn: () => api(`/api/lecturers/${MOCK_USER_ID}`),
+    queryKey: ['lecturer', userId],
+    queryFn: () => api(`/api/lecturers/${userId}`),
+    enabled: !!userId, // Only run query if userId is available
   });
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -47,14 +49,14 @@ export function DashboardProfilePage() {
     }
   }, [profile, form]);
   const mutation = useMutation({
-    mutationFn: (data: z.infer<typeof profileSchema>) => 
-      api(`/api/lecturers/${MOCK_USER_ID}`, {
+    mutationFn: (data: z.infer<typeof profileSchema>) =>
+      api(`/api/lecturers/${userId}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
     onSuccess: () => {
       toast.success('Profile updated successfully!');
-      queryClient.invalidateQueries({ queryKey: ['lecturer', MOCK_USER_ID] });
+      queryClient.invalidateQueries({ queryKey: ['lecturer', userId] });
     },
     onError: (error) => {
       toast.error(`Failed to update profile: ${error.message}`);
@@ -83,8 +85,8 @@ export function DashboardProfilePage() {
       </div>
     );
   }
-  if (isError) {
-    return <div>Error loading profile data.</div>;
+  if (isError || !profile) {
+    return <div>Error loading profile data. Please try again later.</div>;
   }
   return (
     <div className="space-y-4">

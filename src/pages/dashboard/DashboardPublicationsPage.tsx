@@ -43,7 +43,7 @@ const publicationSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   authors: z.string().min(1, 'Authors are required'),
   journal: z.string().min(1, 'Journal is required'),
-  year: z.coerce.number().min(1900, 'Invalid year').max(new Date().getFullYear() + 1),
+  year: z.coerce.number().int().min(1900, 'Invalid year').max(new Date().getFullYear() + 1, 'Invalid year'),
   url: z.string().url('Invalid URL').optional().or(z.literal('')),
 });
 type PublicationFormData = z.infer<typeof publicationSchema>;
@@ -60,7 +60,7 @@ function PublicationForm({ publication, onFinished }: { publication?: Publicatio
     },
   });
   const mutation = useMutation({
-    mutationFn: (data: Publication) => 
+    mutationFn: (data: Omit<Publication, 'id'> | Publication) =>
       api(publication ? `/api/publications/${publication.id}` : '/api/publications', {
         method: publication ? 'PUT' : 'POST',
         body: JSON.stringify(data),
@@ -80,7 +80,11 @@ function PublicationForm({ publication, onFinished }: { publication?: Publicatio
       type: 'publication' as const,
       authors: data.authors.split(',').map(a => a.trim()),
     };
-    mutation.mutate(publication ? { ...payload, id: publication.id } : payload as any);
+    if (publication) {
+      mutation.mutate({ ...payload, id: publication.id });
+    } else {
+      mutation.mutate(payload);
+    }
   };
   return (
     <Form {...form}>

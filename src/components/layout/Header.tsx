@@ -1,8 +1,18 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BookOpenCheck } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useAuthStore } from '@/stores/auth-store';
 export function Header() {
+  const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuthStore((state) => ({
+    isAuthenticated: state.isAuthenticated,
+    logout: state.logout,
+  }));
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
   const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
     `text-sm font-medium transition-colors hover:text-primary ${
       isActive ? 'text-primary' : 'text-muted-foreground'
@@ -25,9 +35,13 @@ export function Header() {
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle className="relative top-0 right-0" />
-            <Button asChild>
-              <Link to="/dashboard">Login</Link>
-            </Button>
+            {isAuthenticated ? (
+              <Button variant="outline" onClick={handleLogout}>Logout</Button>
+            ) : (
+              <Button asChild>
+                <Link to="/login">Login</Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>
