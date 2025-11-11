@@ -42,7 +42,7 @@ export function HomePage() {
                 <Link to="/directory">Explore Directory <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link to="/login">Get Started</Link>
+                <Link to="/register">Get Started</Link>
               </Button>
             </div>
           </motion.div>
@@ -155,7 +155,7 @@ export function HomePage() {
             </p>
             <div className="mt-8">
               <Button size="lg" asChild>
-                <Link to="/login">Create Your Portfolio <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/register">Create Your Portfolio <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
             </div>
           </div>

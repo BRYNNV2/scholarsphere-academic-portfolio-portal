@@ -58,7 +58,7 @@ function PublicationForm({ publication, onFinished }: { publication?: Publicatio
       authors: data.authors.split(',').map(a => a.trim()),
     };
     if (publication) {
-      mutation.mutate({ ...payload, id: publication.id });
+      mutation.mutate(payload);
     } else {
       mutation.mutate({ ...payload, lecturerId: currentUser?.id });
     }

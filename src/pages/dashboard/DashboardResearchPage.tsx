@@ -56,7 +56,7 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
   const onSubmit = (data: ProjectFormData) => {
     const payload = { ...data };
     if (project) {
-      mutation.mutate({ ...payload, id: project.id });
+      mutation.mutate(payload);
     } else {
       mutation.mutate({ ...payload, lecturerId: currentUser?.id });
     }
