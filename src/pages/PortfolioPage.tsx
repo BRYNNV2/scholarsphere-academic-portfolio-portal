@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, Building, Book, FlaskConical, ExternalLink } from 'lucide-react';
+import { Mail, Building, Book, FlaskConical, ExternalLink, Twitter, Linkedin, Github } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { LecturerProfile, Publication, ResearchProject } from '@shared/types';
@@ -88,6 +88,23 @@ export function PortfolioPage() {
                 {lecturer.specializations.map(spec => (
                   <Badge key={spec} variant="secondary">{spec}</Badge>
                 ))}
+              </div>
+              <div className="mt-4 flex items-center gap-4">
+                {lecturer.socialLinks?.twitter && (
+                  <a href={lecturer.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                    <Twitter className="h-5 w-5" />
+                  </a>
+                )}
+                {lecturer.socialLinks?.linkedin && (
+                  <a href={lecturer.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                    <Linkedin className="h-5 w-5" />
+                  </a>
+                )}
+                {lecturer.socialLinks?.github && (
+                  <a href={lecturer.socialLinks.github} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                    <Github className="h-5 w-5" />
+                  </a>
+                )}
               </div>
             </div>
           </div>

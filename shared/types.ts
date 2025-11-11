@@ -37,4 +37,9 @@ export interface LecturerProfile {
   specializations: string[];
   publicationIds: string[];
   projectIds: string[];
+  socialLinks?: {
+    twitter?: string;
+    linkedin?: string;
+    github?: string;
+  };
 }
