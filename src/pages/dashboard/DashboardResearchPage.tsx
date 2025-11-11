@@ -1,36 +1,55 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { api } from "../../lib/api-client-fixed";
-import { ResearchProject, UserProfile } from '@shared/types';
-import { useAuthStore } from '@/stores/auth-store';
+import { api } from '@/lib/api-client';
+import { ResearchProject } from '@shared/types';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from '@/components/ui/sonner';
-import { PlusCircle, Edit, Trash2, Image as ImageIcon, FlaskConical } from 'lucide-react';
+import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { EmptyState } from '@/components/EmptyState';
 const projectSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(1, 'Description is required'),
   role: z.string().min(1, 'Role is required'),
-  year: z.number().int().min(1900, 'Invalid year').max(new Date().getFullYear() + 5, 'Invalid year'),
+  year: z.coerce.number().min(1900, 'Invalid year').max(new Date().getFullYear() + 5),
   url: z.string().url('Invalid URL').optional().or(z.literal('')),
-  thumbnailUrl: z.string().optional()
 });
 type ProjectFormData = z.infer<typeof projectSchema>;
-function ProjectForm({ project, onFinished }: {project?: ResearchProject;onFinished: () => void;}) {
+function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFinished: () => void }) {
   const queryClient = useQueryClient();
-  const currentUser = useAuthStore((state) => state.user);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const form = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
@@ -39,154 +58,75 @@ function ProjectForm({ project, onFinished }: {project?: ResearchProject;onFinis
       role: project?.role || '',
       year: project?.year || new Date().getFullYear(),
       url: project?.url || '',
-      thumbnailUrl: project?.thumbnailUrl || ''
-    }
+    },
   });
-  const thumbnailUrlValue = form.watch('thumbnailUrl');
   const mutation = useMutation({
-    mutationFn: (data: Partial<ResearchProject> & {lecturerId?: string;}) =>
-      project
-        ? api.put(`/api/research/${project.id}`, data)
-        : api.post('/api/research', data),
+    mutationFn: (data: ResearchProject) => 
+      api(project ? `/api/projects/${project.id}` : '/api/projects', {
+        method: project ? 'PUT' : 'POST',
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
       toast.success(`Project ${project ? 'updated' : 'added'} successfully!`);
-      queryClient.invalidateQueries({ queryKey: ['research'] });
-      queryClient.invalidateQueries({ queryKey: ['user', currentUser?.id] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
       onFinished();
     },
     onError: (error) => {
-      toast.error(`Failed to ${project ? 'update' : 'add'} project: ${(error as Error).message}`);
-    }
+      toast.error(`Failed to ${project ? 'update' : 'add'} project: ${error.message}`);
+    },
   });
   const onSubmit = (data: ProjectFormData) => {
-    const payload = { ...data };
-    if (project) {
-      mutation.mutate(payload);
-    } else {
-      mutation.mutate({ ...payload, lecturerId: currentUser?.id, commentIds: [], likeIds: [] });
-    }
-  };
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const MAX_FILE_SIZE = 2 * 1024 * 1024;
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error('File is too large. Maximum size is 2MB.');
-      return;
-    }
-    if (!file.type.startsWith('image/')) {
-      toast.error('Invalid file type. Please select an image.');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      form.setValue('thumbnailUrl', result, { shouldValidate: true, shouldDirty: true });
+    const payload = {
+      ...data,
+      type: 'project' as const,
     };
-    reader.onerror = () => {
-      toast.error('Failed to read file.');
-    };
-    reader.readAsDataURL(file);
+    mutation.mutate(project ? { ...payload, id: project.id } : payload as any);
   };
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField control={form.control} name="thumbnailUrl" render={({ field }) =>
-        <FormItem>
-            <FormLabel>Cover Image</FormLabel>
-            <div className="flex items-center gap-4">
-              <div className="w-32">
-                <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden">
-                  {thumbnailUrlValue ?
-                <img src={thumbnailUrlValue} alt="Cover image preview" className="object-cover w-full h-full" /> :
-
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                      <ImageIcon className="h-8 w-8" />
-                    </div>
-                }
-                </AspectRatio>
-              </div>
-              <div className="flex-grow">
-                <FormControl>
-                  <Input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept="image/png, image/jpeg, image/gif"
-                  onChange={handleFileChange} />
-
-                </FormControl>
-                <Button
-                type="button"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}>
-
-                  Upload Image
-                </Button>
-                <FormDescription className="mt-2">
-                  Optional. Max file size: 2MB.
-                </FormDescription>
-                <FormMessage />
-              </div>
-            </div>
-          </FormItem>
-        } />
-        <FormField control={form.control} name="title" render={({ field }) =>
-        <FormItem><FormLabel>Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-        } />
-        <FormField control={form.control} name="description" render={({ field }) =>
-        <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
-        } />
-        <FormField control={form.control} name="role" render={({ field }) =>
-        <FormItem><FormLabel>Your Role</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-        } />
-        <FormField control={form.control} name="year" render={({ field }) =>
-        <FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>
-        } />
-        <FormField control={form.control} name="url" render={({ field }) =>
-        <FormItem><FormLabel>URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
-        } />
+        <FormField control={form.control} name="title" render={({ field }) => (
+          <FormItem><FormLabel>Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+        )} />
+        <FormField control={form.control} name="description" render={({ field }) => (
+          <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+        )} />
+        <FormField control={form.control} name="role" render={({ field }) => (
+          <FormItem><FormLabel>Your Role</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+        )} />
+        <FormField control={form.control} name="year" render={({ field }) => (
+          <FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+        )} />
+        <FormField control={form.control} name="url" render={({ field }) => (
+          <FormItem><FormLabel>URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
+        )} />
         <DialogFooter>
           <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
           <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? 'Saving...' : 'Save'}</Button>
         </DialogFooter>
       </form>
-    </Form>);
-
+    </Form>
+  );
 }
 export function DashboardResearchPage() {
   const [isFormOpen, setFormOpen] = useState(false);
   const [isAlertOpen, setAlertOpen] = useState(false);
   const [selectedProj, setSelectedProj] = useState<ResearchProject | undefined>(undefined);
   const queryClient = useQueryClient();
-  const currentUser = useAuthStore((state) => state.user);
-  const userId = currentUser?.id;
-  const { data: profile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
-    queryKey: ['user', userId],
-    queryFn: () => api.get(`/api/users/${userId}`),
-    enabled: !!userId
+  const { data: projects, isLoading } = useQuery<ResearchProject[]>({
+    queryKey: ['projects'],
+    queryFn: () => api('/api/projects'),
   });
-  const { data: allProjects, isLoading: isLoadingProjs } = useQuery<ResearchProject[]>({
-    queryKey: ['research'],
-    queryFn: () => api.get('/api/research')
-  });
-  const userProjects = useMemo(() => {
-    if (!profile || !allProjects) return [];
-    const userProjIds = new Set(profile.projectIds);
-    return allProjects.filter((proj) => userProjIds.has(proj.id));
-  }, [profile, allProjects]);
-  const isLoading = isLoadingProfile || isLoadingProjs;
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/api/research/${id}`),
+    mutationFn: (id: string) => api(`/api/projects/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       toast.success('Project deleted successfully!');
-      queryClient.invalidateQueries({ queryKey: ['research'] });
-      queryClient.invalidateQueries({ queryKey: ['user', userId] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
     onError: (error) => {
-      toast.error(`Failed to delete project: ${(error as Error).message}`);
+      toast.error(`Failed to delete project: ${error.message}`);
     },
-    onSettled: () => setAlertOpen(false)
+    onSettled: () => setAlertOpen(false),
   });
   const handleEdit = (proj: ResearchProject) => {
     setSelectedProj(proj);
@@ -231,18 +171,18 @@ export function DashboardResearchPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ?
-            Array.from({ length: 3 }).map((_, i) =>
-            <TableRow key={i}>
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <TableRow key={i}>
                   <TableCell><Skeleton className="h-5 w-48" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                   <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
                 </TableRow>
-            ) :
-            userProjects.length > 0 ?
-            userProjects.map((proj) =>
-            <TableRow key={proj.id}>
+              ))
+            ) : projects?.length ? (
+              projects.map((proj) => (
+                <TableRow key={proj.id}>
                   <TableCell className="font-medium">{proj.title}</TableCell>
                   <TableCell>{proj.role}</TableCell>
                   <TableCell>{proj.year}</TableCell>
@@ -251,19 +191,12 @@ export function DashboardResearchPage() {
                     <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(proj)}><Trash2 className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
-            ) :
-
-            <TableRow>
-                <TableCell colSpan={4} className="p-0">
-                  <EmptyState
-                  icon={<FlaskConical className="h-8 w-8" />}
-                  title="No Research Projects Yet"
-                  description="Showcase your work by adding your first research project."
-                  action={{ label: 'Add Project', onClick: handleAddNew }} />
-
-                </TableCell>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center">No projects found.</TableCell>
               </TableRow>
-            }
+            )}
           </TableBody>
         </Table>
       </div>
@@ -283,6 +216,6 @@ export function DashboardResearchPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>);
-
+    </div>
+  );
 }

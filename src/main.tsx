@@ -6,7 +6,9 @@ import { createRoot } from 'react-dom/client'
 import {
   createBrowserRouter,
   RouterProvider,
+  Outlet,
 } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import '@/index.css'
@@ -14,6 +16,17 @@ import { HomePage } from '@/pages/HomePage';
 import { DirectoryPage } from '@/pages/DirectoryPage';
 import { PortfolioPage } from '@/pages/PortfolioPage';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { DashboardProfilePage } from '@/pages/dashboard/DashboardProfilePage';
+import { DashboardPublicationsPage } from '@/pages/dashboard/DashboardPublicationsPage';
+import { DashboardResearchPage } from '@/pages/dashboard/DashboardResearchPage';
+import { AppLayout } from './components/layout/AppLayout';
+import { Toaster } from "@/components/ui/sonner"
+const queryClient = new QueryClient();
+const DashboardLayout = () => (
+  <AppLayout container>
+    <Outlet />
+  </AppLayout>
+);
 const router = createBrowserRouter([
   {
     path: "/",
@@ -32,15 +45,35 @@ const router = createBrowserRouter([
   },
   {
     path: "/dashboard",
-    element: <DashboardPage />,
+    element: <DashboardLayout />,
     errorElement: <RouteErrorBoundary />,
+    children: [
+      {
+        index: true,
+        element: <DashboardPage />,
+      },
+      {
+        path: "profile",
+        element: <DashboardProfilePage />,
+      },
+      {
+        path: "publications",
+        element: <DashboardPublicationsPage />,
+      },
+      {
+        path: "research",
+        element: <DashboardResearchPage />,
+      },
+    ]
   },
 ]);
-// Do not touch this code
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
-      <RouterProvider router={router} />
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+        <Toaster richColors closeButton />
+      </QueryClientProvider>
     </ErrorBoundary>
   </StrictMode>,
 )
