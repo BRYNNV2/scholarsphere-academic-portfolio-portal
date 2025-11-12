@@ -23,6 +23,8 @@ import { LoginPage } from './pages/LoginPage';
 import { RegistrationPage } from './pages/RegistrationPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DashboardLayout } from './components/layout/DashboardLayout';
+import { PublicationsPage } from './pages/PublicationsPage';
+import { ResearchPage } from './pages/ResearchPage';
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
@@ -48,6 +50,16 @@ const router = createBrowserRouter([
   {
     path: "/lecturers/:id",
     element: <PortfolioPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/publications",
+    element: <PublicationsPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/research",
+    element: <ResearchPage />,
     errorElement: <RouteErrorBoundary />,
   },
   {

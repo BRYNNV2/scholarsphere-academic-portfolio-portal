@@ -40,6 +40,12 @@ export function Header() {
             <NavLink to="/directory" className={navLinkClasses}>
               Directory
             </NavLink>
+            <NavLink to="/publications" className={navLinkClasses}>
+              Publications
+            </NavLink>
+            <NavLink to="/research" className={navLinkClasses}>
+              Research
+            </NavLink>
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle className="relative top-0 right-0" />
