@@ -20,7 +20,7 @@ export class LecturerProfileEntity extends IndexedEntity<LecturerProfile> {
     projectIds: [],
     socialLinks: {},
   };
-  static seedData = MOCK_LECTURERS;
+  static seedData = [];
 }
 // Publication ENTITY
 export class PublicationEntity extends IndexedEntity<Publication> {
