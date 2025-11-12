@@ -283,8 +283,23 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     return ok(c, rest);
   });
   app.get('/api/publications', async (c) => { return ok(c, (await PublicationEntity.list(c.env)).items); });
+  app.get('/api/publications/:id', async (c) => {
+    const { id } = c.req.param();
+    const pub = await PublicationEntity.get(c.env, id);
+    return pub ? ok(c, pub) : notFound(c, 'Publication not found');
+  });
   app.get('/api/projects', async (c) => { return ok(c, (await ResearchProjectEntity.list(c.env)).items); });
+  app.get('/api/research/:id', async (c) => { // Note: frontend uses /research, so API should match
+    const { id } = c.req.param();
+    const proj = await ResearchProjectEntity.get(c.env, id);
+    return proj ? ok(c, proj) : notFound(c, 'Project not found');
+  });
   app.get('/api/portfolio', async (c) => { return ok(c, (await PortfolioItemEntity.list(c.env)).items); });
+  app.get('/api/portfolio/:id', async (c) => {
+    const { id } = c.req.param();
+    const item = await PortfolioItemEntity.get(c.env, id);
+    return item ? ok(c, item) : notFound(c, 'Portfolio item not found');
+  });
   app.get('/api/posts/:postId/comments', async (c) => {
     const { postId } = c.req.param();
     const allComments = (await CommentEntity.list(c.env)).items;
