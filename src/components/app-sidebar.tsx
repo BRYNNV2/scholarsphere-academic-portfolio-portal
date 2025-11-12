@@ -1,5 +1,5 @@
-import { NavLink, useLocation } from "react-router-dom";
-import { Home, User, BookCopy, FlaskConical, BookOpenCheck, Shield } from "lucide-react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Home, User, BookCopy, FlaskConical, BookOpenCheck, Shield, Globe, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -9,8 +9,15 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
+import { useAuthStore } from "@/stores/auth-store";
 export function AppSidebar(): JSX.Element {
   const location = useLocation();
+  const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout);
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
   const isActive = (path: string) => location.pathname === path;
   return (
     <Sidebar>
@@ -46,6 +53,20 @@ export function AppSidebar(): JSX.Element {
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={isActive("/dashboard/admin")}>
                 <NavLink to="/dashboard/admin"><Shield /> <span>Admin</span></NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+        <SidebarGroup className="mt-auto">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <NavLink to="/"><Globe /> <span>Homepage</span></NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={handleLogout}>
+                <LogOut /> <span>Logout</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
