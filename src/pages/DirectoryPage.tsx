@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import { LecturerProfile } from '@shared/types';
+import { UserProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from 'react-use';
 function LecturerCardSkeleton() {
@@ -34,10 +34,13 @@ export function DirectoryPage() {
   useDebounce(() => {
     setDebouncedSearchTerm(searchTerm);
   }, 500, [searchTerm]);
-  const { data: lecturers, isLoading, isError } = useQuery<LecturerProfile[]>({
-    queryKey: ['lecturers', debouncedSearchTerm],
-    queryFn: () => api(`/api/lecturers/search?q=${debouncedSearchTerm}`),
+  const { data: users, isLoading, isError } = useQuery<UserProfile[]>({
+    queryKey: ['users', debouncedSearchTerm],
+    queryFn: () => api(`/api/users/search?q=${debouncedSearchTerm}`),
   });
+  const lecturers = useMemo(() => {
+    return users?.filter(user => user.role === 'lecturer') ?? [];
+  }, [users]);
   return (
     <PublicLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -66,7 +69,7 @@ export function DirectoryPage() {
             ) : isError ? (
               <p className="col-span-full text-center text-destructive">Failed to load lecturers.</p>
             ) : (
-              lecturers?.map((lecturer, index) => (
+              lecturers.map((lecturer, index) => (
                 <motion.div
                   key={lecturer.id}
                   initial={{ opacity: 0, y: 20 }}

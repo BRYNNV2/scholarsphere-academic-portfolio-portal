@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/sonner';
 import { BookOpenCheck } from 'lucide-react';
-import { LecturerProfile } from '@shared/types';
+import { UserProfile } from '@shared/types';
 export function LoginPage() {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
@@ -19,7 +19,7 @@ export function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await api<{ user: LecturerProfile; token: string }>('/api/auth/login', {
+      const response = await api<{ user: UserProfile; token: string }>('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });

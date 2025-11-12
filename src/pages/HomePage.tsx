@@ -7,14 +7,14 @@ import { ArrowRight, BookCopy, Globe, Share2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import { LecturerProfile } from '@shared/types';
+import { UserProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 export function HomePage() {
-  const { data: lecturers, isLoading } = useQuery<LecturerProfile[]>({
-    queryKey: ['lecturers'],
-    queryFn: () => api('/api/lecturers'),
+  const { data: users, isLoading } = useQuery<UserProfile[]>({
+    queryKey: ['users'],
+    queryFn: () => api('/api/users'),
   });
-  const featuredLecturers = lecturers ?? [];
+  const featuredLecturers = users?.filter(u => u.role === 'lecturer') ?? [];
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
