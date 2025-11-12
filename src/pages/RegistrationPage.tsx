@@ -13,6 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { LecturerProfile } from '@shared/types';
+import { useQueryClient } from '@tanstack/react-query';
 const registrationSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
@@ -27,6 +28,7 @@ export function RegistrationPage() {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
   const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
   const form = useForm<RegistrationFormData>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
@@ -48,6 +50,7 @@ export function RegistrationPage() {
       });
       login(response.user, response.token);
       toast.success(`Welcome, ${response.user.name}! Your account has been created.`);
+      await queryClient.invalidateQueries({ queryKey: ['lecturers'] });
       navigate('/dashboard');
     } catch (error) {
       toast.error((error as Error).message || 'Registration failed. Please try again.');
