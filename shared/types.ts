@@ -58,6 +58,7 @@ export interface UserProfile {
   publicationIds: string[];
   projectIds: string[];
   portfolioItemIds: string[];
+  savedItemIds: string[];
   socialLinks?: {
     twitter?: string;
     linkedin?: string;

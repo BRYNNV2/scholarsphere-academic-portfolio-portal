@@ -4,13 +4,48 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, Building, Book, FlaskConical, ExternalLink, Twitter, Linkedin, Github, Briefcase } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { Mail, Building, Book, FlaskConical, ExternalLink, Twitter, Linkedin, Github, Briefcase, Bookmark } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { UserProfile, Publication, ResearchProject, PortfolioItem } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { CommentsSection } from '@/components/CommentsSection';
+import { useAuthStore } from '@/stores/auth-store';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+function SaveButton({ itemId }: { itemId: string }) {
+  const queryClient = useQueryClient();
+  const currentUser = useAuthStore((state) => state.user);
+  const updateUser = useAuthStore((state) => state.updateUser);
+  const canSave = currentUser?.role === 'student';
+  const isSaved = currentUser?.savedItemIds.includes(itemId);
+  const saveMutation = useMutation({
+    mutationFn: () => isSaved
+      ? api(`/api/users/me/save/${itemId}`, { method: 'DELETE' })
+      : api(`/api/users/me/save/${itemId}`, { method: 'POST' }),
+    onSuccess: (updatedProfile: UserProfile) => {
+      toast.success(isSaved ? 'Item unsaved!' : 'Item saved for later!');
+      queryClient.invalidateQueries({ queryKey: ['user', currentUser?.id] });
+      updateUser(updatedProfile);
+    },
+    onError: (error) => {
+      toast.error((error as Error).message);
+    },
+  });
+  if (!canSave) return null;
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => saveMutation.mutate()}
+      disabled={saveMutation.isPending}
+    >
+      <Bookmark className={cn("mr-2 h-4 w-4", isSaved && "fill-primary text-primary")} />
+      {isSaved ? 'Saved' : 'Save'}
+    </Button>
+  );
+}
 function PortfolioPageSkeleton() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
@@ -141,15 +176,15 @@ export function PortfolioPage() {
                       </div>
                       <div className="flex-1">
                         <CardContent className="p-6">
-                          <div className="flex justify-between items-start">
+                          <div className="flex justify-between items-start gap-4">
                             <div>
                               <h3 className="font-semibold text-lg">{item.title}</h3>
                               <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
                             </div>
-                            <Badge variant="outline">{item.category}</Badge>
+                            <div className="flex-shrink-0"><SaveButton itemId={item.id} /></div>
                           </div>
                           <div className="flex justify-between items-end mt-2">
-                            <p className="text-sm text-muted-foreground">{item.year}</p>
+                            <p className="text-sm text-muted-foreground">{item.year} &middot; <Badge variant="outline" className="ml-1">{item.category}</Badge></p>
                             {item.url && <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">View Details <ExternalLink className="h-4 w-4" /></a>}
                           </div>
                         </CardContent>
@@ -181,7 +216,10 @@ export function PortfolioPage() {
                       </div>
                       <div className="flex-1">
                         <CardContent className="p-6">
-                          <h3 className="font-semibold text-lg">{pub.title}</h3>
+                          <div className="flex justify-between items-start gap-4">
+                            <h3 className="font-semibold text-lg flex-grow">{pub.title}</h3>
+                            <div className="flex-shrink-0"><SaveButton itemId={pub.id} /></div>
+                          </div>
                           <p className="text-sm text-muted-foreground mt-1">{pub.authors.join(', ')}</p>
                           <p className="text-sm text-muted-foreground mt-1"><em>{pub.journal}</em>, {pub.year}</p>
                           {pub.url && <a href={pub.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">View Publication <ExternalLink className="h-4 w-4" /></a>}
@@ -214,7 +252,10 @@ export function PortfolioPage() {
                       </div>
                       <div className="flex-1">
                         <CardContent className="p-6">
-                          <h3 className="font-semibold text-lg">{proj.title}</h3>
+                          <div className="flex justify-between items-start gap-4">
+                            <h3 className="font-semibold text-lg flex-grow">{proj.title}</h3>
+                            <div className="flex-shrink-0"><SaveButton itemId={proj.id} /></div>
+                          </div>
                           <p className="text-sm text-muted-foreground mt-1"><strong>Role:</strong> {proj.role} ({proj.year})</p>
                           <p className="text-sm text-muted-foreground mt-2">{proj.description}</p>
                           {proj.url && <a href={proj.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">Learn More <ExternalLink className="h-4 w-4" /></a>}

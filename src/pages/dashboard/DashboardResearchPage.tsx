@@ -43,7 +43,7 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
   });
   const thumbnailUrlValue = form.watch('thumbnailUrl');
   const mutation = useMutation({
-    mutationFn: (data: Omit<ResearchProject, 'id' | 'type' | 'lecturerId'> & { lecturerId?: string }) =>
+    mutationFn: (data: Partial<ResearchProject> & { lecturerId?: string }) =>
       api(project ? `/api/projects/${project.id}` : '/api/projects', {
         method: project ? 'PUT' : 'POST',
         body: JSON.stringify(data),

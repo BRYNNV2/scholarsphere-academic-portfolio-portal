@@ -1,17 +1,15 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
-import { Search, ExternalLink, User, FlaskConical } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { ResearchProject, UserProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from 'react-use';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { AcademicWorkCard } from '@/components/AcademicWorkCard';
 function ProjectCardSkeleton() {
   return (
     <Card className="overflow-hidden">
@@ -86,53 +84,14 @@ export function ResearchPage() {
             {isLoading ? (
               Array.from({ length: 6 }).map((_, index) => <ProjectCardSkeleton key={index} />)
             ) : (
-              filteredProjects.map((proj, index) => {
-                const user = usersMap.get(proj.lecturerId);
-                return (
-                  <motion.div
-                    key={proj.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.05 }}
-                  >
-                    <Card className="h-full flex flex-col overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1">
-                      <AspectRatio ratio={16 / 9} className="bg-muted">
-                        {proj.thumbnailUrl ? (
-                          <img src={proj.thumbnailUrl} alt={proj.title} className="object-cover w-full h-full" />
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-muted-foreground">
-                            <FlaskConical className="h-12 w-12" />
-                          </div>
-                        )}
-                      </AspectRatio>
-                      <CardHeader>
-                        <CardTitle>{proj.title}</CardTitle>
-                        <CardDescription>{proj.role} - {proj.year}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="flex-grow flex flex-col">
-                        <p className="text-sm text-muted-foreground flex-grow">{proj.description}</p>
-                        <div className="mt-4 pt-4 border-t flex justify-between items-center">
-                          {user ? (
-                            <Button variant="ghost" size="sm" asChild>
-                              <Link to={`/users/${user.id}`} className="text-sm">
-                                <User className="mr-2 h-4 w-4" />
-                                {user.name}
-                              </Link>
-                            </Button>
-                          ) : <div />}
-                          {proj.url && (
-                            <Button variant="outline" size="sm" asChild>
-                              <a href={proj.url} target="_blank" rel="noopener noreferrer">
-                                Learn More <ExternalLink className="ml-2 h-4 w-4" />
-                              </a>
-                            </Button>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })
+              filteredProjects.map((proj, index) => (
+                <AcademicWorkCard
+                  key={proj.id}
+                  item={proj}
+                  author={usersMap.get(proj.lecturerId)}
+                  index={index}
+                />
+              ))
             )}
           </div>
           {!isLoading && filteredProjects.length === 0 && (

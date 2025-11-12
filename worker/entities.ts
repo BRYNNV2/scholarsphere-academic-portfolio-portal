@@ -20,6 +20,7 @@ export class UserProfileEntity extends IndexedEntity<UserProfile> {
     publicationIds: [],
     projectIds: [],
     portfolioItemIds: [],
+    savedItemIds: [],
     socialLinks: {},
   };
   static seedData = [];
