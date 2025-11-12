@@ -1,7 +1,7 @@
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import { api } from "../lib/api-client-fixed";
+import { api } from '@/lib/api-client';
 import { AcademicWork, UserProfile } from '@shared/types';
 import { CommentsSection } from '@/components/CommentsSection';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,20 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ArrowLeft, Book, Briefcase, Building, ExternalLink, FlaskConical, User } from 'lucide-react';
-const getPathForType = (type: AcademicWork['type']) => {
-  switch (type) {
-    case 'publication':
-      return 'publications';
-    case 'project':
-    case 'research':
-      return 'projects';
-    case 'portfolio':
-      return 'portfolio';
-    default:
-
-      return type;
-  }
-};
 function AcademicWorkDetailPageSkeleton() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
@@ -43,27 +29,29 @@ function AcademicWorkDetailPageSkeleton() {
         <Skeleton className="h-5 w-full" />
         <Skeleton className="h-5 w-5/6" />
       </div>
-    </div>);
-
+    </div>
+  );
 }
 export function AcademicWorkDetailPage() {
-  const { id } = useParams<{id: string;}>();
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const itemType = location.pathname.split('/')[1]; // 'publications', 'research', or 'portfolio'
   const { data: item, isLoading: isLoadingItem, isError } = useQuery<AcademicWork>({
-    queryKey: ['academic-work', id],
-    queryFn: () => api.get(`/api/academic-work/${id}`),
-    enabled: !!id
+    queryKey: [itemType, id],
+    queryFn: () => api(`/api/${itemType}/${id}`),
+    enabled: !!id && !!itemType,
   });
   const { data: author, isLoading: isLoadingAuthor } = useQuery<UserProfile>({
     queryKey: ['user', item?.lecturerId],
-    queryFn: () => api.get(`/api/users/${item?.lecturerId}`),
-    enabled: !!item?.lecturerId
+    queryFn: () => api(`/api/users/${item?.lecturerId}`),
+    enabled: !!item?.lecturerId,
   });
   const getIcon = (type: AcademicWork['type']) => {
     switch (type) {
-      case 'publication':return <Book className="h-10 w-10" />;
-      case 'project':return <FlaskConical className="h-10 w-10" />;
-      case 'portfolio':return <Briefcase className="h-10 w-10" />;
-      default:return null;
+      case 'publication': return <Book className="h-10 w-10" />;
+      case 'project': return <FlaskConical className="h-10 w-10" />;
+      case 'portfolio': return <Briefcase className="h-10 w-10" />;
+      default: return null;
     }
   };
   const renderItemDetails = (item: AcademicWork) => {
@@ -73,15 +61,15 @@ export function AcademicWorkDetailPage() {
           <>
             <p className="text-lg text-muted-foreground">{item.authors.join(', ')}</p>
             <p className="text-md text-muted-foreground"><em>{item.journal}</em>, {item.year}</p>
-          </>);
-
+          </>
+        );
       case 'project':
         return (
           <>
             <p className="text-lg text-muted-foreground"><strong>Role:</strong> {item.role} ({item.year})</p>
             <p className="mt-6 text-lg leading-relaxed whitespace-pre-wrap">{item.description}</p>
-          </>);
-
+          </>
+        );
       case 'portfolio':
         return (
           <>
@@ -90,8 +78,8 @@ export function AcademicWorkDetailPage() {
               <p className="text-lg text-muted-foreground">{item.year}</p>
             </div>
             <p className="mt-6 text-lg leading-relaxed whitespace-pre-wrap">{item.description}</p>
-          </>);
-
+          </>
+        );
       default:
         return null;
     }
@@ -106,33 +94,29 @@ export function AcademicWorkDetailPage() {
           <h1 className="text-2xl font-bold">Item not found</h1>
           <p className="text-muted-foreground mt-2">The academic work you are looking for does not exist.</p>
           <Button asChild className="mt-6">
-            <Link to="/">Back to Home</Link>
+            <Link to={`/${itemType}`}>Back to Directory</Link>
           </Button>
         </div>
-      </PublicLayout>);
-
+      </PublicLayout>
+    );
   }
-
-  const backPath = getPathForType(item.type);
-  const backPathTitle = backPath.charAt(0).toUpperCase() + backPath.slice(1);
-
   return (
     <PublicLayout>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         <Button variant="ghost" asChild className="mb-8">
-          <Link to={`/${backPath}`}>
+          <Link to={`/${itemType}`}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to {backPathTitle}
+            Back to {itemType.charAt(0).toUpperCase() + itemType.slice(1)}
           </Link>
         </Button>
         <article>
           <header className="mb-8">
             <h1 className="text-4xl md:text-5xl font-display font-bold text-foreground tracking-tight">{item.title}</h1>
-            {author &&
-            <div className="mt-6 flex items-center gap-4">
+            {author && (
+              <div className="mt-6 flex items-center gap-4">
                 <Avatar className="h-16 w-16">
                   <AvatarImage src={author.photoUrl} alt={author.name} />
-                  <AvatarFallback>{author.name.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
+                  <AvatarFallback>{author.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                 </Avatar>
                 <div>
                   <Link to={`/users/${author.id}`} className="text-lg font-semibold hover:underline">{author.name}</Link>
@@ -141,32 +125,32 @@ export function AcademicWorkDetailPage() {
                   </p>
                 </div>
               </div>
-            }
+            )}
           </header>
           <Card className="overflow-hidden">
             <AspectRatio ratio={16 / 9} className="bg-muted">
-              {item.thumbnailUrl ?
-              <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" /> :
-
-              <div className="flex items-center justify-center h-full text-muted-foreground">
+              {item.thumbnailUrl ? (
+                <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" />
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
                   {getIcon(item.type)}
                 </div>
-              }
+              )}
             </AspectRatio>
             <CardContent className="p-6 md:p-8 space-y-4">
               {renderItemDetails(item)}
-              {item.url &&
-              <Button asChild className="mt-6">
+              {item.url && (
+                <Button asChild className="mt-6">
                   <a href={item.url} target="_blank" rel="noopener noreferrer">
                     View Source <ExternalLink className="ml-2 h-4 w-4" />
                   </a>
                 </Button>
-              }
+              )}
             </CardContent>
             <CommentsSection postId={item.id} />
           </Card>
         </article>
       </div>
-    </PublicLayout>);
-
+    </PublicLayout>
+  );
 }

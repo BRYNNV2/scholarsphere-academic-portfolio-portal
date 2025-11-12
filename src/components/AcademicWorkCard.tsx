@@ -43,6 +43,7 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
       default: return null;
     }
   };
+  const itemUrl = `/${item.type === 'project' ? 'research' : item.type}s/${item.id}`;
   return (
     <motion.div
       key={item.id}
@@ -63,18 +64,22 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
             <Bookmark className={cn("h-5 w-5", isSaved && "fill-primary text-primary")} />
           </Button>
         )}
-        <AspectRatio ratio={16 / 9} className="bg-muted">
-          {item.thumbnailUrl ? (
-            <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" />
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              {getIcon()}
-            </div>
-          )}
-        </AspectRatio>
+        <Link to={itemUrl}>
+          <AspectRatio ratio={16 / 9} className="bg-muted">
+            {item.thumbnailUrl ? (
+              <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" />
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                {getIcon()}
+              </div>
+            )}
+          </AspectRatio>
+        </Link>
         <CardHeader>
           <div className="flex justify-between items-start">
-            <CardTitle className="text-lg flex-grow pr-2">{item.title}</CardTitle>
+            <CardTitle className="text-lg flex-grow pr-2">
+              <Link to={itemUrl} className="hover:underline">{item.title}</Link>
+            </CardTitle>
             {item.type === 'portfolio' && <Badge variant="outline">{item.category}</Badge>}
           </div>
           {item.type !== 'publication' && <CardDescription>{item.year}</CardDescription>}

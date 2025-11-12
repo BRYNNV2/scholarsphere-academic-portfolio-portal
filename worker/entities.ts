@@ -1,6 +1,7 @@
 import { IndexedEntity } from "./core-utils";
 import type { UserProfile, Publication, ResearchProject, PortfolioItem, Comment, Like } from "@shared/types";
 import { MOCK_PUBLICATIONS, MOCK_PROJECTS, MOCK_PORTFOLIO_ITEMS } from "@shared/mock-data";
+import { Env } from "./core-utils";
 // UserProfile ENTITY
 export class UserProfileEntity extends IndexedEntity<UserProfile> {
   static readonly entityName = "user";
@@ -43,6 +44,11 @@ export class PublicationEntity extends IndexedEntity<Publication> {
     likeIds: [],
   };
   static seedData = MOCK_PUBLICATIONS;
+  static async get(env: Env, id: string): Promise<Publication | null> {
+    const inst = new this(env, id);
+    if (!(await inst.exists())) return null;
+    return inst.getState();
+  }
 }
 // ResearchProject ENTITY
 export class ResearchProjectEntity extends IndexedEntity<ResearchProject> {
@@ -61,6 +67,11 @@ export class ResearchProjectEntity extends IndexedEntity<ResearchProject> {
     likeIds: [],
   };
   static seedData = MOCK_PROJECTS;
+  static async get(env: Env, id: string): Promise<ResearchProject | null> {
+    const inst = new this(env, id);
+    if (!(await inst.exists())) return null;
+    return inst.getState();
+  }
 }
 // PortfolioItem ENTITY
 export class PortfolioItemEntity extends IndexedEntity<PortfolioItem> {
@@ -79,6 +90,11 @@ export class PortfolioItemEntity extends IndexedEntity<PortfolioItem> {
     likeIds: [],
   };
   static seedData = MOCK_PORTFOLIO_ITEMS;
+  static async get(env: Env, id: string): Promise<PortfolioItem | null> {
+    const inst = new this(env, id);
+    if (!(await inst.exists())) return null;
+    return inst.getState();
+  }
 }
 // Comment ENTITY
 export class CommentEntity extends IndexedEntity<Comment> {
