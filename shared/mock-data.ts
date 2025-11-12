@@ -29,6 +29,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
     specializations: ['Distributed Systems', 'Cloud Computing', 'Machine Learning'],
     publicationIds: ['pub1', 'pub2'],
     projectIds: ['proj1', 'proj2'],
+    socialLinks: {},
   },
   {
     id: 'l2',
@@ -42,6 +43,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
     specializations: ['Quantum Computing', 'Theoretical Physics', 'Algorithm Design'],
     publicationIds: ['pub3'],
     projectIds: ['proj3'],
+    socialLinks: {},
   },
   {
     id: 'l3',
@@ -55,6 +57,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
     specializations: ['AI Ethics', 'Moral Philosophy', 'Technology Policy'],
     publicationIds: ['pub4'],
     projectIds: ['proj4'],
+    socialLinks: {},
   },
   {
     id: 'l4',
@@ -68,6 +71,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
     specializations: ['Nanotechnology', 'Materials Science', 'Energy Storage'],
     publicationIds: ['pub5'],
     projectIds: ['proj5'],
+    socialLinks: {},
   },
   {
     id: 'l5',
@@ -81,6 +85,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
     specializations: ['Neuroscience', 'Cognitive Science', 'Brain Mapping'],
     publicationIds: ['pub6'],
     projectIds: ['proj6'],
+    socialLinks: {},
   },
   {
     id: 'l6',
@@ -94,5 +99,6 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
     specializations: ['Artificial Intelligence', 'Deep Learning', 'Computer Vision'],
     publicationIds: ['pub1', 'pub7'],
     projectIds: [],
+    socialLinks: {},
   },
 ];

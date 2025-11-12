@@ -26,7 +26,7 @@ type PublicationFormData = z.infer<typeof publicationSchema>;
 function PublicationForm({ publication, onFinished }: { publication?: Publication, onFinished: () => void }) {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
-  const form = useForm({
+  const form = useForm<PublicationFormData>({
     resolver: zodResolver(publicationSchema),
     defaultValues: {
       title: publication?.title || '',
@@ -76,7 +76,7 @@ function PublicationForm({ publication, onFinished }: { publication?: Publicatio
           <FormItem><FormLabel>Journal/Conference</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
         )} />
         <FormField control={form.control} name="year" render={({ field }) => (
-          <FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>
         )} />
         <FormField control={form.control} name="url" render={({ field }) => (
           <FormItem><FormLabel>URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
