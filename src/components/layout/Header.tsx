@@ -46,6 +46,9 @@ export function Header() {
             <NavLink to="/research" className={navLinkClasses}>
               Research
             </NavLink>
+            <NavLink to="/portfolio" className={navLinkClasses}>
+              Portfolio
+            </NavLink>
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle className="relative top-0 right-0" />
