@@ -21,7 +21,7 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
   const currentUser = useAuthStore((state) => state.user);
   const updateUser = useAuthStore((state) => state.updateUser);
   const canSave = currentUser?.role === 'student';
-  const isSaved = currentUser?.savedItemIds.includes(item.id);
+  const isSaved = (currentUser?.savedItemIds ?? []).includes(item.id);
   const saveMutation = useMutation({
     mutationFn: () => isSaved
       ? api(`/api/users/me/save/${item.id}`, { method: 'DELETE' })
