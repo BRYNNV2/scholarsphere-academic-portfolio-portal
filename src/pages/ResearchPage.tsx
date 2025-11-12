@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { Search, ExternalLink, User, FlaskConical } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import { ResearchProject, LecturerProfile } from '@shared/types';
+import { ResearchProject, UserProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from 'react-use';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -42,24 +42,24 @@ export function ResearchPage() {
     queryKey: ['projects'],
     queryFn: () => api('/api/projects'),
   });
-  const { data: lecturers, isLoading: isLoadingLecturers } = useQuery<LecturerProfile[]>({
-    queryKey: ['lecturers'],
-    queryFn: () => api('/api/lecturers'),
+  const { data: users, isLoading: isLoadingUsers } = useQuery<UserProfile[]>({
+    queryKey: ['users'],
+    queryFn: () => api('/api/users'),
   });
-  const lecturersMap = useMemo(() => {
-    if (!lecturers) return new Map<string, LecturerProfile>();
-    return new Map(lecturers.map(l => [l.id, l]));
-  }, [lecturers]);
+  const usersMap = useMemo(() => {
+    if (!users) return new Map<string, UserProfile>();
+    return new Map(users.map(l => [l.id, l]));
+  }, [users]);
   const filteredProjects = useMemo(() => {
     if (!projects) return [];
     const lowercasedFilter = debouncedSearchTerm.toLowerCase();
     return projects.filter(proj =>
       proj.title.toLowerCase().includes(lowercasedFilter) ||
       proj.description.toLowerCase().includes(lowercasedFilter) ||
-      (lecturersMap.get(proj.lecturerId)?.name.toLowerCase().includes(lowercasedFilter))
+      (usersMap.get(proj.lecturerId)?.name.toLowerCase().includes(lowercasedFilter))
     );
-  }, [projects, debouncedSearchTerm, lecturersMap]);
-  const isLoading = isLoadingProjs || isLoadingLecturers;
+  }, [projects, debouncedSearchTerm, usersMap]);
+  const isLoading = isLoadingProjs || isLoadingUsers;
   return (
     <PublicLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -87,7 +87,7 @@ export function ResearchPage() {
               Array.from({ length: 6 }).map((_, index) => <ProjectCardSkeleton key={index} />)
             ) : (
               filteredProjects.map((proj, index) => {
-                const lecturer = lecturersMap.get(proj.lecturerId);
+                const user = usersMap.get(proj.lecturerId);
                 return (
                   <motion.div
                     key={proj.id}
@@ -112,11 +112,11 @@ export function ResearchPage() {
                       <CardContent className="flex-grow flex flex-col">
                         <p className="text-sm text-muted-foreground flex-grow">{proj.description}</p>
                         <div className="mt-4 pt-4 border-t flex justify-between items-center">
-                          {lecturer ? (
+                          {user ? (
                             <Button variant="ghost" size="sm" asChild>
-                              <Link to={`/lecturers/${lecturer.id}`} className="text-sm">
+                              <Link to={`/users/${user.id}`} className="text-sm">
                                 <User className="mr-2 h-4 w-4" />
-                                {lecturer.name}
+                                {user.name}
                               </Link>
                             </Button>
                           ) : <div />}

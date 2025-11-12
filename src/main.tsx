@@ -51,7 +51,7 @@ const router = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
   },
   {
-    path: "/lecturers/:id",
+    path: "/users/:id",
     element: <PortfolioPage />,
     errorElement: <RouteErrorBoundary />,
   },

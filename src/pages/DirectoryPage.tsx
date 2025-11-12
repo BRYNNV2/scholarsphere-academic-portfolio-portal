@@ -76,7 +76,7 @@ export function DirectoryPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.05 }}
                 >
-                  <Link to={`/lecturers/${lecturer.id}`} className="block h-full">
+                  <Link to={`/users/${lecturer.id}`} className="block h-full">
                     <Card className="h-full transition-all hover:shadow-xl hover:-translate-y-1">
                       <CardContent className="p-6 flex flex-col items-center text-center">
                         <Avatar className="h-24 w-24 mb-4">
