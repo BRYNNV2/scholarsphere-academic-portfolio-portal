@@ -22,6 +22,7 @@ export interface ResearchProject {
   role: string;
   year: number;
   url?: string;
+  thumbnailUrl?: string;
 }
 export interface PortfolioItem {
   id: string;
@@ -32,6 +33,7 @@ export interface PortfolioItem {
   description: string;
   year: number;
   url?: string;
+  thumbnailUrl?: string;
 }
 export type AcademicWork = Publication | ResearchProject | PortfolioItem;
 export interface LecturerProfile {

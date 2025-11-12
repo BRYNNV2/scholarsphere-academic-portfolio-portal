@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,21 +12,24 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { toast } from '@/components/ui/sonner';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 const portfolioItemSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   category: z.string().min(1, 'Category is required'),
   description: z.string().min(1, 'Description is required'),
   year: z.number().int().min(1900, 'Invalid year').max(new Date().getFullYear() + 5, 'Invalid year'),
   url: z.string().url('Invalid URL').optional().or(z.literal('')),
+  thumbnailUrl: z.string().optional(),
 });
 type PortfolioItemFormData = z.infer<typeof portfolioItemSchema>;
 function PortfolioItemForm({ item, onFinished }: { item?: PortfolioItem, onFinished: () => void }) {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const form = useForm<PortfolioItemFormData>({
     resolver: zodResolver(portfolioItemSchema),
     defaultValues: {
@@ -35,8 +38,10 @@ function PortfolioItemForm({ item, onFinished }: { item?: PortfolioItem, onFinis
       description: item?.description || '',
       year: item?.year || new Date().getFullYear(),
       url: item?.url || '',
+      thumbnailUrl: item?.thumbnailUrl || '',
     },
   });
+  const thumbnailUrlValue = form.watch('thumbnailUrl');
   const mutation = useMutation({
     mutationFn: (data: Omit<PortfolioItem, 'id' | 'type' | 'lecturerId'> & { lecturerId?: string }) =>
       api(item ? `/api/portfolio/${item.id}` : '/api/portfolio', {
@@ -50,7 +55,7 @@ function PortfolioItemForm({ item, onFinished }: { item?: PortfolioItem, onFinis
       onFinished();
     },
     onError: (error) => {
-      toast.error(`Failed to ${item ? 'update' : 'add'} item: ${error.message}`);
+      toast.error(`Failed to ${item ? 'update' : 'add'} item: ${(error as Error).message}`);
     },
   });
   const onSubmit = (data: PortfolioItemFormData) => {
@@ -61,9 +66,71 @@ function PortfolioItemForm({ item, onFinished }: { item?: PortfolioItem, onFinis
       mutation.mutate({ ...payload, lecturerId: currentUser?.id });
     }
   };
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error('File is too large. Maximum size is 2MB.');
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      toast.error('Invalid file type. Please select an image.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      form.setValue('thumbnailUrl', result, { shouldValidate: true, shouldDirty: true });
+    };
+    reader.onerror = () => {
+      toast.error('Failed to read file.');
+    };
+    reader.readAsDataURL(file);
+  };
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField control={form.control} name="thumbnailUrl" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Cover Image</FormLabel>
+            <div className="flex items-center gap-4">
+              <div className="w-32">
+                <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden">
+                  {thumbnailUrlValue ? (
+                    <img src={thumbnailUrlValue} alt="Cover image preview" className="object-cover w-full h-full" />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      <ImageIcon className="h-8 w-8" />
+                    </div>
+                  )}
+                </AspectRatio>
+              </div>
+              <div className="flex-grow">
+                <FormControl>
+                  <Input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/png, image/jpeg, image/gif"
+                    onChange={handleFileChange}
+                  />
+                </FormControl>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Upload Image
+                </Button>
+                <FormDescription className="mt-2">
+                  Optional. Max file size: 2MB.
+                </FormDescription>
+                <FormMessage />
+              </div>
+            </div>
+          </FormItem>
+        )} />
         <FormField control={form.control} name="title" render={({ field }) => (
           <FormItem><FormLabel>Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
         )} />
@@ -117,7 +184,7 @@ export function DashboardPortfolioPage() {
       queryClient.invalidateQueries({ queryKey: ['lecturer', userId] });
     },
     onError: (error) => {
-      toast.error(`Failed to delete item: ${error.message}`);
+      toast.error(`Failed to delete item: ${(error as Error).message}`);
     },
     onSettled: () => setAlertOpen(false),
   });

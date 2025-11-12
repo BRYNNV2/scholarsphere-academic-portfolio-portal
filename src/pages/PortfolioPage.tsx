@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { LecturerProfile, Publication, ResearchProject, PortfolioItem } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 function PortfolioPageSkeleton() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
@@ -124,20 +125,35 @@ export function PortfolioPage() {
               <h2 className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><Briefcase /> Portfolio</h2>
               <div className="mt-6 space-y-4">
                 {lecturerPortfolioItems.map(item => (
-                  <Card key={item.id}>
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold text-lg">{item.title}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
-                        </div>
-                        <Badge variant="outline">{item.category}</Badge>
+                  <Card key={item.id} className="overflow-hidden">
+                    <div className="flex flex-col sm:flex-row">
+                      <div className="sm:w-1/3 md:w-1/4">
+                        <AspectRatio ratio={16 / 9} className="bg-muted">
+                          {item.thumbnailUrl ? (
+                            <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" />
+                          ) : (
+                            <div className="flex items-center justify-center h-full text-muted-foreground">
+                              <Briefcase className="h-10 w-10" />
+                            </div>
+                          )}
+                        </AspectRatio>
                       </div>
-                      <div className="flex justify-between items-end mt-2">
-                        <p className="text-sm text-muted-foreground">{item.year}</p>
-                        {item.url && <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">View Details <ExternalLink className="h-4 w-4" /></a>}
+                      <div className="flex-1">
+                        <CardContent className="p-6">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-semibold text-lg">{item.title}</h3>
+                              <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                            </div>
+                            <Badge variant="outline">{item.category}</Badge>
+                          </div>
+                          <div className="flex justify-between items-end mt-2">
+                            <p className="text-sm text-muted-foreground">{item.year}</p>
+                            {item.url && <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">View Details <ExternalLink className="h-4 w-4" /></a>}
+                          </div>
+                        </CardContent>
                       </div>
-                    </CardContent>
+                    </div>
                   </Card>
                 ))}
               </div>
@@ -165,13 +181,28 @@ export function PortfolioPage() {
               <h2 className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><FlaskConical /> Research Projects</h2>
               <div className="mt-6 space-y-4">
                 {lecturerProjects.map(proj => (
-                  <Card key={proj.id}>
-                    <CardContent className="p-6">
-                      <h3 className="font-semibold text-lg">{proj.title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1"><strong>Role:</strong> {proj.role} ({proj.year})</p>
-                      <p className="text-sm text-muted-foreground mt-2">{proj.description}</p>
-                      {proj.url && <a href={proj.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">Learn More <ExternalLink className="h-4 w-4" /></a>}
-                    </CardContent>
+                  <Card key={proj.id} className="overflow-hidden">
+                    <div className="flex flex-col sm:flex-row">
+                      <div className="sm:w-1/3 md:w-1/4">
+                        <AspectRatio ratio={16 / 9} className="bg-muted">
+                          {proj.thumbnailUrl ? (
+                            <img src={proj.thumbnailUrl} alt={proj.title} className="object-cover w-full h-full" />
+                          ) : (
+                            <div className="flex items-center justify-center h-full text-muted-foreground">
+                              <FlaskConical className="h-10 w-10" />
+                            </div>
+                          )}
+                        </AspectRatio>
+                      </div>
+                      <div className="flex-1">
+                        <CardContent className="p-6">
+                          <h3 className="font-semibold text-lg">{proj.title}</h3>
+                          <p className="text-sm text-muted-foreground mt-1"><strong>Role:</strong> {proj.role} ({proj.year})</p>
+                          <p className="text-sm text-muted-foreground mt-2">{proj.description}</p>
+                          {proj.url && <a href={proj.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">Learn More <ExternalLink className="h-4 w-4" /></a>}
+                        </CardContent>
+                      </div>
+                    </div>
                   </Card>
                 ))}
               </div>
