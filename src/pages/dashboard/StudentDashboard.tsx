@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
-import { AcademicWork, Comment, Like, UserProfile } from '@shared/types';
+import { AcademicWork, Comment, UserProfile } from '@shared/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
-import { Bookmark, Heart, MessageSquare } from 'lucide-react';
+import { Bookmark, MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 function SmallAcademicWorkCard({ item, authorName }: { item: AcademicWork, authorName: string }) {
   return (
@@ -41,11 +41,6 @@ export function StudentDashboard() {
       return [...publications, ...projects, ...portfolio];
     },
   });
-  const { data: allLikes, isLoading: isLoadingLikes } = useQuery<Like[]>({
-    queryKey: ['all-likes', userId],
-    queryFn: () => api('/api/posts/all/likes'),
-    enabled: !!userId,
-  });
   const { data: allComments, isLoading: isLoadingComments } = useQuery<Comment[]>({
     queryKey: ['all-comments'],
     queryFn: () => api('/api/posts/all/comments'),
@@ -54,17 +49,14 @@ export function StudentDashboard() {
     queryKey: ['users'],
     queryFn: () => api('/api/users'),
   });
-
-  const isLoading = isLoadingProfile || isLoadingWork || isLoadingLikes || isLoadingComments || isLoadingUsers;
+  const isLoading = isLoadingProfile || isLoadingWork || isLoadingComments || isLoadingUsers;
   const savedItems = allAcademicWork?.filter(item => profile?.savedItemIds?.includes(item.id)) ?? [];
-  const likedItems = allAcademicWork?.filter(item => allLikes?.some(like => like.userId === userId && like.postId === item.id)) ?? [];
   const userComments = allComments?.filter(comment => comment.userId === userId).slice(0, 5) ?? [];
   if (isLoading) {
     return (
       <div className="space-y-8">
         <Skeleton className="h-10 w-1/2" />
-        <div className="grid gap-6 md:grid-cols-3">
-          <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent className="space-y-2"><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></CardContent></Card>
+        <div className="grid gap-6 md:grid-cols-2">
           <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent className="space-y-2"><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></CardContent></Card>
           <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent className="space-y-2"><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></CardContent></Card>
         </div>
@@ -77,7 +69,7 @@ export function StudentDashboard() {
         <h1 className="text-3xl font-bold tracking-tight">Student Dashboard</h1>
         <p className="text-muted-foreground">Welcome, {currentUser?.name}! Here's your activity overview.</p>
       </div>
-      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Bookmark className="h-5 w-5" /> Saved for Later</CardTitle>
@@ -92,22 +84,6 @@ export function StudentDashboard() {
                 })}
               </div>
             ) : <p className="text-sm text-muted-foreground">No saved items yet.</p>}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Heart className="h-5 w-5" /> Liked Items</CardTitle>
-            <CardDescription>Work you've recently liked.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {likedItems.length > 0 ? (
-              <div className="space-y-2">
-                {likedItems.slice(0, 5).map(item => {
-                  const author = users?.find(u => u.id === item.lecturerId);
-                  return <SmallAcademicWorkCard key={item.id} item={item} authorName={author?.name || '...'} />;
-                })}
-              </div>
-            ) : <p className="text-sm text-muted-foreground">No liked items yet.</p>}
           </CardContent>
         </Card>
         <Card>
