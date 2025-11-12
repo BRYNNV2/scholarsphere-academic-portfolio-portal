@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { Search, ExternalLink, User, BookCopy } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import { Publication, LecturerProfile } from '@shared/types';
+import { Publication, UserProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from 'react-use';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -42,14 +42,14 @@ export function PublicationsPage() {
     queryKey: ['publications'],
     queryFn: () => api('/api/publications'),
   });
-  const { data: lecturers, isLoading: isLoadingLecturers } = useQuery<LecturerProfile[]>({
-    queryKey: ['lecturers'],
-    queryFn: () => api('/api/lecturers'),
+  const { data: users, isLoading: isLoadingUsers } = useQuery<UserProfile[]>({
+    queryKey: ['users'],
+    queryFn: () => api('/api/users'),
   });
-  const lecturersMap = useMemo(() => {
-    if (!lecturers) return new Map<string, LecturerProfile>();
-    return new Map(lecturers.map(l => [l.id, l]));
-  }, [lecturers]);
+  const usersMap = useMemo(() => {
+    if (!users) return new Map<string, UserProfile>();
+    return new Map(users.map(l => [l.id, l]));
+  }, [users]);
   const filteredPublications = useMemo(() => {
     if (!publications) return [];
     const lowercasedFilter = debouncedSearchTerm.toLowerCase();
@@ -59,7 +59,7 @@ export function PublicationsPage() {
       pub.journal.toLowerCase().includes(lowercasedFilter)
     );
   }, [publications, debouncedSearchTerm]);
-  const isLoading = isLoadingPubs || isLoadingLecturers;
+  const isLoading = isLoadingPubs || isLoadingUsers;
   return (
     <PublicLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -87,7 +87,7 @@ export function PublicationsPage() {
               Array.from({ length: 6 }).map((_, index) => <PublicationCardSkeleton key={index} />)
             ) : (
               filteredPublications.map((pub, index) => {
-                const lecturer = lecturersMap.get(pub.lecturerId);
+                const user = usersMap.get(pub.lecturerId);
                 return (
                   <motion.div
                     key={pub.id}
@@ -112,11 +112,11 @@ export function PublicationsPage() {
                         <p className="text-sm text-muted-foreground flex-grow">{pub.authors.join(', ')}</p>
                         <p className="text-sm text-muted-foreground mt-1"><em>{pub.journal}</em>, {pub.year}</p>
                         <div className="mt-4 pt-4 border-t flex justify-between items-center">
-                          {lecturer ? (
+                          {user ? (
                             <Button variant="ghost" size="sm" asChild>
-                              <Link to={`/lecturers/${lecturer.id}`} className="text-sm">
+                              <Link to={`/users/${user.id}`} className="text-sm">
                                 <User className="mr-2 h-4 w-4" />
-                                {lecturer.name}
+                                {user.name}
                               </Link>
                             </Button>
                           ) : <div />}

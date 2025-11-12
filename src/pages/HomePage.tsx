@@ -135,7 +135,7 @@ export function HomePage() {
                       <p className="text-sm text-primary">{lecturer.title}</p>
                       <p className="text-sm text-muted-foreground mt-1">{lecturer.university}</p>
                       <Button variant="outline" size="sm" className="mt-4" asChild>
-                        <Link to={`/lecturers/${lecturer.id}`}>View Profile</Link>
+                        <Link to={`/users/${lecturer.id}`}>View Profile</Link>
                       </Button>
                     </CardContent>
                   </Card>

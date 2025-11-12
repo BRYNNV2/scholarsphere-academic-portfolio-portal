@@ -41,7 +41,7 @@ function ChangePasswordForm({ onFinished }: { onFinished: () => void }) {
   });
   const mutation = useMutation({
     mutationFn: (data: Omit<PasswordFormData, 'confirmPassword'>) =>
-      api('/api/lecturers/me/change-password', {
+      api('/api/users/me/change-password', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
@@ -85,11 +85,11 @@ export function DashboardSettingsPage() {
   const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);
   const deleteMutation = useMutation({
-    mutationFn: () => api('/api/lecturers/me', { method: 'DELETE' }),
+    mutationFn: () => api('/api/users/me', { method: 'DELETE' }),
     onSuccess: () => {
       toast.success('Your account has been deleted successfully.');
       logout();
-      queryClient.invalidateQueries({ queryKey: ['lecturers'] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
       navigate('/');
     },
     onError: (error) => {

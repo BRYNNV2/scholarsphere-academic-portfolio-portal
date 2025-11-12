@@ -1,30 +1,31 @@
-import type { LecturerProfile, Publication, ResearchProject, PortfolioItem } from './types';
+import type { UserProfile, Publication, ResearchProject, PortfolioItem } from './types';
 export const MOCK_PUBLICATIONS: Publication[] = [
-  { id: 'pub1', type: 'publication', lecturerId: 'l1', title: 'The Future of Distributed Systems', authors: ['Dr. Evelyn Reed', 'Dr. Kenji Tanaka'], journal: 'Journal of Advanced Computing', year: 2023, url: '#' },
-  { id: 'pub2', type: 'publication', lecturerId: 'l1', title: 'Machine Learning in Bioinformatics', authors: ['Dr. Evelyn Reed'], journal: 'Nature Informatics', year: 2022, url: '#' },
-  { id: 'pub3', type: 'publication', lecturerId: 'l2', title: 'Quantum Computing Algorithms', authors: ['Dr. Ben Carter'], journal: 'Physics Review', year: 2023, url: '#' },
-  { id: 'pub4', type: 'publication', lecturerId: 'l3', title: 'Ethical AI Frameworks', authors: ['Dr. Aisha Khan'], journal: 'Journal of AI Ethics', year: 2021, url: '#' },
-  { id: 'pub5', type: 'publication', lecturerId: 'l4', title: 'Advanced Nanotechnology Materials', authors: ['Dr. Maria Garcia'], journal: 'Materials Science Today', year: 2022, url: '#' },
-  { id: 'pub6', type: 'publication', lecturerId: 'l5', title: 'The Human Brain Mapping', authors: ['Dr. Samuel Chen'], journal: 'NeuroScience', year: 2023, url: '#' },
-  { id: 'pub7', type: 'publication', lecturerId: 'l6', title: 'Deep Learning for Image Recognition', authors: ['Dr. Kenji Tanaka'], journal: 'IEEE Transactions on Pattern Analysis', year: 2021, url: '#' },
+  { id: 'pub1', type: 'publication', lecturerId: 'l1', title: 'The Future of Distributed Systems', authors: ['Dr. Evelyn Reed', 'Dr. Kenji Tanaka'], journal: 'Journal of Advanced Computing', year: 2023, url: '#', commentIds: [], likeIds: [] },
+  { id: 'pub2', type: 'publication', lecturerId: 'l1', title: 'Machine Learning in Bioinformatics', authors: ['Dr. Evelyn Reed'], journal: 'Nature Informatics', year: 2022, url: '#', commentIds: [], likeIds: [] },
+  { id: 'pub3', type: 'publication', lecturerId: 'l2', title: 'Quantum Computing Algorithms', authors: ['Dr. Ben Carter'], journal: 'Physics Review', year: 2023, url: '#', commentIds: [], likeIds: [] },
+  { id: 'pub4', type: 'publication', lecturerId: 'l3', title: 'Ethical AI Frameworks', authors: ['Dr. Aisha Khan'], journal: 'Journal of AI Ethics', year: 2021, url: '#', commentIds: [], likeIds: [] },
+  { id: 'pub5', type: 'publication', lecturerId: 'l4', title: 'Advanced Nanotechnology Materials', authors: ['Dr. Maria Garcia'], journal: 'Materials Science Today', year: 2022, url: '#', commentIds: [], likeIds: [] },
+  { id: 'pub6', type: 'publication', lecturerId: 'l5', title: 'The Human Brain Mapping', authors: ['Dr. Samuel Chen'], journal: 'NeuroScience', year: 2023, url: '#', commentIds: [], likeIds: [] },
+  { id: 'pub7', type: 'publication', lecturerId: 'l6', title: 'Deep Learning for Image Recognition', authors: ['Dr. Kenji Tanaka'], journal: 'IEEE Transactions on Pattern Analysis', year: 2021, url: '#', commentIds: [], likeIds: [] },
 ];
 export const MOCK_PROJECTS: ResearchProject[] = [
-  { id: 'proj1', type: 'project', lecturerId: 'l1', title: 'Project Phoenix: Scalable Cloud Architectures', description: 'Developing next-generation cloud infrastructure for high-performance computing.', role: 'Lead Architect', year: 2022, url: '#' },
-  { id: 'proj2', type: 'project', lecturerId: 'l1', title: 'AI for Drug Discovery', description: 'Utilizing machine learning models to accelerate the discovery of new pharmaceuticals.', role: 'Principal Investigator', year: 2021, url: '#' },
-  { id: 'proj3', type: 'project', lecturerId: 'l2', title: 'Quantum Supremacy Simulation', description: 'A project to simulate quantum algorithms on classical supercomputers.', role: 'Lead Researcher', year: 2023, url: '#' },
-  { id: 'proj4', type: 'project', lecturerId: 'l3', title: 'AI Ethics Initiative', description: 'Establishing guidelines for the responsible development and deployment of artificial intelligence.', role: 'Project Lead', year: 2020, url: '#' },
-  { id: 'proj5', type: 'project', lecturerId: 'l4', title: 'Graphene-based Supercapacitors', description: 'Research into energy storage solutions using novel nanomaterials.', role: 'Senior Researcher', year: 2021, url: '#' },
-  { id: 'proj6', type: 'project', lecturerId: 'l5', title: 'Cognitive Neuroscience Models', description: 'Building computational models of human cognition and decision-making.', role: 'Principal Investigator', year: 2022, url: '#' },
+  { id: 'proj1', type: 'project', lecturerId: 'l1', title: 'Project Phoenix: Scalable Cloud Architectures', description: 'Developing next-generation cloud infrastructure for high-performance computing.', role: 'Lead Architect', year: 2022, url: '#', commentIds: [], likeIds: [] },
+  { id: 'proj2', type: 'project', lecturerId: 'l1', title: 'AI for Drug Discovery', description: 'Utilizing machine learning models to accelerate the discovery of new pharmaceuticals.', role: 'Principal Investigator', year: 2021, url: '#', commentIds: [], likeIds: [] },
+  { id: 'proj3', type: 'project', lecturerId: 'l2', title: 'Quantum Supremacy Simulation', description: 'A project to simulate quantum algorithms on classical supercomputers.', role: 'Lead Researcher', year: 2023, url: '#', commentIds: [], likeIds: [] },
+  { id: 'proj4', type: 'project', lecturerId: 'l3', title: 'AI Ethics Initiative', description: 'Establishing guidelines for the responsible development and deployment of artificial intelligence.', role: 'Project Lead', year: 2020, url: '#', commentIds: [], likeIds: [] },
+  { id: 'proj5', type: 'project', lecturerId: 'l4', title: 'Graphene-based Supercapacitors', description: 'Research into energy storage solutions using novel nanomaterials.', role: 'Senior Researcher', year: 2021, url: '#', commentIds: [], likeIds: [] },
+  { id: 'proj6', type: 'project', lecturerId: 'l5', title: 'Cognitive Neuroscience Models', description: 'Building computational models of human cognition and decision-making.', role: 'Principal Investigator', year: 2022, url: '#', commentIds: [], likeIds: [] },
 ];
 export const MOCK_PORTFOLIO_ITEMS: PortfolioItem[] = [
-    { id: 'port1', type: 'portfolio', lecturerId: 'l1', title: 'Innovator of the Year Award', category: 'Award', description: 'Awarded for groundbreaking work in distributed systems.', year: 2023, url: '#' },
-    { id: 'port2', type: 'portfolio', lecturerId: 'l2', title: 'Quantum Research Grant', category: 'Grant', description: 'Received a $500,000 grant for quantum algorithm research.', year: 2022 },
-    { id: 'port3', type: 'portfolio', lecturerId: 'l3', title: 'Guest Lecturer at Harvard', category: 'Teaching', description: 'Taught a semester-long course on AI Ethics.', year: 2022 },
+    { id: 'port1', type: 'portfolio', lecturerId: 'l1', title: 'Innovator of the Year Award', category: 'Award', description: 'Awarded for groundbreaking work in distributed systems.', year: 2023, url: '#', commentIds: [], likeIds: [] },
+    { id: 'port2', type: 'portfolio', lecturerId: 'l2', title: 'Quantum Research Grant', category: 'Grant', description: 'Received a $500,000 grant for quantum algorithm research.', year: 2022, commentIds: [], likeIds: [] },
+    { id: 'port3', type: 'portfolio', lecturerId: 'l3', title: 'Guest Lecturer at Harvard', category: 'Teaching', description: 'Taught a semester-long course on AI Ethics.', year: 2022, commentIds: [], likeIds: [] },
 ];
-export const MOCK_LECTURERS: LecturerProfile[] = [
+export const MOCK_LECTURERS: UserProfile[] = [
   {
     id: 'l1',
     name: 'Dr. Evelyn Reed',
+    role: 'lecturer',
     title: 'Professor of Computer Science',
     university: 'Stanford University',
     department: 'Computer Science',
@@ -41,6 +42,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
   {
     id: 'l2',
     name: 'Dr. Ben Carter',
+    role: 'lecturer',
     title: 'Associate Professor of Physics',
     university: 'MIT',
     department: 'Physics',
@@ -57,6 +59,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
   {
     id: 'l3',
     name: 'Dr. Aisha Khan',
+    role: 'lecturer',
     title: 'Professor of Philosophy',
     university: 'University of Oxford',
     department: 'Philosophy',
@@ -73,6 +76,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
   {
     id: 'l4',
     name: 'Dr. Maria Garcia',
+    role: 'lecturer',
     title: 'Professor of Materials Science',
     university: 'Caltech',
     department: 'Materials Science',
@@ -89,6 +93,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
   {
     id: 'l5',
     name: 'Dr. Samuel Chen',
+    role: 'lecturer',
     title: 'Professor of Neuroscience',
     university: 'Johns Hopkins University',
     department: 'Neuroscience',
@@ -105,6 +110,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
   {
     id: 'l6',
     name: 'Dr. Kenji Tanaka',
+    role: 'lecturer',
     title: 'Assistant Professor of AI',
     university: 'Carnegie Mellon University',
     department: 'Machine Learning',

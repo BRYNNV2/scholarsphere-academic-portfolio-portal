@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { api } from '@/lib/api-client';
-import { PortfolioItem, LecturerProfile } from '@shared/types';
+import { PortfolioItem, UserProfile } from '@shared/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -51,7 +51,7 @@ function PortfolioItemForm({ item, onFinished }: { item?: PortfolioItem, onFinis
     onSuccess: () => {
       toast.success(`Portfolio item ${item ? 'updated' : 'added'} successfully!`);
       queryClient.invalidateQueries({ queryKey: ['portfolio'] });
-      queryClient.invalidateQueries({ queryKey: ['lecturer', currentUser?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user', currentUser?.id] });
       onFinished();
     },
     onError: (error) => {
@@ -63,7 +63,7 @@ function PortfolioItemForm({ item, onFinished }: { item?: PortfolioItem, onFinis
     if (item) {
       mutation.mutate(payload);
     } else {
-      mutation.mutate({ ...payload, lecturerId: currentUser?.id });
+      mutation.mutate({ ...payload, lecturerId: currentUser?.id, commentIds: [], likeIds: [] });
     }
   };
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,9 +161,9 @@ export function DashboardPortfolioPage() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
   const userId = currentUser?.id;
-  const { data: profile, isLoading: isLoadingProfile } = useQuery<LecturerProfile>({
-    queryKey: ['lecturer', userId],
-    queryFn: () => api(`/api/lecturers/${userId}`),
+  const { data: profile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
+    queryKey: ['user', userId],
+    queryFn: () => api(`/api/users/${userId}`),
     enabled: !!userId,
   });
   const { data: allItems, isLoading: isLoadingItems } = useQuery<PortfolioItem[]>({
@@ -181,7 +181,7 @@ export function DashboardPortfolioPage() {
     onSuccess: () => {
       toast.success('Portfolio item deleted successfully!');
       queryClient.invalidateQueries({ queryKey: ['portfolio'] });
-      queryClient.invalidateQueries({ queryKey: ['lecturer', userId] });
+      queryClient.invalidateQueries({ queryKey: ['user', userId] });
     },
     onError: (error) => {
       toast.error(`Failed to delete item: ${(error as Error).message}`);

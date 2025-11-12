@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import { LecturerProfile } from '@shared/types';
+import { UserProfile } from '@shared/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,9 +36,9 @@ export function DashboardProfilePage() {
   const updateUser = useAuthStore((state) => state.updateUser);
   const userId = currentUser?.id;
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { data: profile, isLoading, isError } = useQuery<LecturerProfile>({
-    queryKey: ['lecturer', userId],
-    queryFn: () => api(`/api/lecturers/${userId}`),
+  const { data: profile, isLoading, isError } = useQuery<UserProfile>({
+    queryKey: ['user', userId],
+    queryFn: () => api(`/api/users/${userId}`),
     enabled: !!userId, // Only run query if userId is available
   });
   const form = useForm<ProfileFormData>({
@@ -74,14 +74,14 @@ export function DashboardProfilePage() {
     }
   }, [profile, form]);
   const mutation = useMutation({
-    mutationFn: (data: Partial<LecturerProfile>) =>
-      api<LecturerProfile>(`/api/lecturers/${userId}`, {
+    mutationFn: (data: Partial<UserProfile>) =>
+      api<UserProfile>(`/api/users/${userId}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
     onSuccess: (updatedProfile) => {
       toast.success('Profile updated successfully!');
-      queryClient.invalidateQueries({ queryKey: ['lecturer', userId] });
+      queryClient.invalidateQueries({ queryKey: ['user', userId] });
       updateUser(updatedProfile);
     },
     onError: (error) => {

@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { api } from '@/lib/api-client';
-import { ResearchProject, LecturerProfile } from '@shared/types';
+import { ResearchProject, UserProfile } from '@shared/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -51,7 +51,7 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
     onSuccess: () => {
       toast.success(`Project ${project ? 'updated' : 'added'} successfully!`);
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['lecturer', currentUser?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user', currentUser?.id] });
       onFinished();
     },
     onError: (error) => {
@@ -63,7 +63,7 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
     if (project) {
       mutation.mutate(payload);
     } else {
-      mutation.mutate({ ...payload, lecturerId: currentUser?.id });
+      mutation.mutate({ ...payload, lecturerId: currentUser?.id, commentIds: [], likeIds: [] });
     }
   };
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,9 +161,9 @@ export function DashboardResearchPage() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
   const userId = currentUser?.id;
-  const { data: profile, isLoading: isLoadingProfile } = useQuery<LecturerProfile>({
-    queryKey: ['lecturer', userId],
-    queryFn: () => api(`/api/lecturers/${userId}`),
+  const { data: profile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
+    queryKey: ['user', userId],
+    queryFn: () => api(`/api/users/${userId}`),
     enabled: !!userId,
   });
   const { data: allProjects, isLoading: isLoadingProjs } = useQuery<ResearchProject[]>({
@@ -181,7 +181,7 @@ export function DashboardResearchPage() {
     onSuccess: () => {
       toast.success('Project deleted successfully!');
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['lecturer', userId] });
+      queryClient.invalidateQueries({ queryKey: ['user', userId] });
     },
     onError: (error) => {
       toast.error(`Failed to delete project: ${(error as Error).message}`);
