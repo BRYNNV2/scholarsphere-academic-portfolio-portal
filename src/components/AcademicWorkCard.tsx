@@ -21,7 +21,7 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
   const currentUser = useAuthStore((state) => state.user);
   const updateUser = useAuthStore((state) => state.updateUser);
   const canSave = currentUser?.role === 'student';
-  const isSaved = (currentUser?.savedItemIds ?? []).includes(item.id);
+  const isSaved = currentUser?.savedItemIds.includes(item.id);
   const saveMutation = useMutation({
     mutationFn: () => isSaved
       ? api(`/api/users/me/save/${item.id}`, { method: 'DELETE' })
@@ -43,7 +43,6 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
       default: return null;
     }
   };
-  const itemUrl = `/${item.type === 'project' ? 'research' : item.type}s/${item.id}`;
   return (
     <motion.div
       key={item.id}
@@ -64,22 +63,18 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
             <Bookmark className={cn("h-5 w-5", isSaved && "fill-primary text-primary")} />
           </Button>
         )}
-        <Link to={itemUrl}>
-          <AspectRatio ratio={16 / 9} className="bg-muted">
-            {item.thumbnailUrl ? (
-              <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" />
-            ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                {getIcon()}
-              </div>
-            )}
-          </AspectRatio>
-        </Link>
+        <AspectRatio ratio={16 / 9} className="bg-muted">
+          {item.thumbnailUrl ? (
+            <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" />
+          ) : (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              {getIcon()}
+            </div>
+          )}
+        </AspectRatio>
         <CardHeader>
           <div className="flex justify-between items-start">
-            <CardTitle className="text-lg flex-grow pr-2">
-              <Link to={itemUrl} className="hover:underline">{item.title}</Link>
-            </CardTitle>
+            <CardTitle className="text-lg flex-grow pr-2">{item.title}</CardTitle>
             {item.type === 'portfolio' && <Badge variant="outline">{item.category}</Badge>}
           </div>
           {item.type !== 'publication' && <CardDescription>{item.year}</CardDescription>}

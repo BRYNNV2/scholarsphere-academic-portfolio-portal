@@ -43,7 +43,7 @@ function PortfolioItemForm({ item, onFinished }: { item?: PortfolioItem, onFinis
   });
   const thumbnailUrlValue = form.watch('thumbnailUrl');
   const mutation = useMutation({
-    mutationFn: (data: Omit<PortfolioItem, 'id' | 'type' | 'lecturerId'> & { lecturerId?: string }) =>
+    mutationFn: (data: Partial<PortfolioItem> & { lecturerId?: string }) =>
       api(item ? `/api/portfolio/${item.id}` : '/api/portfolio', {
         method: item ? 'PUT' : 'POST',
         body: JSON.stringify(data),

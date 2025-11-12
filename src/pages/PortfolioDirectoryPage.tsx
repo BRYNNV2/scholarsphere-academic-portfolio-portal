@@ -1,18 +1,15 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { motion } from 'framer-motion';
-import { Search, ExternalLink, User, Briefcase } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { PortfolioItem, UserProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from 'react-use';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { AcademicWorkCard } from '@/components/AcademicWorkCard';
 function PortfolioItemCardSkeleton() {
   return (
     <Card className="overflow-hidden">
@@ -88,56 +85,14 @@ export function PortfolioDirectoryPage() {
             {isLoading ? (
               Array.from({ length: 6 }).map((_, index) => <PortfolioItemCardSkeleton key={index} />)
             ) : (
-              filteredItems.map((item, index) => {
-                const user = usersMap.get(item.lecturerId);
-                return (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.05 }}
-                  >
-                    <Card className="h-full flex flex-col overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1">
-                       <AspectRatio ratio={16 / 9} className="bg-muted">
-                        {item.thumbnailUrl ? (
-                          <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" />
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-muted-foreground">
-                            <Briefcase className="h-12 w-12" />
-                          </div>
-                        )}
-                      </AspectRatio>
-                      <CardHeader>
-                        <div className="flex justify-between items-start">
-                          <CardTitle className="flex-grow pr-2">{item.title}</CardTitle>
-                          <Badge variant="outline">{item.category}</Badge>
-                        </div>
-                        <CardDescription>{item.year}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="flex-grow flex flex-col">
-                        <p className="text-sm text-muted-foreground flex-grow">{item.description}</p>
-                        <div className="mt-4 pt-4 border-t flex justify-between items-center">
-                          {user ? (
-                            <Button variant="ghost" size="sm" asChild>
-                              <Link to={`/users/${user.id}`} className="text-sm">
-                                <User className="mr-2 h-4 w-4" />
-                                {user.name}
-                              </Link>
-                            </Button>
-                          ) : <div />}
-                          {item.url && (
-                            <Button variant="outline" size="sm" asChild>
-                              <a href={item.url} target="_blank" rel="noopener noreferrer">
-                                View <ExternalLink className="ml-2 h-4 w-4" />
-                              </a>
-                            </Button>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })
+              filteredItems.map((item, index) => (
+                <AcademicWorkCard
+                  key={item.id}
+                  item={item}
+                  author={usersMap.get(item.lecturerId)}
+                  index={index}
+                />
+              ))
             )}
           </div>
           {!isLoading && filteredItems.length === 0 && (
