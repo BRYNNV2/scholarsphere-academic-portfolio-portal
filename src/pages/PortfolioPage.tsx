@@ -164,13 +164,28 @@ export function PortfolioPage() {
               <h2 className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><Book /> Publications</h2>
               <div className="mt-6 space-y-4">
                 {lecturerPublications.map(pub => (
-                  <Card key={pub.id}>
-                    <CardContent className="p-6">
-                      <h3 className="font-semibold text-lg">{pub.title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{pub.authors.join(', ')}</p>
-                      <p className="text-sm text-muted-foreground mt-1"><em>{pub.journal}</em>, {pub.year}</p>
-                      {pub.url && <a href={pub.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">View Publication <ExternalLink className="h-4 w-4" /></a>}
-                    </CardContent>
+                  <Card key={pub.id} className="overflow-hidden">
+                     <div className="flex flex-col sm:flex-row">
+                      <div className="sm:w-1/3 md:w-1/4">
+                        <AspectRatio ratio={16 / 9} className="bg-muted">
+                          {pub.thumbnailUrl ? (
+                            <img src={pub.thumbnailUrl} alt={pub.title} className="object-cover w-full h-full" />
+                          ) : (
+                            <div className="flex items-center justify-center h-full text-muted-foreground">
+                              <Book className="h-10 w-10" />
+                            </div>
+                          )}
+                        </AspectRatio>
+                      </div>
+                      <div className="flex-1">
+                        <CardContent className="p-6">
+                          <h3 className="font-semibold text-lg">{pub.title}</h3>
+                          <p className="text-sm text-muted-foreground mt-1">{pub.authors.join(', ')}</p>
+                          <p className="text-sm text-muted-foreground mt-1"><em>{pub.journal}</em>, {pub.year}</p>
+                          {pub.url && <a href={pub.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">View Publication <ExternalLink className="h-4 w-4" /></a>}
+                        </CardContent>
+                      </div>
+                    </div>
                   </Card>
                 ))}
               </div>
