@@ -4,9 +4,9 @@ import type { Env } from './core-utils';
 import { UserProfileEntity, PublicationEntity, ResearchProjectEntity, PortfolioItemEntity, CommentEntity, LikeEntity } from "./entities";
 import { ok, bad, notFound } from './core-utils';
 import type { UserProfile, Publication, ResearchProject, PortfolioItem, Comment, Like } from "@shared/types";
-type PublicationCreatePayload = Omit<Publication, 'id' | 'type' | 'lecturerId' | 'commentIds' | 'likeIds'> & { lecturerId: string };
-type ProjectCreatePayload = Omit<ResearchProject, 'id' | 'type' | 'lecturerId' | 'commentIds' | 'likeIds'> & { lecturerId: string };
-type PortfolioItemCreatePayload = Omit<PortfolioItem, 'id' | 'type' | 'lecturerId' | 'commentIds' | 'likeIds'> & { lecturerId: string };
+type PublicationCreatePayload = Omit<Publication, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
+type ProjectCreatePayload = Omit<ResearchProject, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
+type PortfolioItemCreatePayload = Omit<PortfolioItem, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
 const JWT_SECRET = 'a-very-secret-key-that-should-be-in-env';
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
   // --- AUTH ---
@@ -34,6 +34,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       publicationIds: [],
       projectIds: [],
       portfolioItemIds: [],
+      savedItemIds: [],
       specializations: body.specializations || [],
       socialLinks: body.socialLinks || {},
       photoUrl: body.photoUrl || `https://i.pravatar.cc/300?u=${body.email}`,
@@ -100,6 +101,34 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (user.portfolioItemIds.length > 0) await PortfolioItemEntity.deleteMany(c.env, user.portfolioItemIds);
     const deleted = await UserProfileEntity.delete(c.env, userId);
     return ok(c, { id: userId, deleted });
+  });
+  secured.post('/users/me/save/:postId', async (c) => {
+    const payload = c.get('jwtPayload');
+    if (payload.role !== 'student') return c.json({ success: false, error: 'Only students can save items' }, 403);
+    const userId = payload.sub;
+    const { postId } = c.req.param();
+    const userEntity = new UserProfileEntity(c.env, userId);
+    if (!(await userEntity.exists())) return notFound(c, 'User not found');
+    await userEntity.mutate(state => {
+      if (!state.savedItemIds.includes(postId)) {
+        return { ...state, savedItemIds: [...state.savedItemIds, postId] };
+      }
+      return state;
+    });
+    return ok(c, await userEntity.getState());
+  });
+  secured.delete('/users/me/save/:postId', async (c) => {
+    const payload = c.get('jwtPayload');
+    if (payload.role !== 'student') return c.json({ success: false, error: 'Only students can unsave items' }, 403);
+    const userId = payload.sub;
+    const { postId } = c.req.param();
+    const userEntity = new UserProfileEntity(c.env, userId);
+    if (!(await userEntity.exists())) return notFound(c, 'User not found');
+    await userEntity.mutate(state => ({
+      ...state,
+      savedItemIds: state.savedItemIds.filter(id => id !== postId)
+    }));
+    return ok(c, await userEntity.getState());
   });
   secured.post('/publications', async (c) => {
     const body = await c.req.json<PublicationCreatePayload>();

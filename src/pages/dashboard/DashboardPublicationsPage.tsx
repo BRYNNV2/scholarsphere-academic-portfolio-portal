@@ -42,7 +42,7 @@ function PublicationForm({ publication, onFinished }: { publication?: Publicatio
   });
   const thumbnailUrlValue = form.watch('thumbnailUrl');
   const mutation = useMutation({
-    mutationFn: (data: Omit<Publication, 'id' | 'type' | 'lecturerId'> & { lecturerId?: string }) =>
+    mutationFn: (data: Partial<Publication> & { lecturerId?: string }) =>
       api(publication ? `/api/publications/${publication.id}` : '/api/publications', {
         method: publication ? 'PUT' : 'POST',
         body: JSON.stringify(data),
