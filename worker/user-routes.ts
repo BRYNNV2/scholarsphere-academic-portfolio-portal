@@ -1,30 +1,36 @@
 import { Hono } from "hono";
 import { jwt, sign } from 'hono/jwt'
-import { bearerAuth } from 'hono/bearer-auth'
 import type { Env } from './core-utils';
-import { LecturerProfileEntity, PublicationEntity, ResearchProjectEntity, PortfolioItemEntity } from "./entities";
+import { UserProfileEntity, PublicationEntity, ResearchProjectEntity, PortfolioItemEntity, CommentEntity, LikeEntity } from "./entities";
 import { ok, bad, notFound } from './core-utils';
-import type { LecturerProfile, Publication, ResearchProject, PortfolioItem } from "@shared/types";
-type PublicationCreatePayload = Omit<Publication, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
-type ProjectCreatePayload = Omit<ResearchProject, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
-type PortfolioItemCreatePayload = Omit<PortfolioItem, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
+import type { UserProfile, Publication, ResearchProject, PortfolioItem, Comment, Like } from "@shared/types";
+type PublicationCreatePayload = Omit<Publication, 'id' | 'type' | 'lecturerId' | 'commentIds' | 'likeIds'> & { lecturerId: string };
+type ProjectCreatePayload = Omit<ResearchProject, 'id' | 'type' | 'lecturerId' | 'commentIds' | 'likeIds'> & { lecturerId: string };
+type PortfolioItemCreatePayload = Omit<PortfolioItem, 'id' | 'type' | 'lecturerId' | 'commentIds' | 'likeIds'> & { lecturerId: string };
 const JWT_SECRET = 'a-very-secret-key-that-should-be-in-env';
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
   // --- AUTH ---
   const auth = new Hono<{ Bindings: Env }>();
   auth.post('/register', async (c) => {
-    const body = await c.req.json<Omit<LecturerProfile, 'id'>>();
-    if (!body.email || !body.password) {
-      return bad(c, 'Email and password are required');
+    const body = await c.req.json<Partial<UserProfile>>();
+    if (!body.email || !body.password || !body.role) {
+      return bad(c, 'Email, password, and role are required');
     }
-    const lecturers = (await LecturerProfileEntity.list(c.env)).items;
-    const existingUser = lecturers.find(l => l.email === body.email);
+    const users = (await UserProfileEntity.list(c.env)).items;
+    const existingUser = users.find(l => l.email === body.email);
     if (existingUser) {
       return bad(c, 'User with this email already exists');
     }
-    const newUser: LecturerProfile = {
-      ...body,
+    const newUser: UserProfile = {
       id: crypto.randomUUID(),
+      name: body.name || '',
+      email: body.email,
+      password: body.password,
+      role: body.role,
+      title: body.title || '',
+      university: body.university || '',
+      department: body.department || '',
+      bio: body.bio || '',
       publicationIds: [],
       projectIds: [],
       portfolioItemIds: [],
@@ -32,10 +38,9 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       socialLinks: body.socialLinks || {},
       photoUrl: body.photoUrl || `https://i.pravatar.cc/300?u=${body.email}`,
     };
-    await LecturerProfileEntity.create(c.env, newUser);
-    // Don't return password
+    await UserProfileEntity.create(c.env, newUser);
     const { password, ...userToReturn } = newUser;
-    const token = await sign({ sub: userToReturn.id, role: 'user' }, JWT_SECRET);
+    const token = await sign({ sub: userToReturn.id, role: userToReturn.role }, JWT_SECRET);
     return ok(c, { user: userToReturn, token });
   });
   auth.post('/login', async (c) => {
@@ -43,28 +48,28 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!email || !password) {
       return bad(c, 'Email and password are required');
     }
-    const lecturers = (await LecturerProfileEntity.list(c.env)).items;
-    const user = lecturers.find(l => l.email === email);
+    const users = (await UserProfileEntity.list(c.env)).items;
+    const user = users.find(l => l.email === email);
     if (!user || user.password !== password) {
       return c.json({ success: false, error: 'Invalid credentials' }, 401);
     }
     const { password: _, ...userToReturn } = user;
-    const token = await sign({ sub: userToReturn.id, role: 'user' }, JWT_SECRET);
+    const token = await sign({ sub: userToReturn.id, role: userToReturn.role }, JWT_SECRET);
     return ok(c, { user: userToReturn, token });
   });
   app.route('/api/auth', auth);
   // --- SECURED ROUTES ---
   const secured = new Hono<{ Bindings: Env }>();
   secured.use('*', jwt({ secret: JWT_SECRET }));
-  secured.put('/lecturers/:id', async (c) => {
+  secured.put('/users/:id', async (c) => {
     const { id } = c.req.param();
-    const body = await c.req.json<Partial<LecturerProfile>>();
-    const lecturer = new LecturerProfileEntity(c.env, id);
-    if (!(await lecturer.exists())) return notFound(c, 'Lecturer not found');
-    await lecturer.patch(body);
-    return ok(c, await lecturer.getState());
+    const body = await c.req.json<Partial<UserProfile>>();
+    const user = new UserProfileEntity(c.env, id);
+    if (!(await user.exists())) return notFound(c, 'User not found');
+    await user.patch(body);
+    return ok(c, await user.getState());
   });
-  secured.post('/lecturers/me/change-password', async (c) => {
+  secured.post('/users/me/change-password', async (c) => {
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
     if (!userId) return bad(c, 'User ID not found in token');
@@ -72,49 +77,39 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!currentPassword || !newPassword) {
       return bad(c, 'Current and new passwords are required');
     }
-    const lecturerEntity = new LecturerProfileEntity(c.env, userId);
-    if (!(await lecturerEntity.exists())) return notFound(c, 'Lecturer not found');
-    const lecturer = await lecturerEntity.getState();
-    if (lecturer.password !== currentPassword) {
+    const userEntity = new UserProfileEntity(c.env, userId);
+    if (!(await userEntity.exists())) return notFound(c, 'User not found');
+    const user = await userEntity.getState();
+    if (user.password !== currentPassword) {
       return bad(c, 'Incorrect current password');
     }
-    await lecturerEntity.patch({ password: newPassword });
+    await userEntity.patch({ password: newPassword });
     return ok(c, { message: 'Password updated successfully' });
   });
-  secured.delete('/lecturers/me', async (c) => {
+  secured.delete('/users/me', async (c) => {
     const payload = c.get('jwtPayload');
     const userId = payload.sub;
     if (!userId) {
       return bad(c, 'User ID not found in token');
     }
-    const lecturerEntity = new LecturerProfileEntity(c.env, userId);
-    if (!(await lecturerEntity.exists())) return notFound(c, 'Lecturer not found');
-    const lecturer = await lecturerEntity.getState();
-    // Cascading delete
-    if (lecturer.publicationIds.length > 0) {
-      await PublicationEntity.deleteMany(c.env, lecturer.publicationIds);
-    }
-    if (lecturer.projectIds.length > 0) {
-      await ResearchProjectEntity.deleteMany(c.env, lecturer.projectIds);
-    }
-    if (lecturer.portfolioItemIds.length > 0) {
-      await PortfolioItemEntity.deleteMany(c.env, lecturer.portfolioItemIds);
-    }
-    const deleted = await LecturerProfileEntity.delete(c.env, userId);
+    const userEntity = new UserProfileEntity(c.env, userId);
+    if (!(await userEntity.exists())) return notFound(c, 'User not found');
+    const user = await userEntity.getState();
+    if (user.publicationIds.length > 0) await PublicationEntity.deleteMany(c.env, user.publicationIds);
+    if (user.projectIds.length > 0) await ResearchProjectEntity.deleteMany(c.env, user.projectIds);
+    if (user.portfolioItemIds.length > 0) await PortfolioItemEntity.deleteMany(c.env, user.portfolioItemIds);
+    const deleted = await UserProfileEntity.delete(c.env, userId);
     return ok(c, { id: userId, deleted });
   });
   secured.post('/publications', async (c) => {
     const body = await c.req.json<PublicationCreatePayload>();
     const { lecturerId, ...pubData } = body;
     if (!lecturerId) return bad(c, 'lecturerId is required');
-    const lecturer = new LecturerProfileEntity(c.env, lecturerId);
-    if (!(await lecturer.exists())) return notFound(c, 'Lecturer not found');
-    const newPub: Publication = { ...pubData, id: crypto.randomUUID(), type: 'publication', lecturerId };
+    const user = new UserProfileEntity(c.env, lecturerId);
+    if (!(await user.exists())) return notFound(c, 'User not found');
+    const newPub: Publication = { ...pubData, id: crypto.randomUUID(), type: 'publication', lecturerId, commentIds: [], likeIds: [] };
     await PublicationEntity.create(c.env, newPub);
-    await lecturer.mutate(state => ({
-      ...state,
-      publicationIds: [...state.publicationIds, newPub.id],
-    }));
+    await user.mutate(state => ({ ...state, publicationIds: [...state.publicationIds, newPub.id] }));
     return ok(c, newPub);
   });
   secured.put('/publications/:id', async (c) => {
@@ -130,12 +125,9 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const pubEntity = new PublicationEntity(c.env, id);
     if (!(await pubEntity.exists())) return notFound(c, 'Publication not found');
     const pub = await pubEntity.getState();
-    const lecturer = new LecturerProfileEntity(c.env, pub.lecturerId);
-    if (await lecturer.exists()) {
-      await lecturer.mutate(state => ({
-        ...state,
-        publicationIds: state.publicationIds.filter(pubId => pubId !== id),
-      }));
+    const user = new UserProfileEntity(c.env, pub.lecturerId);
+    if (await user.exists()) {
+      await user.mutate(state => ({ ...state, publicationIds: state.publicationIds.filter(pubId => pubId !== id) }));
     }
     const deleted = await PublicationEntity.delete(c.env, id);
     return ok(c, { id, deleted });
@@ -144,14 +136,11 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const body = await c.req.json<ProjectCreatePayload>();
     const { lecturerId, ...projData } = body;
     if (!lecturerId) return bad(c, 'lecturerId is required');
-    const lecturer = new LecturerProfileEntity(c.env, lecturerId);
-    if (!(await lecturer.exists())) return notFound(c, 'Lecturer not found');
-    const newProj: ResearchProject = { ...projData, id: crypto.randomUUID(), type: 'project', lecturerId };
+    const user = new UserProfileEntity(c.env, lecturerId);
+    if (!(await user.exists())) return notFound(c, 'User not found');
+    const newProj: ResearchProject = { ...projData, id: crypto.randomUUID(), type: 'project', lecturerId, commentIds: [], likeIds: [] };
     await ResearchProjectEntity.create(c.env, newProj);
-    await lecturer.mutate(state => ({
-      ...state,
-      projectIds: [...state.projectIds, newProj.id],
-    }));
+    await user.mutate(state => ({ ...state, projectIds: [...state.projectIds, newProj.id] }));
     return ok(c, newProj);
   });
   secured.put('/projects/:id', async (c) => {
@@ -167,12 +156,9 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const projEntity = new ResearchProjectEntity(c.env, id);
     if (!(await projEntity.exists())) return notFound(c, 'Project not found');
     const proj = await projEntity.getState();
-    const lecturer = new LecturerProfileEntity(c.env, proj.lecturerId);
-    if (await lecturer.exists()) {
-      await lecturer.mutate(state => ({
-        ...state,
-        projectIds: state.projectIds.filter(projId => projId !== id),
-      }));
+    const user = new UserProfileEntity(c.env, proj.lecturerId);
+    if (await user.exists()) {
+      await user.mutate(state => ({ ...state, projectIds: state.projectIds.filter(projId => projId !== id) }));
     }
     const deleted = await ResearchProjectEntity.delete(c.env, id);
     return ok(c, { id, deleted });
@@ -181,14 +167,11 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const body = await c.req.json<PortfolioItemCreatePayload>();
     const { lecturerId, ...itemData } = body;
     if (!lecturerId) return bad(c, 'lecturerId is required');
-    const lecturer = new LecturerProfileEntity(c.env, lecturerId);
-    if (!(await lecturer.exists())) return notFound(c, 'Lecturer not found');
-    const newItem: PortfolioItem = { ...itemData, id: crypto.randomUUID(), type: 'portfolio', lecturerId };
+    const user = new UserProfileEntity(c.env, lecturerId);
+    if (!(await user.exists())) return notFound(c, 'User not found');
+    const newItem: PortfolioItem = { ...itemData, id: crypto.randomUUID(), type: 'portfolio', lecturerId, commentIds: [], likeIds: [] };
     await PortfolioItemEntity.create(c.env, newItem);
-    await lecturer.mutate(state => ({
-      ...state,
-      portfolioItemIds: [...state.portfolioItemIds, newItem.id],
-    }));
+    await user.mutate(state => ({ ...state, portfolioItemIds: [...state.portfolioItemIds, newItem.id] }));
     return ok(c, newItem);
   });
   secured.put('/portfolio/:id', async (c) => {
@@ -204,63 +187,85 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const itemEntity = new PortfolioItemEntity(c.env, id);
     if (!(await itemEntity.exists())) return notFound(c, 'Portfolio item not found');
     const item = await itemEntity.getState();
-    const lecturer = new LecturerProfileEntity(c.env, item.lecturerId);
-    if (await lecturer.exists()) {
-      await lecturer.mutate(state => ({
-        ...state,
-        portfolioItemIds: state.portfolioItemIds.filter(itemId => itemId !== id),
-      }));
+    const user = new UserProfileEntity(c.env, item.lecturerId);
+    if (await user.exists()) {
+      await user.mutate(state => ({ ...state, portfolioItemIds: state.portfolioItemIds.filter(itemId => itemId !== id) }));
     }
     const deleted = await PortfolioItemEntity.delete(c.env, id);
     return ok(c, { id, deleted });
   });
+  secured.post('/comments', async (c) => {
+    const payload = c.get('jwtPayload');
+    if (payload.role !== 'student') return c.json({ success: false, error: 'Only students can comment' }, 403);
+    const { postId, content } = await c.req.json<{ postId: string; content: string }>();
+    const user = await new UserProfileEntity(c.env, payload.sub).getState();
+    const newComment: Comment = { id: crypto.randomUUID(), postId, content, userId: user.id, userName: user.name, userPhotoUrl: user.photoUrl, createdAt: Date.now() };
+    await CommentEntity.create(c.env, newComment);
+    return ok(c, newComment);
+  });
+  secured.post('/likes', async (c) => {
+    const payload = c.get('jwtPayload');
+    if (payload.role !== 'student') return c.json({ success: false, error: 'Only students can like posts' }, 403);
+    const { postId } = await c.req.json<{ postId: string }>();
+    const allLikes = (await LikeEntity.list(c.env)).items;
+    const existingLike = allLikes.find(l => l.postId === postId && l.userId === payload.sub);
+    if (existingLike) return bad(c, 'You have already liked this post');
+    const newLike: Like = { id: crypto.randomUUID(), postId, userId: payload.sub };
+    await LikeEntity.create(c.env, newLike);
+    return ok(c, newLike);
+  });
+  secured.delete('/likes/:postId', async (c) => {
+    const payload = c.get('jwtPayload');
+    if (payload.role !== 'student') return c.json({ success: false, error: 'Only students can unlike posts' }, 403);
+    const { postId } = c.req.param();
+    const allLikes = (await LikeEntity.list(c.env)).items;
+    const likeToDelete = allLikes.find(l => l.postId === postId && l.userId === payload.sub);
+    if (!likeToDelete) return notFound(c, 'Like not found');
+    await LikeEntity.delete(c.env, likeToDelete.id);
+    return ok(c, { id: likeToDelete.id, deleted: true });
+  });
   // --- PUBLIC ROUTES ---
-  app.get('/api/lecturers/search', async (c) => {
+  app.get('/api/users/search', async (c) => {
     const { q } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
-    const page = await LecturerProfileEntity.list(c.env);
-    let lecturers = page.items.map(l => {
-      const { password, ...rest } = l;
-      return rest;
-    });
+    const page = await UserProfileEntity.list(c.env);
+    let users = page.items.map(l => { const { password, ...rest } = l; return rest; });
     if (searchTerm) {
-      lecturers = lecturers.filter(lecturer =>
-        lecturer.name.toLowerCase().includes(searchTerm) ||
-        lecturer.specializations.some(spec => spec.toLowerCase().includes(searchTerm)) ||
-        lecturer.university.toLowerCase().includes(searchTerm)
+      users = users.filter(user =>
+        user.name.toLowerCase().includes(searchTerm) ||
+        user.specializations.some(spec => spec.toLowerCase().includes(searchTerm)) ||
+        user.university.toLowerCase().includes(searchTerm)
       );
     }
-    return ok(c, lecturers);
+    return ok(c, users);
   });
-  app.get('/api/lecturers', async (c) => {
-    const page = await LecturerProfileEntity.list(c.env);
-    // Omit password from public listing
-    const lecturers = page.items.map(l => {
-      const { password, ...rest } = l;
-      return rest;
-    });
-    return ok(c, lecturers);
+  app.get('/api/users', async (c) => {
+    const page = await UserProfileEntity.list(c.env);
+    const users = page.items.map(l => { const { password, ...rest } = l; return rest; });
+    return ok(c, users);
   });
-  app.get('/api/lecturers/:id', async (c) => {
+  app.get('/api/users/:id', async (c) => {
     const { id } = c.req.param();
-    const lecturer = new LecturerProfileEntity(c.env, id);
-    if (!(await lecturer.exists())) return notFound(c, 'Lecturer not found');
-    const state = await lecturer.getState();
-    // Omit password from public profile
+    const user = new UserProfileEntity(c.env, id);
+    if (!(await user.exists())) return notFound(c, 'User not found');
+    const state = await user.getState();
     const { password, ...rest } = state;
     return ok(c, rest);
   });
-  app.get('/api/publications', async (c) => {
-    const page = await PublicationEntity.list(c.env);
-    return ok(c, page.items);
+  app.get('/api/publications', async (c) => { return ok(c, (await PublicationEntity.list(c.env)).items); });
+  app.get('/api/projects', async (c) => { return ok(c, (await ResearchProjectEntity.list(c.env)).items); });
+  app.get('/api/portfolio', async (c) => { return ok(c, (await PortfolioItemEntity.list(c.env)).items); });
+  app.get('/api/posts/:postId/comments', async (c) => {
+    const { postId } = c.req.param();
+    const allComments = (await CommentEntity.list(c.env)).items;
+    const postComments = allComments.filter(comment => comment.postId === postId).sort((a, b) => b.createdAt - a.createdAt);
+    return ok(c, postComments);
   });
-  app.get('/api/projects', async (c) => {
-    const page = await ResearchProjectEntity.list(c.env);
-    return ok(c, page.items);
-  });
-  app.get('/api/portfolio', async (c) => {
-    const page = await PortfolioItemEntity.list(c.env);
-    return ok(c, page.items);
+  app.get('/api/posts/:postId/likes', async (c) => {
+    const { postId } = c.req.param();
+    const allLikes = (await LikeEntity.list(c.env)).items;
+    const postLikes = allLikes.filter(like => like.postId === postId);
+    return ok(c, postLikes);
   });
   app.route('/api', secured);
 }

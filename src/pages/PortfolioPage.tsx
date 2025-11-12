@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Mail, Building, Book, FlaskConical, ExternalLink, Twitter, Linkedin, Github, Briefcase } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import { LecturerProfile, Publication, ResearchProject, PortfolioItem } from '@shared/types';
+import { UserProfile, Publication, ResearchProject, PortfolioItem } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { CommentsSection } from '@/components/CommentsSection';
 function PortfolioPageSkeleton() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
@@ -31,9 +32,9 @@ function PortfolioPageSkeleton() {
 }
 export function PortfolioPage() {
   const { id } = useParams<{ id: string }>();
-  const { data: lecturer, isLoading: isLoadingLecturer } = useQuery<LecturerProfile>({
-    queryKey: ['lecturer', id],
-    queryFn: () => api(`/api/lecturers/${id}`),
+  const { data: user, isLoading: isLoadingUser } = useQuery<UserProfile>({
+    queryKey: ['user', id],
+    queryFn: () => api(`/api/users/${id}`),
     enabled: !!id,
   });
   const { data: publications, isLoading: isLoadingPubs } = useQuery<Publication[]>({
@@ -48,15 +49,15 @@ export function PortfolioPage() {
     queryKey: ['portfolio'],
     queryFn: () => api('/api/portfolio'),
   });
-  const isLoading = isLoadingLecturer || isLoadingPubs || isLoadingProjs || isLoadingPortfolio;
+  const isLoading = isLoadingUser || isLoadingPubs || isLoadingProjs || isLoadingPortfolio;
   if (isLoading) {
     return <PublicLayout><PortfolioPageSkeleton /></PublicLayout>;
   }
-  if (!lecturer) {
+  if (!user) {
     return (
       <PublicLayout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h1 className="text-2xl font-bold">Lecturer not found</h1>
+          <h1 className="text-2xl font-bold">User not found</h1>
           <p className="text-muted-foreground mt-2">The profile you are looking for does not exist.</p>
           <Button asChild className="mt-6">
             <Link to="/directory">Back to Directory</Link>
@@ -65,49 +66,49 @@ export function PortfolioPage() {
       </PublicLayout>
     );
   }
-  const lecturerPublications = publications?.filter(p => lecturer.publicationIds.includes(p.id)) ?? [];
-  const lecturerProjects = projects?.filter(p => lecturer.projectIds.includes(p.id)) ?? [];
-  const lecturerPortfolioItems = portfolioItems?.filter(p => lecturer.portfolioItemIds.includes(p.id)) ?? [];
+  const userPublications = publications?.filter(p => user.publicationIds.includes(p.id)) ?? [];
+  const userProjects = projects?.filter(p => user.projectIds.includes(p.id)) ?? [];
+  const userPortfolioItems = portfolioItems?.filter(p => user.portfolioItemIds.includes(p.id)) ?? [];
   return (
     <PublicLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-16 md:py-24">
           <div className="flex flex-col md:flex-row items-start gap-8">
             <Avatar className="h-32 w-32 md:h-40 md:w-40">
-              <AvatarImage src={lecturer.photoUrl} alt={lecturer.name} />
-              <AvatarFallback className="text-4xl">{lecturer.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+              <AvatarImage src={user.photoUrl} alt={user.name} />
+              <AvatarFallback className="text-4xl">{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h1 className="text-4xl font-display font-bold text-foreground">{lecturer.name}</h1>
-              <p className="text-xl text-primary mt-1">{lecturer.title}</p>
+              <h1 className="text-4xl font-display font-bold text-foreground">{user.name}</h1>
+              <p className="text-xl text-primary mt-1">{user.title}</p>
               <div className="mt-4 space-y-2 text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Building className="h-5 w-5" />
-                  <span>{lecturer.department}, {lecturer.university}</span>
+                  <span>{user.department}, {user.university}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="h-5 w-5" />
-                  <a href={`mailto:${lecturer.email}`} className="hover:text-primary">{lecturer.email}</a>
+                  <a href={`mailto:${user.email}`} className="hover:text-primary">{user.email}</a>
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
-                {lecturer.specializations.map(spec => (
+                {user.specializations.map(spec => (
                   <Badge key={spec} variant="secondary">{spec}</Badge>
                 ))}
               </div>
               <div className="mt-4 flex items-center gap-4">
-                {lecturer.socialLinks?.twitter && (
-                  <a href={lecturer.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                {user.socialLinks?.twitter && (
+                  <a href={user.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
                     <Twitter className="h-5 w-5" />
                   </a>
                 )}
-                {lecturer.socialLinks?.linkedin && (
-                  <a href={lecturer.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                {user.socialLinks?.linkedin && (
+                  <a href={user.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
                     <Linkedin className="h-5 w-5" />
                   </a>
                 )}
-                {lecturer.socialLinks?.github && (
-                  <a href={lecturer.socialLinks.github} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                {user.socialLinks?.github && (
+                  <a href={user.socialLinks.github} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
                     <Github className="h-5 w-5" />
                   </a>
                 )}
@@ -117,14 +118,14 @@ export function PortfolioPage() {
           <div className="mt-12">
             <Card>
               <CardHeader><CardTitle>Biography</CardTitle></CardHeader>
-              <CardContent><p className="text-muted-foreground whitespace-pre-wrap">{lecturer.bio}</p></CardContent>
+              <CardContent><p className="text-muted-foreground whitespace-pre-wrap">{user.bio}</p></CardContent>
             </Card>
           </div>
-          {lecturerPortfolioItems.length > 0 && (
+          {userPortfolioItems.length > 0 && (
             <div className="mt-12">
               <h2 className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><Briefcase /> Portfolio</h2>
               <div className="mt-6 space-y-4">
-                {lecturerPortfolioItems.map(item => (
+                {userPortfolioItems.map(item => (
                   <Card key={item.id} className="overflow-hidden">
                     <div className="flex flex-col sm:flex-row">
                       <div className="sm:w-1/3 md:w-1/4">
@@ -154,16 +155,17 @@ export function PortfolioPage() {
                         </CardContent>
                       </div>
                     </div>
+                    <CommentsSection postId={item.id} />
                   </Card>
                 ))}
               </div>
             </div>
           )}
-          {lecturerPublications.length > 0 && (
+          {userPublications.length > 0 && (
             <div className="mt-12">
               <h2 className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><Book /> Publications</h2>
               <div className="mt-6 space-y-4">
-                {lecturerPublications.map(pub => (
+                {userPublications.map(pub => (
                   <Card key={pub.id} className="overflow-hidden">
                      <div className="flex flex-col sm:flex-row">
                       <div className="sm:w-1/3 md:w-1/4">
@@ -186,16 +188,17 @@ export function PortfolioPage() {
                         </CardContent>
                       </div>
                     </div>
+                    <CommentsSection postId={pub.id} />
                   </Card>
                 ))}
               </div>
             </div>
           )}
-          {lecturerProjects.length > 0 && (
+          {userProjects.length > 0 && (
             <div className="mt-12">
               <h2 className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><FlaskConical /> Research Projects</h2>
               <div className="mt-6 space-y-4">
-                {lecturerProjects.map(proj => (
+                {userProjects.map(proj => (
                   <Card key={proj.id} className="overflow-hidden">
                     <div className="flex flex-col sm:flex-row">
                       <div className="sm:w-1/3 md:w-1/4">
@@ -218,6 +221,7 @@ export function PortfolioPage() {
                         </CardContent>
                       </div>
                     </div>
+                    <CommentsSection postId={proj.id} />
                   </Card>
                 ))}
               </div>
