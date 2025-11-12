@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Home, User, BookCopy, FlaskConical, BookOpenCheck, Globe, LogOut } from "lucide-react";
+import { Home, User, BookCopy, FlaskConical, BookOpenCheck, Globe, LogOut, Settings } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/stores/auth-store";
-export function AppSidebar(): JSX.Element {
+export function AppSidebar(): JSXElement {
   const location = useLocation();
   const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);
@@ -48,6 +48,11 @@ export function AppSidebar(): JSX.Element {
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={isActive("/dashboard/research")}>
                 <NavLink to="/dashboard/research"><FlaskConical /> <span>Research</span></NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={isActive("/dashboard/settings")}>
+                <NavLink to="/dashboard/settings"><Settings /> <span>Settings</span></NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
