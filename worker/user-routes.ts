@@ -160,7 +160,6 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const deleted = await ResearchProjectEntity.delete(c.env, id);
     return ok(c, { id, deleted });
   });
-  app.route('/api', secured);
   // --- PUBLIC ROUTES ---
   app.get('/api/lecturers/search', async (c) => {
     const { q } = c.req.query();
@@ -205,4 +204,6 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const page = await ResearchProjectEntity.list(c.env);
     return ok(c, page.items);
   });
+
+  app.route('/api', secured);
 }
