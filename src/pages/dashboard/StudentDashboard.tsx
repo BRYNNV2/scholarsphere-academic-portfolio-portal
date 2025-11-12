@@ -52,7 +52,7 @@ export function StudentDashboard() {
     queryFn: () => api('/api/posts/all/comments'),
   });
   const isLoading = isLoadingProfile || isLoadingWork || isLoadingLikes || isLoadingComments;
-  const savedItems = allAcademicWork?.filter(item => profile?.savedItemIds.includes(item.id)) ?? [];
+  const savedItems = allAcademicWork?.filter(item => profile?.savedItemIds?.includes(item.id)) ?? [];
   const likedItems = allAcademicWork?.filter(item => allLikes?.some(like => like.userId === userId && like.postId === item.id)) ?? [];
   const userComments = allComments?.filter(comment => comment.userId === userId).slice(0, 5) ?? [];
   if (isLoading) {
