@@ -19,7 +19,7 @@ function SaveButton({ itemId }: { itemId: string }) {
   const currentUser = useAuthStore((state) => state.user);
   const updateUser = useAuthStore((state) => state.updateUser);
   const canSave = currentUser?.role === 'student';
-  const isSaved = currentUser?.savedItemIds.includes(itemId);
+  const isSaved = (currentUser?.savedItemIds ?? []).includes(itemId);
   const saveMutation = useMutation({
     mutationFn: () => isSaved
       ? api(`/api/users/me/save/${itemId}`, { method: 'DELETE' })
