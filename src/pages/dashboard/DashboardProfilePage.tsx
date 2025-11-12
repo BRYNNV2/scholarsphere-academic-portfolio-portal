@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { toast } from '@/components/ui/sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/stores/auth-store';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 const profileSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   title: z.string().min(1, 'Title is required'),
@@ -32,6 +33,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 export function DashboardProfilePage() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
+  const updateUser = useAuthStore((state) => state.updateUser);
   const userId = currentUser?.id;
   const { data: profile, isLoading, isError } = useQuery<LecturerProfile>({
     queryKey: ['lecturer', userId],
@@ -56,6 +58,7 @@ export function DashboardProfilePage() {
       },
     },
   });
+  const photoUrlValue = form.watch('photoUrl');
   useEffect(() => {
     if (profile) {
       form.reset({
@@ -71,13 +74,14 @@ export function DashboardProfilePage() {
   }, [profile, form]);
   const mutation = useMutation({
     mutationFn: (data: Partial<LecturerProfile>) =>
-      api(`/api/lecturers/${userId}`, {
+      api<LecturerProfile>(`/api/lecturers/${userId}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
-    onSuccess: () => {
+    onSuccess: (updatedProfile) => {
       toast.success('Profile updated successfully!');
       queryClient.invalidateQueries({ queryKey: ['lecturer', userId] });
+      updateUser(updatedProfile);
     },
     onError: (error) => {
       toast.error(`Failed to update profile: ${error.message}`);
@@ -127,6 +131,26 @@ export function DashboardProfilePage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField control={form.control} name="photoUrl" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Profile Picture</FormLabel>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src={photoUrlValue} alt={profile.name} />
+                      <AvatarFallback>{profile.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-grow">
+                      <FormControl>
+                        <Input placeholder="https://..." {...field} />
+                      </FormControl>
+                      <FormDescription className="mt-2">
+                        Enter a valid URL for your profile picture.
+                      </FormDescription>
+                      <FormMessage />
+                    </div>
+                  </div>
+                </FormItem>
+              )} />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="name" render={({ field }) => (
                   <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -143,9 +167,6 @@ export function DashboardProfilePage() {
               </div>
               <FormField control={form.control} name="email" render={({ field }) => (
                 <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={form.control} name="photoUrl" render={({ field }) => (
-                <FormItem><FormLabel>Photo URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="bio" render={({ field }) => (
                 <FormItem><FormLabel>Biography</FormLabel><FormControl><Textarea rows={5} {...field} /></FormControl><FormMessage /></FormItem>
