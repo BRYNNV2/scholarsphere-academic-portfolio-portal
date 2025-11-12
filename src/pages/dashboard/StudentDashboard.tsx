@@ -45,11 +45,11 @@ export function StudentDashboard() {
   });
   const { data: allLikes, isLoading: isLoadingLikes } = useQuery<Like[]>({
     queryKey: ['all-likes'],
-    queryFn: () => api('/api/posts/all/likes').catch(() => []), // Temp endpoint, assuming it exists or fails gracefully
+    queryFn: () => api('/api/posts/all/likes'),
   });
   const { data: allComments, isLoading: isLoadingComments } = useQuery<Comment[]>({
     queryKey: ['all-comments'],
-    queryFn: () => api('/api/posts/all/comments').catch(() => []), // Temp endpoint
+    queryFn: () => api('/api/posts/all/comments'),
   });
   const isLoading = isLoadingProfile || isLoadingWork || isLoadingLikes || isLoadingComments;
   const savedItems = allAcademicWork?.filter(item => profile?.savedItemIds.includes(item.id)) ?? [];
