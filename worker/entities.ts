@@ -34,6 +34,7 @@ export class PublicationEntity extends IndexedEntity<Publication> {
     authors: [],
     journal: "",
     year: 0,
+    url: "",
   };
   static seedData = MOCK_PUBLICATIONS;
 }

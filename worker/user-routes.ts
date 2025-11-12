@@ -36,6 +36,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       publicationIds: [],
       projectIds: [],
       specializations: body.specializations || [],
+      socialLinks: body.socialLinks || {},
       photoUrl: body.photoUrl || `https://i.pravatar.cc/300?u=${body.email}`,
     };
     await LecturerProfileEntity.create(c.env, newUser);
