@@ -14,7 +14,7 @@ export function HomePage() {
     queryKey: ['lecturers'],
     queryFn: () => api('/api/lecturers'),
   });
-  const featuredLecturers = lecturers?.slice(0, 4) ?? [];
+  const featuredLecturers = lecturers ?? [];
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
