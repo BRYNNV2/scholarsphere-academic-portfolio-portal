@@ -30,6 +30,7 @@ import { ResearchPage } from './pages/ResearchPage';
 import { PortfolioDirectoryPage } from './pages/PortfolioDirectoryPage';
 import { AcademicWorkDetailPage } from './pages/AcademicWorkDetailPage';
 import { TermsOfServicePage } from './pages/TermsOfServicePage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
@@ -90,6 +91,11 @@ const router = createBrowserRouter([
   {
     path: "/terms-of-service",
     element: <TermsOfServicePage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/privacy-policy",
+    element: <PrivacyPolicyPage />,
     errorElement: <RouteErrorBoundary />,
   },
   {
