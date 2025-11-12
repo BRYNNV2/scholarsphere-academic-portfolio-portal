@@ -7,9 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 import { Bookmark, Heart, MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-function SmallAcademicWorkCard({ item }: { item: AcademicWork }) {
-  const { data: users } = useQuery<UserProfile[]>({ queryKey: ['users'], queryFn: () => api('/api/users') });
-  const author = users?.find(u => u.id === item.lecturerId);
+function SmallAcademicWorkCard({ item, authorName }: { item: AcademicWork, authorName: string }) {
   return (
     <Link to={`/users/${item.lecturerId}`} className="block">
       <div className="flex items-center gap-4 p-2 rounded-md hover:bg-muted">
@@ -18,7 +16,7 @@ function SmallAcademicWorkCard({ item }: { item: AcademicWork }) {
         </div>
         <div className="flex-1 overflow-hidden">
           <p className="text-sm font-medium truncate">{item.title}</p>
-          <p className="text-xs text-muted-foreground truncate">by {author?.name || '...'}</p>
+          <p className="text-xs text-muted-foreground truncate">by {authorName}</p>
         </div>
       </div>
     </Link>
@@ -44,14 +42,20 @@ export function StudentDashboard() {
     },
   });
   const { data: allLikes, isLoading: isLoadingLikes } = useQuery<Like[]>({
-    queryKey: ['all-likes'],
+    queryKey: ['all-likes', userId],
     queryFn: () => api('/api/posts/all/likes'),
+    enabled: !!userId,
   });
   const { data: allComments, isLoading: isLoadingComments } = useQuery<Comment[]>({
     queryKey: ['all-comments'],
     queryFn: () => api('/api/posts/all/comments'),
   });
-  const isLoading = isLoadingProfile || isLoadingWork || isLoadingLikes || isLoadingComments;
+  const { data: users, isLoading: isLoadingUsers } = useQuery<UserProfile[]>({
+    queryKey: ['users'],
+    queryFn: () => api('/api/users'),
+  });
+
+  const isLoading = isLoadingProfile || isLoadingWork || isLoadingLikes || isLoadingComments || isLoadingUsers;
   const savedItems = allAcademicWork?.filter(item => profile?.savedItemIds?.includes(item.id)) ?? [];
   const likedItems = allAcademicWork?.filter(item => allLikes?.some(like => like.userId === userId && like.postId === item.id)) ?? [];
   const userComments = allComments?.filter(comment => comment.userId === userId).slice(0, 5) ?? [];
@@ -82,7 +86,10 @@ export function StudentDashboard() {
           <CardContent>
             {savedItems.length > 0 ? (
               <div className="space-y-2">
-                {savedItems.slice(0, 5).map(item => <SmallAcademicWorkCard key={item.id} item={item} />)}
+                {savedItems.slice(0, 5).map(item => {
+                  const author = users?.find(u => u.id === item.lecturerId);
+                  return <SmallAcademicWorkCard key={item.id} item={item} authorName={author?.name || '...'} />;
+                })}
               </div>
             ) : <p className="text-sm text-muted-foreground">No saved items yet.</p>}
           </CardContent>
@@ -95,7 +102,10 @@ export function StudentDashboard() {
           <CardContent>
             {likedItems.length > 0 ? (
               <div className="space-y-2">
-                {likedItems.slice(0, 5).map(item => <SmallAcademicWorkCard key={item.id} item={item} />)}
+                {likedItems.slice(0, 5).map(item => {
+                  const author = users?.find(u => u.id === item.lecturerId);
+                  return <SmallAcademicWorkCard key={item.id} item={item} authorName={author?.name || '...'} />;
+                })}
               </div>
             ) : <p className="text-sm text-muted-foreground">No liked items yet.</p>}
           </CardContent>
