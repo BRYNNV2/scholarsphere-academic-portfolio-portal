@@ -62,7 +62,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   app.route('/api/auth', auth);
   // --- SECURED ROUTES ---
   const secured = new Hono<{ Bindings: Env }>();
-  secured.use('*', bearerAuth({ token: JWT_SECRET }));
+  secured.use('*', jwt({ secret: JWT_SECRET }));
   secured.put('/lecturers/:id', async (c) => {
     const { id } = c.req.param();
     const body = await c.req.json<Partial<LecturerProfile>>();
