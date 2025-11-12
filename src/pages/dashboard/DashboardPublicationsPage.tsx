@@ -19,7 +19,7 @@ const publicationSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   authors: z.string().min(1, 'Authors are required'),
   journal: z.string().min(1, 'Journal is required'),
-  year: z.coerce.number().int().min(1900, 'Invalid year').max(new Date().getFullYear() + 1, 'Invalid year'),
+  year: z.number().int().min(1900, 'Invalid year').max(new Date().getFullYear() + 1, 'Invalid year'),
   url: z.string().url('Invalid URL').optional().or(z.literal('')),
 });
 type PublicationFormData = z.infer<typeof publicationSchema>;
