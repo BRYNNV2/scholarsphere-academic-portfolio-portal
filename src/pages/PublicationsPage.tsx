@@ -1,26 +1,21 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Search } from 'lucide-react';
+import { Search, ExternalLink, User } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import { Publication, UserProfile } from '@shared/types';
+import { Publication, LecturerProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from 'react-use';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { AcademicWorkCard } from '@/components/AcademicWorkCard';
 function PublicationCardSkeleton() {
   return (
-    <Card className="overflow-hidden">
-      <AspectRatio ratio={16 / 9}>
-        <Skeleton className="h-full w-full" />
-      </AspectRatio>
-      <CardHeader>
+    <Card>
+      <CardContent className="p-6 space-y-3">
         <Skeleton className="h-6 w-3/4" />
-      </CardHeader>
-      <CardContent className="space-y-3">
         <Skeleton className="h-4 w-1/2" />
         <Skeleton className="h-4 w-2/3" />
         <div className="flex justify-between items-center pt-2">
@@ -41,14 +36,14 @@ export function PublicationsPage() {
     queryKey: ['publications'],
     queryFn: () => api('/api/publications'),
   });
-  const { data: users, isLoading: isLoadingUsers } = useQuery<UserProfile[]>({
-    queryKey: ['users'],
-    queryFn: () => api('/api/users'),
+  const { data: lecturers, isLoading: isLoadingLecturers } = useQuery<LecturerProfile[]>({
+    queryKey: ['lecturers'],
+    queryFn: () => api('/api/lecturers'),
   });
-  const usersMap = useMemo(() => {
-    if (!users) return new Map<string, UserProfile>();
-    return new Map(users.map(l => [l.id, l]));
-  }, [users]);
+  const lecturersMap = useMemo(() => {
+    if (!lecturers) return new Map<string, LecturerProfile>();
+    return new Map(lecturers.map(l => [l.id, l]));
+  }, [lecturers]);
   const filteredPublications = useMemo(() => {
     if (!publications) return [];
     const lowercasedFilter = debouncedSearchTerm.toLowerCase();
@@ -58,7 +53,7 @@ export function PublicationsPage() {
       pub.journal.toLowerCase().includes(lowercasedFilter)
     );
   }, [publications, debouncedSearchTerm]);
-  const isLoading = isLoadingPubs || isLoadingUsers;
+  const isLoading = isLoadingPubs || isLoadingLecturers;
   return (
     <PublicLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -85,14 +80,42 @@ export function PublicationsPage() {
             {isLoading ? (
               Array.from({ length: 6 }).map((_, index) => <PublicationCardSkeleton key={index} />)
             ) : (
-              filteredPublications.map((pub, index) => (
-                <AcademicWorkCard
-                  key={pub.id}
-                  item={pub}
-                  author={usersMap.get(pub.lecturerId)}
-                  index={index}
-                />
-              ))
+              filteredPublications.map((pub, index) => {
+                const lecturer = lecturersMap.get(pub.lecturerId);
+                return (
+                  <motion.div
+                    key={pub.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.05 }}
+                  >
+                    <Card className="h-full flex flex-col">
+                      <CardContent className="p-6 flex-grow flex flex-col">
+                        <h3 className="text-lg font-semibold text-foreground flex-grow">{pub.title}</h3>
+                        <p className="text-sm text-muted-foreground mt-2">{pub.authors.join(', ')}</p>
+                        <p className="text-sm text-muted-foreground mt-1"><em>{pub.journal}</em>, {pub.year}</p>
+                        <div className="mt-4 pt-4 border-t flex justify-between items-center">
+                          {lecturer ? (
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link to={`/lecturers/${lecturer.id}`} className="text-sm">
+                                <User className="mr-2 h-4 w-4" />
+                                {lecturer.name}
+                              </Link>
+                            </Button>
+                          ) : <div />}
+                          {pub.url && (
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={pub.url} target="_blank" rel="noopener noreferrer">
+                                View <ExternalLink className="ml-2 h-4 w-4" />
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })
             )}
           </div>
           {!isLoading && filteredPublications.length === 0 && (

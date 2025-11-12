@@ -1,21 +1,19 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Search } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+import { Search, ExternalLink, User } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import { ResearchProject, UserProfile } from '@shared/types';
+import { ResearchProject, LecturerProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from 'react-use';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { AcademicWorkCard } from '@/components/AcademicWorkCard';
 function ProjectCardSkeleton() {
   return (
-    <Card className="overflow-hidden">
-      <AspectRatio ratio={16 / 9}>
-        <Skeleton className="h-full w-full" />
-      </AspectRatio>
+    <Card>
       <CardHeader>
         <Skeleton className="h-6 w-3/4" />
         <Skeleton className="h-4 w-1/2" />
@@ -40,24 +38,24 @@ export function ResearchPage() {
     queryKey: ['projects'],
     queryFn: () => api('/api/projects'),
   });
-  const { data: users, isLoading: isLoadingUsers } = useQuery<UserProfile[]>({
-    queryKey: ['users'],
-    queryFn: () => api('/api/users'),
+  const { data: lecturers, isLoading: isLoadingLecturers } = useQuery<LecturerProfile[]>({
+    queryKey: ['lecturers'],
+    queryFn: () => api('/api/lecturers'),
   });
-  const usersMap = useMemo(() => {
-    if (!users) return new Map<string, UserProfile>();
-    return new Map(users.map(l => [l.id, l]));
-  }, [users]);
+  const lecturersMap = useMemo(() => {
+    if (!lecturers) return new Map<string, LecturerProfile>();
+    return new Map(lecturers.map(l => [l.id, l]));
+  }, [lecturers]);
   const filteredProjects = useMemo(() => {
     if (!projects) return [];
     const lowercasedFilter = debouncedSearchTerm.toLowerCase();
     return projects.filter(proj =>
       proj.title.toLowerCase().includes(lowercasedFilter) ||
       proj.description.toLowerCase().includes(lowercasedFilter) ||
-      (usersMap.get(proj.lecturerId)?.name.toLowerCase().includes(lowercasedFilter))
+      (lecturersMap.get(proj.lecturerId)?.name.toLowerCase().includes(lowercasedFilter))
     );
-  }, [projects, debouncedSearchTerm, usersMap]);
-  const isLoading = isLoadingProjs || isLoadingUsers;
+  }, [projects, debouncedSearchTerm, lecturersMap]);
+  const isLoading = isLoadingProjs || isLoadingLecturers;
   return (
     <PublicLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -84,14 +82,44 @@ export function ResearchPage() {
             {isLoading ? (
               Array.from({ length: 6 }).map((_, index) => <ProjectCardSkeleton key={index} />)
             ) : (
-              filteredProjects.map((proj, index) => (
-                <AcademicWorkCard
-                  key={proj.id}
-                  item={proj}
-                  author={usersMap.get(proj.lecturerId)}
-                  index={index}
-                />
-              ))
+              filteredProjects.map((proj, index) => {
+                const lecturer = lecturersMap.get(proj.lecturerId);
+                return (
+                  <motion.div
+                    key={proj.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.05 }}
+                  >
+                    <Card className="h-full flex flex-col">
+                      <CardHeader>
+                        <CardTitle>{proj.title}</CardTitle>
+                        <CardDescription>{proj.role} - {proj.year}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex-grow flex flex-col">
+                        <p className="text-sm text-muted-foreground flex-grow">{proj.description}</p>
+                        <div className="mt-4 pt-4 border-t flex justify-between items-center">
+                          {lecturer ? (
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link to={`/lecturers/${lecturer.id}`} className="text-sm">
+                                <User className="mr-2 h-4 w-4" />
+                                {lecturer.name}
+                              </Link>
+                            </Button>
+                          ) : <div />}
+                          {proj.url && (
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={proj.url} target="_blank" rel="noopener noreferrer">
+                                Learn More <ExternalLink className="ml-2 h-4 w-4" />
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })
             )}
           </div>
           {!isLoading && filteredProjects.length === 0 && (
