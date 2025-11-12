@@ -11,6 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { LecturerProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDebounce } from 'react-use';
 function LecturerCardSkeleton() {
   return (
     <Card>
@@ -29,15 +30,14 @@ function LecturerCardSkeleton() {
 }
 export function DirectoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  useDebounce(() => {
+    setDebouncedSearchTerm(searchTerm);
+  }, 500, [searchTerm]);
   const { data: lecturers, isLoading, isError } = useQuery<LecturerProfile[]>({
-    queryKey: ['lecturers'],
-    queryFn: () => api('/api/lecturers'),
+    queryKey: ['lecturers', debouncedSearchTerm],
+    queryFn: () => api(`/api/lecturers/search?q=${debouncedSearchTerm}`),
   });
-  const filteredLecturers = lecturers?.filter(lecturer =>
-    lecturer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lecturer.specializations.some(spec => spec.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    lecturer.university.toLowerCase().includes(searchTerm.toLowerCase())
-  ) ?? [];
   return (
     <PublicLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -66,7 +66,7 @@ export function DirectoryPage() {
             ) : isError ? (
               <p className="col-span-full text-center text-destructive">Failed to load lecturers.</p>
             ) : (
-              filteredLecturers.map((lecturer, index) => (
+              lecturers?.map((lecturer, index) => (
                 <motion.div
                   key={lecturer.id}
                   initial={{ opacity: 0, y: 20 }}
