@@ -1,13 +1,14 @@
 import { IndexedEntity } from "./core-utils";
-import type { LecturerProfile, Publication, ResearchProject, PortfolioItem } from "@shared/types";
-import { MOCK_LECTURERS, MOCK_PUBLICATIONS, MOCK_PROJECTS, MOCK_PORTFOLIO_ITEMS } from "@shared/mock-data";
-// LecturerProfile ENTITY
-export class LecturerProfileEntity extends IndexedEntity<LecturerProfile> {
-  static readonly entityName = "lecturer";
-  static readonly indexName = "lecturers";
-  static readonly initialState: LecturerProfile = {
+import type { UserProfile, Publication, ResearchProject, PortfolioItem, Comment, Like } from "@shared/types";
+import { MOCK_PUBLICATIONS, MOCK_PROJECTS, MOCK_PORTFOLIO_ITEMS } from "@shared/mock-data";
+// UserProfile ENTITY
+export class UserProfileEntity extends IndexedEntity<UserProfile> {
+  static readonly entityName = "user";
+  static readonly indexName = "users";
+  static readonly initialState: UserProfile = {
     id: "",
     name: "",
+    role: 'lecturer',
     title: "",
     university: "",
     department: "",
@@ -37,6 +38,8 @@ export class PublicationEntity extends IndexedEntity<Publication> {
     year: 0,
     url: "",
     thumbnailUrl: "",
+    commentIds: [],
+    likeIds: [],
   };
   static seedData = MOCK_PUBLICATIONS;
 }
@@ -53,6 +56,8 @@ export class ResearchProjectEntity extends IndexedEntity<ResearchProject> {
     role: "",
     year: 0,
     thumbnailUrl: "",
+    commentIds: [],
+    likeIds: [],
   };
   static seedData = MOCK_PROJECTS;
 }
@@ -69,6 +74,32 @@ export class PortfolioItemEntity extends IndexedEntity<PortfolioItem> {
     description: "",
     year: 0,
     thumbnailUrl: "",
+    commentIds: [],
+    likeIds: [],
   };
   static seedData = MOCK_PORTFOLIO_ITEMS;
+}
+// Comment ENTITY
+export class CommentEntity extends IndexedEntity<Comment> {
+  static readonly entityName = "comment";
+  static readonly indexName = "comments";
+  static readonly initialState: Comment = {
+    id: "",
+    postId: "",
+    userId: "",
+    userName: "",
+    userPhotoUrl: "",
+    content: "",
+    createdAt: 0,
+  };
+}
+// Like ENTITY
+export class LikeEntity extends IndexedEntity<Like> {
+  static readonly entityName = "like";
+  static readonly indexName = "likes";
+  static readonly initialState: Like = {
+    id: "",
+    postId: "",
+    userId: "",
+  };
 }

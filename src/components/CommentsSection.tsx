@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from "../lib/api-client-fixed";
+import { api } from '@/lib/api-client';
 import { Comment, Like } from '@shared/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button } from '@/components/ui/button';
@@ -21,24 +21,24 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { data: comments, isLoading: isLoadingComments } = useQuery<Comment[]>({
     queryKey: ['comments', postId],
-    queryFn: () => api.get(`/api/posts/${postId}/comments`)
+    queryFn: () => api(`/api/posts/${postId}/comments`),
   });
   const { data: likes, isLoading: isLoadingLikes } = useQuery<Like[]>({
     queryKey: ['likes', postId],
-    queryFn: () => api.get(`/api/posts/${postId}/likes`)
+    queryFn: () => api(`/api/posts/${postId}/likes`),
   });
-  const hasLiked = likes?.some((like) => like.userId === currentUser?.id);
+  const hasLiked = likes?.some(like => like.userId === currentUser?.id);
   const likeMutation = useMutation({
-    mutationFn: () => hasLiked ? api.delete(`/api/likes/${postId}`) : api.post('/api/likes', { postId }),
+    mutationFn: () => hasLiked ? api(`/api/likes/${postId}`, { method: 'DELETE' }) : api('/api/likes', { method: 'POST', body: JSON.stringify({ postId }) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['likes', postId] });
     },
     onError: (error) => {
       toast.error((error as Error).message);
-    }
+    },
   });
   const commentMutation = useMutation({
-    mutationFn: (content: string) => api.post('/api/comments', { postId, content }),
+    mutationFn: (content: string) => api('/api/comments', { method: 'POST', body: JSON.stringify({ postId, content }) }),
     onSuccess: () => {
       setComment('');
       queryClient.invalidateQueries({ queryKey: ['comments', postId] });
@@ -46,7 +46,7 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
     },
     onError: (error) => {
       toast.error((error as Error).message);
-    }
+    },
   });
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,40 +66,40 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
           {isLoadingComments ? <Skeleton className="h-4 w-4" /> : comments?.length || 0}
         </div>
       </div>
-      {canInteract &&
-      <form onSubmit={handleCommentSubmit} className="flex items-start gap-4 mb-6">
+      {canInteract && (
+        <form onSubmit={handleCommentSubmit} className="flex items-start gap-4 mb-6">
           <Avatar className="h-9 w-9">
             <AvatarImage src={currentUser.photoUrl} alt={currentUser.name} />
-            <AvatarFallback>{currentUser.name.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
+            <AvatarFallback>{currentUser.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <Textarea
-            placeholder="Add a comment..."
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            className="mb-2" />
-
+              placeholder="Add a comment..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="mb-2"
+            />
             <Button type="submit" size="sm" disabled={commentMutation.isPending}>
               {commentMutation.isPending ? 'Posting...' : 'Post Comment'}
             </Button>
           </div>
         </form>
-      }
+      )}
       <div className="space-y-4">
-        {isLoadingComments ?
-        <div className="flex items-start gap-4">
+        {isLoadingComments ? (
+          <div className="flex items-start gap-4">
             <Skeleton className="h-9 w-9 rounded-full" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-1/4" />
               <Skeleton className="h-4 w-3/4" />
             </div>
-          </div> :
-        comments && comments.length > 0 ?
-        comments.map((c) =>
-        <div key={c.id} className="flex items-start gap-4">
+          </div>
+        ) : comments && comments.length > 0 ? (
+          comments.map(c => (
+            <div key={c.id} className="flex items-start gap-4">
               <Avatar className="h-9 w-9">
                 <AvatarImage src={c.userPhotoUrl} alt={c.userName} />
-                <AvatarFallback>{c.userName.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
+                <AvatarFallback>{c.userName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
               </Avatar>
               <div>
                 <div className="flex items-center gap-2 text-sm">
@@ -109,11 +109,11 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
                 <p className="text-sm text-muted-foreground">{c.content}</p>
               </div>
             </div>
-        ) :
-
-        <p className="text-sm text-muted-foreground">No comments yet.</p>
-        }
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">No comments yet.</p>
+        )}
       </div>
-    </div>);
-
+    </div>
+  );
 }

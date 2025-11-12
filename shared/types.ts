@@ -13,6 +13,8 @@ export interface Publication {
   year: number;
   url?: string;
   thumbnailUrl?: string;
+  commentIds: string[];
+  likeIds: string[];
 }
 export interface ResearchProject {
   id: string;
@@ -24,6 +26,8 @@ export interface ResearchProject {
   year: number;
   url?: string;
   thumbnailUrl?: string;
+  commentIds: string[];
+  likeIds: string[];
 }
 export interface PortfolioItem {
   id: string;
@@ -35,11 +39,14 @@ export interface PortfolioItem {
   year: number;
   url?: string;
   thumbnailUrl?: string;
+  commentIds: string[];
+  likeIds: string[];
 }
 export type AcademicWork = Publication | ResearchProject | PortfolioItem;
-export interface LecturerProfile {
+export interface UserProfile {
   id:string;
   name: string;
+  role: 'lecturer' | 'student';
   title: string; // e.g., "Professor of Computer Science"
   university: string;
   department: string;
@@ -56,4 +63,18 @@ export interface LecturerProfile {
     linkedin?: string;
     github?: string;
   };
+}
+export interface Comment {
+  id: string;
+  postId: string; // ID of the Publication, ResearchProject, or PortfolioItem
+  userId: string;
+  userName: string;
+  userPhotoUrl: string;
+  content: string;
+  createdAt: number; // timestamp
+}
+export interface Like {
+  id: string;
+  postId: string;
+  userId: string;
 }

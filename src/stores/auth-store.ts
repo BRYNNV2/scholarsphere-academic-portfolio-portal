@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { LecturerProfile } from '@shared/types';
+import type { UserProfile } from '@shared/types';
 interface AuthState {
-  user: LecturerProfile | null;
+  user: UserProfile | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (user: LecturerProfile, token: string) => void;
+  login: (user: UserProfile, token: string) => void;
   logout: () => void;
-  updateUser: (data: Partial<LecturerProfile>) => void;
+  updateUser: (data: Partial<UserProfile>) => void;
 }
 export const useAuthStore = create<AuthState>()(
   persist(
