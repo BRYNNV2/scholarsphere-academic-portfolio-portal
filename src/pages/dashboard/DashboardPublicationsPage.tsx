@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { api } from '@/lib/api-client';
-import { Publication, LecturerProfile } from '@shared/types';
+import { Publication, UserProfile } from '@shared/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -50,7 +50,7 @@ function PublicationForm({ publication, onFinished }: { publication?: Publicatio
     onSuccess: () => {
       toast.success(`Publication ${publication ? 'updated' : 'added'} successfully!`);
       queryClient.invalidateQueries({ queryKey: ['publications'] });
-      queryClient.invalidateQueries({ queryKey: ['lecturer', currentUser?.id] });
+      queryClient.invalidateQueries({ queryKey: ['user', currentUser?.id] });
       onFinished();
     },
     onError: (error) => {
@@ -65,7 +65,7 @@ function PublicationForm({ publication, onFinished }: { publication?: Publicatio
     if (publication) {
       mutation.mutate(payload);
     } else {
-      mutation.mutate({ ...payload, lecturerId: currentUser?.id });
+      mutation.mutate({ ...payload, lecturerId: currentUser?.id, commentIds: [], likeIds: [] });
     }
   };
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,9 +163,9 @@ export function DashboardPublicationsPage() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
   const userId = currentUser?.id;
-  const { data: profile, isLoading: isLoadingProfile } = useQuery<LecturerProfile>({
-    queryKey: ['lecturer', userId],
-    queryFn: () => api(`/api/lecturers/${userId}`),
+  const { data: profile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
+    queryKey: ['user', userId],
+    queryFn: () => api(`/api/users/${userId}`),
     enabled: !!userId,
   });
   const { data: allPublications, isLoading: isLoadingPubs } = useQuery<Publication[]>({
@@ -183,7 +183,7 @@ export function DashboardPublicationsPage() {
     onSuccess: () => {
       toast.success('Publication deleted successfully!');
       queryClient.invalidateQueries({ queryKey: ['publications'] });
-      queryClient.invalidateQueries({ queryKey: ['lecturer', userId] });
+      queryClient.invalidateQueries({ queryKey: ['user', userId] });
     },
     onError: (error) => {
       toast.error(`Failed to delete publication: ${(error as Error).message}`);
