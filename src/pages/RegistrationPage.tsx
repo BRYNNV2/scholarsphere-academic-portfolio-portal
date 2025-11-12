@@ -136,6 +136,11 @@ export function RegistrationPage() {
                 Login
               </Link>
             </p>
+            <p className="text-center text-sm text-muted-foreground mt-2">
+              <Link to="/" className="underline hover:text-primary">
+                Back to Home
+              </Link>
+            </p>
           </CardContent>
         </Card>
       </div>
