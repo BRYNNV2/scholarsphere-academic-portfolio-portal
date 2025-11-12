@@ -53,7 +53,7 @@ export function DashboardPage() {
         <CardHeader>
           <CardTitle>Portfolio Overview</CardTitle>
           <CardDescription>
-            This is your central hub. Use the links above or the sidebar to navigate.
+            This is your central hub. Use the links above or the sidebar to navigate through your portfolio sections.
           </CardDescription>
         </CardHeader>
         <CardContent>
