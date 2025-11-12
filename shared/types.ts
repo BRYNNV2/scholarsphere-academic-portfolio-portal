@@ -12,6 +12,7 @@ export interface Publication {
   journal: string;
   year: number;
   url?: string;
+  thumbnailUrl?: string;
 }
 export interface ResearchProject {
   id: string;

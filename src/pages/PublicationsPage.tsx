@@ -2,20 +2,26 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Search, ExternalLink, User } from 'lucide-react';
+import { Search, ExternalLink, User, BookCopy } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { Publication, LecturerProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from 'react-use';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 function PublicationCardSkeleton() {
   return (
-    <Card>
-      <CardContent className="p-6 space-y-3">
+    <Card className="overflow-hidden">
+      <AspectRatio ratio={16 / 9}>
+        <Skeleton className="h-full w-full" />
+      </AspectRatio>
+      <CardHeader>
         <Skeleton className="h-6 w-3/4" />
+      </CardHeader>
+      <CardContent className="space-y-3">
         <Skeleton className="h-4 w-1/2" />
         <Skeleton className="h-4 w-2/3" />
         <div className="flex justify-between items-center pt-2">
@@ -89,10 +95,21 @@ export function PublicationsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: index * 0.05 }}
                   >
-                    <Card className="h-full flex flex-col">
-                      <CardContent className="p-6 flex-grow flex flex-col">
-                        <h3 className="text-lg font-semibold text-foreground flex-grow">{pub.title}</h3>
-                        <p className="text-sm text-muted-foreground mt-2">{pub.authors.join(', ')}</p>
+                    <Card className="h-full flex flex-col overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1">
+                      <AspectRatio ratio={16 / 9} className="bg-muted">
+                        {pub.thumbnailUrl ? (
+                          <img src={pub.thumbnailUrl} alt={pub.title} className="object-cover w-full h-full" />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-muted-foreground">
+                            <BookCopy className="h-12 w-12" />
+                          </div>
+                        )}
+                      </AspectRatio>
+                      <CardHeader>
+                        <CardTitle className="text-lg">{pub.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex-grow flex flex-col">
+                        <p className="text-sm text-muted-foreground flex-grow">{pub.authors.join(', ')}</p>
                         <p className="text-sm text-muted-foreground mt-1"><em>{pub.journal}</em>, {pub.year}</p>
                         <div className="mt-4 pt-4 border-t flex justify-between items-center">
                           {lecturer ? (
