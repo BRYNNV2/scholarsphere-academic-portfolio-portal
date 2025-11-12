@@ -298,10 +298,12 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     return ok(c, postLikes);
   });
   app.get('/api/posts/all/likes', async (c) => {
-    return ok(c, (await LikeEntity.list(c.env)).items);
+    const allLikes = (await LikeEntity.list(c.env)).items;
+    return ok(c, allLikes);
   });
   app.get('/api/posts/all/comments', async (c) => {
-    return ok(c, (await CommentEntity.list(c.env)).items);
+    const allComments = (await CommentEntity.list(c.env)).items;
+    return ok(c, allComments);
   });
   app.route('/api', secured);
 }
