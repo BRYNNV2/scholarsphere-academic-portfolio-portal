@@ -297,10 +297,6 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const postLikes = allLikes.filter(like => like.postId === postId);
     return ok(c, postLikes);
   });
-  app.get('/api/posts/all/likes', async (c) => {
-    const allLikes = (await LikeEntity.list(c.env)).items;
-    return ok(c, allLikes);
-  });
   app.get('/api/posts/all/comments', async (c) => {
     const allComments = (await CommentEntity.list(c.env)).items;
     return ok(c, allComments);
