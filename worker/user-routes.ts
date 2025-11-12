@@ -110,8 +110,9 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const userEntity = new UserProfileEntity(c.env, userId);
     if (!(await userEntity.exists())) return notFound(c, 'User not found');
     await userEntity.mutate(state => {
-      if (!state.savedItemIds.includes(postId)) {
-        return { ...state, savedItemIds: [...state.savedItemIds, postId] };
+      const savedIds = state.savedItemIds ?? [];
+      if (!savedIds.includes(postId)) {
+        return { ...state, savedItemIds: [...savedIds, postId] };
       }
       return state;
     });
@@ -126,7 +127,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!(await userEntity.exists())) return notFound(c, 'User not found');
     await userEntity.mutate(state => ({
       ...state,
-      savedItemIds: state.savedItemIds.filter(id => id !== postId)
+      savedItemIds: (state.savedItemIds ?? []).filter(id => id !== postId)
     }));
     return ok(c, await userEntity.getState());
   });
@@ -138,7 +139,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!(await user.exists())) return notFound(c, 'User not found');
     const newPub: Publication = { ...pubData, id: crypto.randomUUID(), type: 'publication', lecturerId, commentIds: [], likeIds: [] };
     await PublicationEntity.create(c.env, newPub);
-    await user.mutate(state => ({ ...state, publicationIds: [...state.publicationIds, newPub.id] }));
+    await user.mutate(state => ({ ...state, publicationIds: [...(state.publicationIds ?? []), newPub.id] }));
     return ok(c, newPub);
   });
   secured.put('/publications/:id', async (c) => {
@@ -169,7 +170,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!(await user.exists())) return notFound(c, 'User not found');
     const newProj: ResearchProject = { ...projData, id: crypto.randomUUID(), type: 'project', lecturerId, commentIds: [], likeIds: [] };
     await ResearchProjectEntity.create(c.env, newProj);
-    await user.mutate(state => ({ ...state, projectIds: [...state.projectIds, newProj.id] }));
+    await user.mutate(state => ({ ...state, projectIds: [...(state.projectIds ?? []), newProj.id] }));
     return ok(c, newProj);
   });
   secured.put('/projects/:id', async (c) => {
@@ -200,7 +201,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!(await user.exists())) return notFound(c, 'User not found');
     const newItem: PortfolioItem = { ...itemData, id: crypto.randomUUID(), type: 'portfolio', lecturerId, commentIds: [], likeIds: [] };
     await PortfolioItemEntity.create(c.env, newItem);
-    await user.mutate(state => ({ ...state, portfolioItemIds: [...state.portfolioItemIds, newItem.id] }));
+    await user.mutate(state => ({ ...state, portfolioItemIds: [...(state.portfolioItemIds ?? []), newItem.id] }));
     return ok(c, newItem);
   });
   secured.put('/portfolio/:id', async (c) => {
