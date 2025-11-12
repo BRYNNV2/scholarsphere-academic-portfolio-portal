@@ -24,7 +24,7 @@ export function HomePage() {
       {/* Hero Section */}
       <div className="relative bg-background">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="py-24 md:py-32 lg:py-40 text-center"
             initial="hidden"
