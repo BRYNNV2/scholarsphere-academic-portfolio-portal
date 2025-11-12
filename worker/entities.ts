@@ -1,6 +1,6 @@
 import { IndexedEntity } from "./core-utils";
-import type { LecturerProfile, Publication, ResearchProject } from "@shared/types";
-import { MOCK_LECTURERS, MOCK_PUBLICATIONS, MOCK_PROJECTS } from "@shared/mock-data";
+import type { LecturerProfile, Publication, ResearchProject, PortfolioItem } from "@shared/types";
+import { MOCK_LECTURERS, MOCK_PUBLICATIONS, MOCK_PROJECTS, MOCK_PORTFOLIO_ITEMS } from "@shared/mock-data";
 // LecturerProfile ENTITY
 export class LecturerProfileEntity extends IndexedEntity<LecturerProfile> {
   static readonly entityName = "lecturer";
@@ -18,6 +18,7 @@ export class LecturerProfileEntity extends IndexedEntity<LecturerProfile> {
     specializations: [],
     publicationIds: [],
     projectIds: [],
+    portfolioItemIds: [],
     socialLinks: {},
   };
   static seedData = [];
@@ -52,4 +53,19 @@ export class ResearchProjectEntity extends IndexedEntity<ResearchProject> {
     year: 0,
   };
   static seedData = MOCK_PROJECTS;
+}
+// PortfolioItem ENTITY
+export class PortfolioItemEntity extends IndexedEntity<PortfolioItem> {
+  static readonly entityName = "portfolio";
+  static readonly indexName = "portfolioItems";
+  static readonly initialState: PortfolioItem = {
+    id: "",
+    type: 'portfolio',
+    lecturerId: '',
+    title: "",
+    category: "",
+    description: "",
+    year: 0,
+  };
+  static seedData = MOCK_PORTFOLIO_ITEMS;
 }

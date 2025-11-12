@@ -1,4 +1,4 @@
-import type { LecturerProfile, Publication, ResearchProject } from './types';
+import type { LecturerProfile, Publication, ResearchProject, PortfolioItem } from './types';
 export const MOCK_PUBLICATIONS: Publication[] = [
   { id: 'pub1', type: 'publication', lecturerId: 'l1', title: 'The Future of Distributed Systems', authors: ['Dr. Evelyn Reed', 'Dr. Kenji Tanaka'], journal: 'Journal of Advanced Computing', year: 2023, url: '#' },
   { id: 'pub2', type: 'publication', lecturerId: 'l1', title: 'Machine Learning in Bioinformatics', authors: ['Dr. Evelyn Reed'], journal: 'Nature Informatics', year: 2022, url: '#' },
@@ -16,6 +16,11 @@ export const MOCK_PROJECTS: ResearchProject[] = [
   { id: 'proj5', type: 'project', lecturerId: 'l4', title: 'Graphene-based Supercapacitors', description: 'Research into energy storage solutions using novel nanomaterials.', role: 'Senior Researcher', year: 2021, url: '#' },
   { id: 'proj6', type: 'project', lecturerId: 'l5', title: 'Cognitive Neuroscience Models', description: 'Building computational models of human cognition and decision-making.', role: 'Principal Investigator', year: 2022, url: '#' },
 ];
+export const MOCK_PORTFOLIO_ITEMS: PortfolioItem[] = [
+    { id: 'port1', type: 'portfolio', lecturerId: 'l1', title: 'Innovator of the Year Award', category: 'Award', description: 'Awarded for groundbreaking work in distributed systems.', year: 2023, url: '#' },
+    { id: 'port2', type: 'portfolio', lecturerId: 'l2', title: 'Quantum Research Grant', category: 'Grant', description: 'Received a $500,000 grant for quantum algorithm research.', year: 2022 },
+    { id: 'port3', type: 'portfolio', lecturerId: 'l3', title: 'Guest Lecturer at Harvard', category: 'Teaching', description: 'Taught a semester-long course on AI Ethics.', year: 2022 },
+];
 export const MOCK_LECTURERS: LecturerProfile[] = [
   {
     id: 'l1',
@@ -29,6 +34,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
     specializations: ['Distributed Systems', 'Cloud Computing', 'Machine Learning'],
     publicationIds: ['pub1', 'pub2'],
     projectIds: ['proj1', 'proj2'],
+    portfolioItemIds: ['port1'],
     password: 'password123',
     socialLinks: {},
   },
@@ -44,6 +50,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
     specializations: ['Quantum Computing', 'Theoretical Physics', 'Algorithm Design'],
     publicationIds: ['pub3'],
     projectIds: ['proj3'],
+    portfolioItemIds: ['port2'],
     password: 'password123',
     socialLinks: {},
   },
@@ -59,6 +66,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
     specializations: ['AI Ethics', 'Moral Philosophy', 'Technology Policy'],
     publicationIds: ['pub4'],
     projectIds: ['proj4'],
+    portfolioItemIds: ['port3'],
     password: 'password123',
     socialLinks: {},
   },
@@ -74,6 +82,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
     specializations: ['Nanotechnology', 'Materials Science', 'Energy Storage'],
     publicationIds: ['pub5'],
     projectIds: ['proj5'],
+    portfolioItemIds: [],
     password: 'password123',
     socialLinks: {},
   },
@@ -89,6 +98,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
     specializations: ['Neuroscience', 'Cognitive Science', 'Brain Mapping'],
     publicationIds: ['pub6'],
     projectIds: ['proj6'],
+    portfolioItemIds: [],
     password: 'password123',
     socialLinks: {},
   },
@@ -104,6 +114,7 @@ export const MOCK_LECTURERS: LecturerProfile[] = [
     specializations: ['Artificial Intelligence', 'Deep Learning', 'Computer Vision'],
     publicationIds: ['pub1', 'pub7'],
     projectIds: [],
+    portfolioItemIds: [],
     password: 'password123',
     socialLinks: {},
   },
