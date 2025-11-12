@@ -71,9 +71,13 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     await lecturer.patch(body);
     return ok(c, await lecturer.getState());
   });
-  secured.delete('/lecturers/:id', async (c) => {
-    const { id } = c.req.param();
-    const lecturerEntity = new LecturerProfileEntity(c.env, id);
+  secured.delete('/lecturers/me', async (c) => {
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+    if (!userId) {
+      return bad(c, 'User ID not found in token');
+    }
+    const lecturerEntity = new LecturerProfileEntity(c.env, userId);
     if (!(await lecturerEntity.exists())) return notFound(c, 'Lecturer not found');
     const lecturer = await lecturerEntity.getState();
     // Cascading delete
@@ -83,8 +87,8 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (lecturer.projectIds.length > 0) {
       await ResearchProjectEntity.deleteMany(c.env, lecturer.projectIds);
     }
-    const deleted = await LecturerProfileEntity.delete(c.env, id);
-    return ok(c, { id, deleted });
+    const deleted = await LecturerProfileEntity.delete(c.env, userId);
+    return ok(c, { id: userId, deleted });
   });
   secured.post('/publications', async (c) => {
     const body = await c.req.json<PublicationCreatePayload>();
@@ -204,6 +208,5 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const page = await ResearchProjectEntity.list(c.env);
     return ok(c, page.items);
   });
-
   app.route('/api', secured);
 }
