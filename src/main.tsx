@@ -18,6 +18,7 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { DashboardProfilePage } from '@/pages/dashboard/DashboardProfilePage';
 import { DashboardPublicationsPage } from '@/pages/dashboard/DashboardPublicationsPage';
 import { DashboardResearchPage } from '@/pages/dashboard/DashboardResearchPage';
+import { DashboardSettingsPage } from '@/pages/dashboard/DashboardSettingsPage';
 import { Toaster } from "@/components/ui/sonner"
 import { LoginPage } from './pages/LoginPage';
 import { RegistrationPage } from './pages/RegistrationPage';
@@ -86,6 +87,10 @@ const router = createBrowserRouter([
       {
         path: "research",
         element: <DashboardResearchPage />,
+      },
+      {
+        path: "settings",
+        element: <DashboardSettingsPage />,
       },
     ]
   },
