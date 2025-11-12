@@ -162,6 +162,23 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   });
   app.route('/api', secured);
   // --- PUBLIC ROUTES ---
+  app.get('/api/lecturers/search', async (c) => {
+    const { q } = c.req.query();
+    const searchTerm = q?.toLowerCase() || '';
+    const page = await LecturerProfileEntity.list(c.env);
+    let lecturers = page.items.map(l => {
+      const { password, ...rest } = l;
+      return rest;
+    });
+    if (searchTerm) {
+      lecturers = lecturers.filter(lecturer =>
+        lecturer.name.toLowerCase().includes(searchTerm) ||
+        lecturer.specializations.some(spec => spec.toLowerCase().includes(searchTerm)) ||
+        lecturer.university.toLowerCase().includes(searchTerm)
+      );
+    }
+    return ok(c, lecturers);
+  });
   app.get('/api/lecturers', async (c) => {
     const page = await LecturerProfileEntity.list(c.env);
     // Omit password from public listing
