@@ -4,10 +4,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, Building, Book, FlaskConical, ExternalLink, Twitter, Linkedin, Github } from 'lucide-react';
+import { Mail, Building, Book, FlaskConical, ExternalLink, Twitter, Linkedin, Github, Briefcase } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import { LecturerProfile, Publication, ResearchProject } from '@shared/types';
+import { LecturerProfile, Publication, ResearchProject, PortfolioItem } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 function PortfolioPageSkeleton() {
   return (
@@ -43,7 +43,11 @@ export function PortfolioPage() {
     queryKey: ['projects'],
     queryFn: () => api('/api/projects'),
   });
-  const isLoading = isLoadingLecturer || isLoadingPubs || isLoadingProjs;
+  const { data: portfolioItems, isLoading: isLoadingPortfolio } = useQuery<PortfolioItem[]>({
+    queryKey: ['portfolio'],
+    queryFn: () => api('/api/portfolio'),
+  });
+  const isLoading = isLoadingLecturer || isLoadingPubs || isLoadingProjs || isLoadingPortfolio;
   if (isLoading) {
     return <PublicLayout><PortfolioPageSkeleton /></PublicLayout>;
   }
@@ -62,6 +66,7 @@ export function PortfolioPage() {
   }
   const lecturerPublications = publications?.filter(p => lecturer.publicationIds.includes(p.id)) ?? [];
   const lecturerProjects = projects?.filter(p => lecturer.projectIds.includes(p.id)) ?? [];
+  const lecturerPortfolioItems = portfolioItems?.filter(p => lecturer.portfolioItemIds.includes(p.id)) ?? [];
   return (
     <PublicLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -114,6 +119,30 @@ export function PortfolioPage() {
               <CardContent><p className="text-muted-foreground whitespace-pre-wrap">{lecturer.bio}</p></CardContent>
             </Card>
           </div>
+          {lecturerPortfolioItems.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><Briefcase /> Portfolio</h2>
+              <div className="mt-6 space-y-4">
+                {lecturerPortfolioItems.map(item => (
+                  <Card key={item.id}>
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold text-lg">{item.title}</h3>
+                          <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                        </div>
+                        <Badge variant="outline">{item.category}</Badge>
+                      </div>
+                      <div className="flex justify-between items-end mt-2">
+                        <p className="text-sm text-muted-foreground">{item.year}</p>
+                        {item.url && <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">View Details <ExternalLink className="h-4 w-4" /></a>}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
           {lecturerPublications.length > 0 && (
             <div className="mt-12">
               <h2 className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><Book /> Publications</h2>

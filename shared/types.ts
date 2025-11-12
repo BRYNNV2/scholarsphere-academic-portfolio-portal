@@ -3,7 +3,6 @@ export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
 }
-export type AcademicWork = Publication | ResearchProject;
 export interface Publication {
   id: string;
   type: 'publication';
@@ -24,6 +23,17 @@ export interface ResearchProject {
   year: number;
   url?: string;
 }
+export interface PortfolioItem {
+  id: string;
+  type: 'portfolio';
+  lecturerId: string;
+  title: string;
+  category: string; // e.g., Award, Grant, Teaching, Service
+  description: string;
+  year: number;
+  url?: string;
+}
+export type AcademicWork = Publication | ResearchProject | PortfolioItem;
 export interface LecturerProfile {
   id:string;
   name: string;
@@ -37,6 +47,7 @@ export interface LecturerProfile {
   specializations: string[];
   publicationIds: string[];
   projectIds: string[];
+  portfolioItemIds: string[];
   socialLinks?: {
     twitter?: string;
     linkedin?: string;
