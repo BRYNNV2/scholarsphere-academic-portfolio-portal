@@ -29,6 +29,7 @@ import { PublicationsPage } from './pages/PublicationsPage';
 import { ResearchPage } from './pages/ResearchPage';
 import { PortfolioDirectoryPage } from './pages/PortfolioDirectoryPage';
 import { AcademicWorkDetailPage } from './pages/AcademicWorkDetailPage';
+import { TermsOfServicePage } from './pages/TermsOfServicePage';
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
@@ -84,6 +85,11 @@ const router = createBrowserRouter([
   {
     path: "/portfolio/:id",
     element: <AcademicWorkDetailPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/terms-of-service",
+    element: <TermsOfServicePage />,
     errorElement: <RouteErrorBoundary />,
   },
   {
