@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Home, User, BookCopy, FlaskConical, BookOpenCheck, Globe, LogOut, Settings } from "lucide-react";
+import { Home, User, BookCopy, FlaskConical, BookOpenCheck, Globe, LogOut, Settings, Briefcase } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -48,6 +48,11 @@ export function AppSidebar(): JSX.Element {
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={isActive("/dashboard/research")}>
                 <NavLink to="/dashboard/research"><FlaskConical /> <span>Research</span></NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={isActive("/dashboard/portfolio")}>
+                <NavLink to="/dashboard/portfolio"><Briefcase /> <span>Portfolio</span></NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>

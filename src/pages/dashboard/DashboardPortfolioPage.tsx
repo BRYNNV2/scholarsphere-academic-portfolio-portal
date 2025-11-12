@@ -1,39 +1,32 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { api } from "../../lib/api-client-fixed";
-import { PortfolioItem, UserProfile } from '@shared/types';
+import { api } from '@/lib/api-client';
+import { PortfolioItem, LecturerProfile } from '@shared/types';
 import { useAuthStore } from '@/stores/auth-store';
-import { resizeImage } from '@/lib/image-utils';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from '@/components/ui/sonner';
-import { PlusCircle, Edit, Trash2, Image as ImageIcon, Briefcase, MoreVertical, Eye, EyeOff } from 'lucide-react';
+import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { EmptyState } from '@/components/EmptyState';
-import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 const portfolioItemSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   category: z.string().min(1, 'Category is required'),
   description: z.string().min(1, 'Description is required'),
   year: z.number().int().min(1900, 'Invalid year').max(new Date().getFullYear() + 5, 'Invalid year'),
   url: z.string().url('Invalid URL').optional().or(z.literal('')),
-  thumbnailUrl: z.string().optional()
 });
 type PortfolioItemFormData = z.infer<typeof portfolioItemSchema>;
-function PortfolioItemForm({ item, onFinished }: {item?: PortfolioItem;onFinished: () => void;}) {
+function PortfolioItemForm({ item, onFinished }: { item?: PortfolioItem, onFinished: () => void }) {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const form = useForm<PortfolioItemFormData>({
     resolver: zodResolver(portfolioItemSchema),
     defaultValues: {
@@ -42,113 +35,57 @@ function PortfolioItemForm({ item, onFinished }: {item?: PortfolioItem;onFinishe
       description: item?.description || '',
       year: item?.year || new Date().getFullYear(),
       url: item?.url || '',
-      thumbnailUrl: item?.thumbnailUrl || ''
-    }
+    },
   });
-  const thumbnailUrlValue = form.watch('thumbnailUrl');
   const mutation = useMutation({
-    mutationFn: (data: Partial<PortfolioItem> & {lecturerId?: string;}) =>
-      item
-        ? api.put(`/api/portfolio/${item.id}`, data)
-        : api.post('/api/portfolio', data),
+    mutationFn: (data: Omit<PortfolioItem, 'id' | 'type' | 'lecturerId'> & { lecturerId?: string }) =>
+      api(item ? `/api/portfolio/${item.id}` : '/api/portfolio', {
+        method: item ? 'PUT' : 'POST',
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
       toast.success(`Portfolio item ${item ? 'updated' : 'added'} successfully!`);
-      queryClient.invalidateQueries({ queryKey: ['userPortfolioItems', currentUser?.id] });
-      queryClient.invalidateQueries({ queryKey: ['user', currentUser?.id] });
+      queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+      queryClient.invalidateQueries({ queryKey: ['lecturer', currentUser?.id] });
       onFinished();
     },
     onError: (error) => {
-      toast.error(`Failed to ${item ? 'update' : 'add'} item: ${(error as Error).message}`);
-    }
+      toast.error(`Failed to ${item ? 'update' : 'add'} item: ${error.message}`);
+    },
   });
   const onSubmit = (data: PortfolioItemFormData) => {
     const payload = { ...data };
     if (item) {
       mutation.mutate(payload);
     } else {
-      mutation.mutate({ ...payload, lecturerId: currentUser?.id, commentIds: [], likeIds: [] });
-    }
-  };
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // Allow larger original files, e.g., 5MB
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error('File is too large. Maximum size is 5MB.');
-      return;
-    }
-    if (!file.type.startsWith('image/')) {
-      toast.error('Invalid file type. Please select an image.');
-      return;
-    }
-    try {
-      const resizedDataUrl = await resizeImage(file, 800, 800); // Resize to max 800x800
-      form.setValue('thumbnailUrl', resizedDataUrl, { shouldValidate: true, shouldDirty: true });
-    } catch (error) {
-      toast.error(`Failed to process image: ${(error as Error).message}`);
+      mutation.mutate({ ...payload, lecturerId: currentUser?.id });
     }
   };
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField control={form.control} name="thumbnailUrl" render={({ field }) =>
-        <FormItem>
-            <FormLabel>Cover Image</FormLabel>
-            <div className="flex items-center gap-4">
-              <div className="w-32">
-                <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden">
-                  {thumbnailUrlValue ?
-                <img src={thumbnailUrlValue} alt="Cover image preview" className="object-cover w-full h-full" /> :
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                      <ImageIcon className="h-8 w-8" />
-                    </div>
-                }
-                </AspectRatio>
-              </div>
-              <div className="flex-grow">
-                <FormControl>
-                  <Input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept="image/png, image/jpeg, image/gif"
-                  onChange={handleFileChange} />
-                </FormControl>
-                <Button
-                type="button"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}>
-                  Upload Image
-                </Button>
-                <FormDescription className="mt-2">
-                  Optional. Max file size: 5MB.
-                </FormDescription>
-                <FormMessage />
-              </div>
-            </div>
-          </FormItem>
-        } />
-        <FormField control={form.control} name="title" render={({ field }) =>
-        <FormItem><FormLabel>Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-        } />
-        <FormField control={form.control} name="category" render={({ field }) =>
-        <FormItem><FormLabel>Category</FormLabel><FormControl><Input placeholder="e.g., Award, Grant, Teaching" {...field} /></FormControl><FormMessage /></FormItem>
-        } />
-        <FormField control={form.control} name="description" render={({ field }) =>
-        <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
-        } />
-        <FormField control={form.control} name="year" render={({ field }) =>
-        <FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>
-        } />
-        <FormField control={form.control} name="url" render={({ field }) =>
-        <FormItem><FormLabel>URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
-        } />
+        <FormField control={form.control} name="title" render={({ field }) => (
+          <FormItem><FormLabel>Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+        )} />
+        <FormField control={form.control} name="category" render={({ field }) => (
+          <FormItem><FormLabel>Category</FormLabel><FormControl><Input placeholder="e.g., Award, Grant, Teaching" {...field} /></FormControl><FormMessage /></FormItem>
+        )} />
+        <FormField control={form.control} name="description" render={({ field }) => (
+          <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+        )} />
+        <FormField control={form.control} name="year" render={({ field }) => (
+          <FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>
+        )} />
+        <FormField control={form.control} name="url" render={({ field }) => (
+          <FormItem><FormLabel>URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
+        )} />
         <DialogFooter>
           <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
           <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? 'Saving...' : 'Save'}</Button>
         </DialogFooter>
       </form>
-    </Form>);
+    </Form>
+  );
 }
 export function DashboardPortfolioPage() {
   const [isFormOpen, setFormOpen] = useState(false);
@@ -157,41 +94,32 @@ export function DashboardPortfolioPage() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
   const userId = currentUser?.id;
-  const { data: userPortfolioItems, isLoading } = useQuery<PortfolioItem[]>({
-    queryKey: ['userPortfolioItems', userId],
-    queryFn: async () => {
-      if (!userId) return [];
-      const user = await api.get<UserProfile>(`/api/users/${userId}`);
-      if (!user.portfolioItemIds || user.portfolioItemIds.length === 0) return [];
-      const items = await Promise.all(
-        user.portfolioItemIds.map(id => api.get<PortfolioItem>(`/api/academic-work/${id}`))
-      );
-      return items.filter(Boolean) as PortfolioItem[];
-    },
+  const { data: profile, isLoading: isLoadingProfile } = useQuery<LecturerProfile>({
+    queryKey: ['lecturer', userId],
+    queryFn: () => api(`/api/lecturers/${userId}`),
     enabled: !!userId,
   });
+  const { data: allItems, isLoading: isLoadingItems } = useQuery<PortfolioItem[]>({
+    queryKey: ['portfolio'],
+    queryFn: () => api('/api/portfolio'),
+  });
+  const userPortfolioItems = useMemo(() => {
+    if (!profile || !allItems) return [];
+    const userItemIds = new Set(profile.portfolioItemIds);
+    return allItems.filter(item => userItemIds.has(item.id));
+  }, [profile, allItems]);
+  const isLoading = isLoadingProfile || isLoadingItems;
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/api/portfolio/${id}`),
+    mutationFn: (id: string) => api(`/api/portfolio/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       toast.success('Portfolio item deleted successfully!');
-      queryClient.invalidateQueries({ queryKey: ['userPortfolioItems', userId] });
-      queryClient.invalidateQueries({ queryKey: ['user', userId] });
+      queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+      queryClient.invalidateQueries({ queryKey: ['lecturer', userId] });
     },
     onError: (error) => {
-      toast.error(`Failed to delete item: ${(error as Error).message}`);
+      toast.error(`Failed to delete item: ${error.message}`);
     },
-    onSettled: () => setAlertOpen(false)
-  });
-  const visibilityMutation = useMutation({
-    mutationFn: ({ id, visibility }: { id: string; visibility: 'public' | 'private' }) =>
-      api.put(`/api/portfolio/${id}/visibility`, { visibility }),
-    onSuccess: () => {
-      toast.success('Item visibility updated!');
-      queryClient.invalidateQueries({ queryKey: ['userPortfolioItems', userId] });
-    },
-    onError: (error) => {
-      toast.error(`Failed to update visibility: ${(error as Error).message}`);
-    },
+    onSettled: () => setAlertOpen(false),
   });
   const handleEdit = (item: PortfolioItem) => {
     setSelectedItem(item);
@@ -232,67 +160,36 @@ export function DashboardPortfolioPage() {
               <TableHead>Title</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Year</TableHead>
-              <TableHead>Visibility</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ?
-            Array.from({ length: 3 }).map((_, i) =>
-            <TableRow key={i}>
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <TableRow key={i}>
                   <TableCell><Skeleton className="h-5 w-48" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
                 </TableRow>
-            ) :
-            userPortfolioItems && userPortfolioItems.length > 0 ?
-            userPortfolioItems.map((item) => {
-              const visibility = item.visibility || 'public';
-              return (
+              ))
+            ) : userPortfolioItems.length ? (
+              userPortfolioItems.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.title}</TableCell>
                   <TableCell>{item.category}</TableCell>
                   <TableCell>{item.year}</TableCell>
-                  <TableCell>
-                    <Badge variant={visibility === 'public' ? 'default' : 'secondary'}>
-                      {visibility.charAt(0).toUpperCase() + visibility.slice(1)}
-                    </Badge>
-                  </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEdit(item)}><Edit className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
-                        {visibility === 'public' ? (
-                          <DropdownMenuItem onClick={() => visibilityMutation.mutate({ id: item.id, visibility: 'private' })}>
-                            <EyeOff className="mr-2 h-4 w-4" />Make Private
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem onClick={() => visibilityMutation.mutate({ id: item.id, visibility: 'public' })}>
-                            <Eye className="mr-2 h-4 w-4" />Make Public
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem onClick={() => handleDelete(item)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}><Edit className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(item)}><Trash2 className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
-              );
-            }) :
-            <TableRow>
-                <TableCell colSpan={5} className="p-0">
-                   <EmptyState
-                  icon={<Briefcase className="h-8 w-8" />}
-                  title="No Portfolio Items Yet"
-                  description="Highlight your awards, grants, and other activities by adding them here."
-                  action={{ label: 'Add Item', onClick: handleAddNew }} />
-                </TableCell>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center">No portfolio items found.</TableCell>
               </TableRow>
-            }
+            )}
           </TableBody>
         </Table>
       </div>
@@ -312,5 +209,6 @@ export function DashboardPortfolioPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>);
+    </div>
+  );
 }

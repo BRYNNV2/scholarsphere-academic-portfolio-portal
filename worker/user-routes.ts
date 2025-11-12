@@ -2,11 +2,12 @@ import { Hono } from "hono";
 import { jwt, sign } from 'hono/jwt'
 import { bearerAuth } from 'hono/bearer-auth'
 import type { Env } from './core-utils';
-import { LecturerProfileEntity, PublicationEntity, ResearchProjectEntity } from "./entities";
+import { LecturerProfileEntity, PublicationEntity, ResearchProjectEntity, PortfolioItemEntity } from "./entities";
 import { ok, bad, notFound } from './core-utils';
-import type { LecturerProfile, Publication, ResearchProject } from "@shared/types";
+import type { LecturerProfile, Publication, ResearchProject, PortfolioItem } from "@shared/types";
 type PublicationCreatePayload = Omit<Publication, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
 type ProjectCreatePayload = Omit<ResearchProject, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
+type PortfolioItemCreatePayload = Omit<PortfolioItem, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
 const JWT_SECRET = 'a-very-secret-key-that-should-be-in-env';
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
   // Ensure seed data on first request in a dev environment
@@ -15,6 +16,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       LecturerProfileEntity.ensureSeed(c.env),
       PublicationEntity.ensureSeed(c.env),
       ResearchProjectEntity.ensureSeed(c.env),
+      PortfolioItemEntity.ensureSeed(c.env),
     ]);
     await next();
   });
@@ -35,6 +37,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       id: crypto.randomUUID(),
       publicationIds: [],
       projectIds: [],
+      portfolioItemIds: [],
       specializations: body.specializations || [],
       socialLinks: body.socialLinks || {},
       photoUrl: body.photoUrl || `https://i.pravatar.cc/300?u=${body.email}`,
@@ -86,6 +89,9 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     }
     if (lecturer.projectIds.length > 0) {
       await ResearchProjectEntity.deleteMany(c.env, lecturer.projectIds);
+    }
+    if (lecturer.portfolioItemIds.length > 0) {
+      await PortfolioItemEntity.deleteMany(c.env, lecturer.portfolioItemIds);
     }
     const deleted = await LecturerProfileEntity.delete(c.env, userId);
     return ok(c, { id: userId, deleted });
@@ -164,6 +170,43 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const deleted = await ResearchProjectEntity.delete(c.env, id);
     return ok(c, { id, deleted });
   });
+  secured.post('/portfolio', async (c) => {
+    const body = await c.req.json<PortfolioItemCreatePayload>();
+    const { lecturerId, ...itemData } = body;
+    if (!lecturerId) return bad(c, 'lecturerId is required');
+    const lecturer = new LecturerProfileEntity(c.env, lecturerId);
+    if (!(await lecturer.exists())) return notFound(c, 'Lecturer not found');
+    const newItem: PortfolioItem = { ...itemData, id: crypto.randomUUID(), type: 'portfolio', lecturerId };
+    await PortfolioItemEntity.create(c.env, newItem);
+    await lecturer.mutate(state => ({
+      ...state,
+      portfolioItemIds: [...state.portfolioItemIds, newItem.id],
+    }));
+    return ok(c, newItem);
+  });
+  secured.put('/portfolio/:id', async (c) => {
+    const { id } = c.req.param();
+    const body = await c.req.json<Partial<PortfolioItem>>();
+    const item = new PortfolioItemEntity(c.env, id);
+    if (!(await item.exists())) return notFound(c, 'Portfolio item not found');
+    await item.patch(body);
+    return ok(c, await item.getState());
+  });
+  secured.delete('/portfolio/:id', async (c) => {
+    const { id } = c.req.param();
+    const itemEntity = new PortfolioItemEntity(c.env, id);
+    if (!(await itemEntity.exists())) return notFound(c, 'Portfolio item not found');
+    const item = await itemEntity.getState();
+    const lecturer = new LecturerProfileEntity(c.env, item.lecturerId);
+    if (await lecturer.exists()) {
+      await lecturer.mutate(state => ({
+        ...state,
+        portfolioItemIds: state.portfolioItemIds.filter(itemId => itemId !== id),
+      }));
+    }
+    const deleted = await PortfolioItemEntity.delete(c.env, id);
+    return ok(c, { id, deleted });
+  });
   // --- PUBLIC ROUTES ---
   app.get('/api/lecturers/search', async (c) => {
     const { q } = c.req.query();
@@ -206,6 +249,10 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   });
   app.get('/api/projects', async (c) => {
     const page = await ResearchProjectEntity.list(c.env);
+    return ok(c, page.items);
+  });
+  app.get('/api/portfolio', async (c) => {
+    const page = await PortfolioItemEntity.list(c.env);
     return ok(c, page.items);
   });
   app.route('/api', secured);
