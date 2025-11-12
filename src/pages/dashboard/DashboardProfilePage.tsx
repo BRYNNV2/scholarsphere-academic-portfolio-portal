@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,7 +21,7 @@ const profileSchema = z.object({
   department: z.string().min(1, 'Department is required'),
   email: z.string().email('Invalid email address'),
   bio: z.string().min(10, 'Biography must be at least 10 characters'),
-  photoUrl: z.string().url('Invalid URL'),
+  photoUrl: z.string().optional(),
   specializations: z.string().min(1, 'At least one specialization is required'),
   socialLinks: z.object({
     twitter: z.string().url().optional().or(z.literal('')),
@@ -35,6 +35,7 @@ export function DashboardProfilePage() {
   const currentUser = useAuthStore((state) => state.user);
   const updateUser = useAuthStore((state) => state.updateUser);
   const userId = currentUser?.id;
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: profile, isLoading, isError } = useQuery<LecturerProfile>({
     queryKey: ['lecturer', userId],
     queryFn: () => api(`/api/lecturers/${userId}`),
@@ -94,6 +95,28 @@ export function DashboardProfilePage() {
     };
     mutation.mutate(payload);
   };
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error('File is too large. Maximum size is 2MB.');
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      toast.error('Invalid file type. Please select an image.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      form.setValue('photoUrl', result, { shouldValidate: true, shouldDirty: true });
+    };
+    reader.onerror = () => {
+      toast.error('Failed to read file.');
+    };
+    reader.readAsDataURL(file);
+  };
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -141,10 +164,23 @@ export function DashboardProfilePage() {
                     </Avatar>
                     <div className="flex-grow">
                       <FormControl>
-                        <Input placeholder="https://..." {...field} />
+                        <Input
+                          type="file"
+                          ref={fileInputRef}
+                          className="hidden"
+                          accept="image/png, image/jpeg, image/gif"
+                          onChange={handleFileChange}
+                        />
                       </FormControl>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        Upload Image
+                      </Button>
                       <FormDescription className="mt-2">
-                        Enter a valid URL for your profile picture.
+                        Upload a new profile picture. Max file size: 2MB.
                       </FormDescription>
                       <FormMessage />
                     </div>
@@ -181,10 +217,10 @@ export function DashboardProfilePage() {
                     <FormItem><FormLabel>Twitter URL</FormLabel><FormControl><Input placeholder="https://twitter.com/username" {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
                   <FormField control={form.control} name="socialLinks.linkedin" render={({ field }) => (
-                    <FormItem><FormLabel>LinkedIn URL</FormLabel><FormControl><Input placeholder="https://linkedin.com/in/username" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>LinkedIn URL</FormLabel><FormControl><Input placeholder="https://linkedin.com/in/username" {...field} /></FormControl><FormMessage /></FormMessage>
                   )} />
                   <FormField control={form.control} name="socialLinks.github" render={({ field }) => (
-                    <FormItem><FormLabel>GitHub URL</FormLabel><FormControl><Input placeholder="https://github.com/username" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>GitHub URL</FormLabel><FormControl><Input placeholder="https://github.com/username" {...field} /></FormControl><FormMessage /></FormMessage>
                   )} />
                 </div>
               </div>
