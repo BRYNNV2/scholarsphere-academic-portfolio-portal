@@ -51,6 +51,7 @@ export class ResearchProjectEntity extends IndexedEntity<ResearchProject> {
     description: "",
     role: "",
     year: 0,
+    thumbnailUrl: "",
   };
   static seedData = MOCK_PROJECTS;
 }
@@ -66,6 +67,7 @@ export class PortfolioItemEntity extends IndexedEntity<PortfolioItem> {
     category: "",
     description: "",
     year: 0,
+    thumbnailUrl: "",
   };
   static seedData = MOCK_PORTFOLIO_ITEMS;
 }

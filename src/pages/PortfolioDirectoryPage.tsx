@@ -6,15 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
-import { Search, ExternalLink, User } from 'lucide-react';
+import { Search, ExternalLink, User, Briefcase } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { PortfolioItem, LecturerProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from 'react-use';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 function PortfolioItemCardSkeleton() {
   return (
-    <Card>
+    <Card className="overflow-hidden">
+      <AspectRatio ratio={16 / 9}>
+        <Skeleton className="h-full w-full" />
+      </AspectRatio>
       <CardHeader>
         <Skeleton className="h-6 w-3/4" />
         <Skeleton className="h-4 w-1/2" />
@@ -93,7 +97,16 @@ export function PortfolioDirectoryPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: index * 0.05 }}
                   >
-                    <Card className="h-full flex flex-col">
+                    <Card className="h-full flex flex-col overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1">
+                       <AspectRatio ratio={16 / 9} className="bg-muted">
+                        {item.thumbnailUrl ? (
+                          <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-muted-foreground">
+                            <Briefcase className="h-12 w-12" />
+                          </div>
+                        )}
+                      </AspectRatio>
                       <CardHeader>
                         <div className="flex justify-between items-start">
                           <CardTitle className="flex-grow pr-2">{item.title}</CardTitle>
