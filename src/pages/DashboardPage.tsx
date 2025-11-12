@@ -4,7 +4,7 @@ import { StudentDashboard } from './dashboard/StudentDashboard';
 import { Skeleton } from '@/components/ui/skeleton';
 export function DashboardPage() {
   const user = useAuthStore((state) => state.user);
-  if (!user) {
+  if (!useAuthStore.persist.hasHydrated() || !user) {
     return (
       <div className="space-y-8">
         <Skeleton className="h-10 w-1/3" />
