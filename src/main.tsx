@@ -27,6 +27,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { PublicationsPage } from './pages/PublicationsPage';
 import { ResearchPage } from './pages/ResearchPage';
+import { PortfolioDirectoryPage } from './pages/PortfolioDirectoryPage';
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
@@ -62,6 +63,11 @@ const router = createBrowserRouter([
   {
     path: "/research",
     element: <ResearchPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/portfolio",
+    element: <PortfolioDirectoryPage />,
     errorElement: <RouteErrorBoundary />,
   },
   {

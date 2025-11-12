@@ -10,16 +10,6 @@ type ProjectCreatePayload = Omit<ResearchProject, 'id' | 'type' | 'lecturerId'> 
 type PortfolioItemCreatePayload = Omit<PortfolioItem, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
 const JWT_SECRET = 'a-very-secret-key-that-should-be-in-env';
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
-  // Ensure seed data on first request in a dev environment
-  app.use('/api/*', async (c, next) => {
-    await Promise.all([
-      LecturerProfileEntity.ensureSeed(c.env),
-      PublicationEntity.ensureSeed(c.env),
-      ResearchProjectEntity.ensureSeed(c.env),
-      PortfolioItemEntity.ensureSeed(c.env),
-    ]);
-    await next();
-  });
   // --- AUTH ---
   const auth = new Hono<{ Bindings: Env }>();
   auth.post('/register', async (c) => {
@@ -73,6 +63,23 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!(await lecturer.exists())) return notFound(c, 'Lecturer not found');
     await lecturer.patch(body);
     return ok(c, await lecturer.getState());
+  });
+  secured.post('/lecturers/me/change-password', async (c) => {
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+    if (!userId) return bad(c, 'User ID not found in token');
+    const { currentPassword, newPassword } = await c.req.json();
+    if (!currentPassword || !newPassword) {
+      return bad(c, 'Current and new passwords are required');
+    }
+    const lecturerEntity = new LecturerProfileEntity(c.env, userId);
+    if (!(await lecturerEntity.exists())) return notFound(c, 'Lecturer not found');
+    const lecturer = await lecturerEntity.getState();
+    if (lecturer.password !== currentPassword) {
+      return bad(c, 'Incorrect current password');
+    }
+    await lecturerEntity.patch({ password: newPassword });
+    return ok(c, { message: 'Password updated successfully' });
   });
   secured.delete('/lecturers/me', async (c) => {
     const payload = c.get('jwtPayload');
