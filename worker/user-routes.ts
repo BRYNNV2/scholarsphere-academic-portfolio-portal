@@ -53,7 +53,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const lecturers = (await LecturerProfileEntity.list(c.env)).items;
     const user = lecturers.find(l => l.email === email);
     if (!user || user.password !== password) {
-      return bad(c, 'Invalid credentials', 401);
+      return c.json({ success: false, error: 'Invalid credentials' }, 401);
     }
     const { password: _, ...userToReturn } = user;
     const token = await sign({ sub: userToReturn.id, role: 'user' }, JWT_SECRET);
