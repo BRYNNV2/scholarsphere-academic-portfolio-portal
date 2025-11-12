@@ -14,6 +14,7 @@ export function AppSidebar(): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -35,26 +36,30 @@ export function AppSidebar(): JSX.Element {
                 <NavLink to="/dashboard"><Home /> <span>Dashboard</span></NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={isActive("/dashboard/profile")}>
-                <NavLink to="/dashboard/profile"><User /> <span>Profile</span></NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={isActive("/dashboard/publications")}>
-                <NavLink to="/dashboard/publications"><BookCopy /> <span>Publications</span></NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={isActive("/dashboard/research")}>
-                <NavLink to="/dashboard/research"><FlaskConical /> <span>Research</span></NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={isActive("/dashboard/portfolio")}>
-                <NavLink to="/dashboard/portfolio"><Briefcase /> <span>Portfolio</span></NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {user?.role === 'lecturer' && (
+              <>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/profile")}>
+                    <NavLink to="/dashboard/profile"><User /> <span>Profile</span></NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/publications")}>
+                    <NavLink to="/dashboard/publications"><BookCopy /> <span>Publications</span></NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/research")}>
+                    <NavLink to="/dashboard/research"><FlaskConical /> <span>Research</span></NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/dashboard/portfolio")}>
+                    <NavLink to="/dashboard/portfolio"><Briefcase /> <span>Portfolio</span></NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </>
+            )}
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={isActive("/dashboard/settings")}>
                 <NavLink to="/dashboard/settings"><Settings /> <span>Settings</span></NavLink>
