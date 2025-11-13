@@ -5,7 +5,7 @@ import { AcademicWork, UserProfile } from '@shared/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
-import { Bookmark } from 'lucide-react';
+import { Bookmark, User } from 'lucide-react';
 function SmallAcademicWorkCard({ item, authorName }: { item: AcademicWork, authorName: string }) {
   const itemUrl = `/${item.type === 'project' ? 'research' : item.type}s/${item.id}`;
   return (
@@ -51,8 +51,9 @@ export function StudentDashboard() {
     return (
       <div className="space-y-8">
         <Skeleton className="h-10 w-1/2" />
-        <div className="grid gap-6 md:grid-cols-1">
+        <div className="grid gap-6 md:grid-cols-2">
           <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent className="space-y-2"><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></CardContent></Card>
+          <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent className="space-y-2"><Skeleton className="h-12 w-full" /></CardContent></Card>
         </div>
       </div>
     );
@@ -63,7 +64,7 @@ export function StudentDashboard() {
         <h1 className="text-3xl font-bold tracking-tight">Student Dashboard</h1>
         <p className="text-muted-foreground">Welcome, {currentUser?.name}! Here's your activity overview.</p>
       </div>
-      <div className="grid gap-6 md:grid-cols-1">
+      <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Bookmark className="h-5 w-5" /> Saved for Later</CardTitle>
@@ -79,6 +80,17 @@ export function StudentDashboard() {
               </div>
             ) : <p className="text-sm text-muted-foreground">No saved items yet. You can save items from any directory page.</p>}
           </CardContent>
+        </Card>
+        <Card className="hover:border-primary transition-colors">
+          <Link to="/dashboard/profile" className="block h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><User className="h-5 w-5" /> Manage Profile</CardTitle>
+              <CardDescription>Update your profile picture.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Keep your profile image up to date so others can recognize you.</p>
+            </CardContent>
+          </Link>
         </Card>
       </div>
     </div>
