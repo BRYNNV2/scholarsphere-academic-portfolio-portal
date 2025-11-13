@@ -2,7 +2,6 @@ import { useAuthStore } from '@/stores/auth-store';
 import { DashboardProfilePage } from './DashboardProfilePage';
 import { StudentProfilePage } from './StudentProfilePage';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 export function DashboardProfileRouterPage() {
   const user = useAuthStore((state) => state.user);
   if (!useAuthStore.persist.hasHydrated() || !user) {

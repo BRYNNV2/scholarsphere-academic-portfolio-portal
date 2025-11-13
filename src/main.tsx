@@ -15,7 +15,6 @@ import { HomePage } from '@/pages/HomePage';
 import { DirectoryPage } from '@/pages/DirectoryPage';
 import { PortfolioPage } from '@/pages/PortfolioPage';
 import { DashboardPage } from '@/pages/DashboardPage';
-import { DashboardProfilePage } from '@/pages/dashboard/DashboardProfilePage';
 import { DashboardPublicationsPage } from '@/pages/dashboard/DashboardPublicationsPage';
 import { DashboardResearchPage } from '@/pages/dashboard/DashboardResearchPage';
 import { DashboardSettingsPage } from '@/pages/dashboard/DashboardSettingsPage';
@@ -31,6 +30,7 @@ import { PortfolioDirectoryPage } from './pages/PortfolioDirectoryPage';
 import { AcademicWorkDetailPage } from './pages/AcademicWorkDetailPage';
 import { TermsOfServicePage } from './pages/TermsOfServicePage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { DashboardProfileRouterPage } from './pages/dashboard/DashboardProfileRouterPage';
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
@@ -113,7 +113,7 @@ const router = createBrowserRouter([
       },
       {
         path: "profile",
-        element: <DashboardProfilePage />,
+        element: <DashboardProfileRouterPage />,
       },
       {
         path: "publications",

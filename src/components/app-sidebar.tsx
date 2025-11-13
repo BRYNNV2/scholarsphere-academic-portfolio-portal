@@ -36,13 +36,13 @@ export function AppSidebar(): JSX.Element {
                 <NavLink to="/dashboard"><Home /> <span>Dashboard</span></NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={isActive("/dashboard/profile")}>
+                <NavLink to="/dashboard/profile"><User /> <span>Profile</span></NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             {user?.role === 'lecturer' && (
               <>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/dashboard/profile")}>
-                    <NavLink to="/dashboard/profile"><User /> <span>Profile</span></NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/dashboard/publications")}>
                     <NavLink to="/dashboard/publications"><BookCopy /> <span>Publications</span></NavLink>
