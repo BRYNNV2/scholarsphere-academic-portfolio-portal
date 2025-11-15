@@ -6,7 +6,7 @@ export function ResearchPage() {
       pageDescription="Discover ongoing and completed research from leading academic minds."
       searchPlaceholder="Search by title, description, or researcher..."
       apiEndpoint="/api/research"
-      queryKey="projects"
+      queryKey="research"
     />
   );
 }
