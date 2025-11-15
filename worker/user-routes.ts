@@ -350,7 +350,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const pub = await PublicationEntity.get(c.env, id);
     return pub ? ok(c, pub) : notFound(c, 'Publication not found');
   });
-  app.get('/api/projects', async (c) => {
+  app.get('/api/research', async (c) => {
     const { q, year } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
     let items = (await ResearchProjectEntity.list(c.env)).items;
