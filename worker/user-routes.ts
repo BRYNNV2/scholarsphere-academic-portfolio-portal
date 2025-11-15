@@ -350,6 +350,11 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const pub = await PublicationEntity.get(c.env, id);
     return pub ? ok(c, pub) : notFound(c, 'Publication not found');
   });
+  app.get('/api/publications/years', async (c) => {
+    const items = (await PublicationEntity.list(c.env)).items;
+    const years = [...new Set(items.map(item => item.year))].sort((a, b) => b - a);
+    return ok(c, years);
+  });
   app.get('/api/research', async (c) => {
     const { q, year } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
@@ -369,6 +374,11 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const { id } = c.req.param();
     const proj = await ResearchProjectEntity.get(c.env, id);
     return proj ? ok(c, proj) : notFound(c, 'Project not found');
+  });
+  app.get('/api/research/years', async (c) => {
+    const items = (await ResearchProjectEntity.list(c.env)).items;
+    const years = [...new Set(items.map(item => item.year))].sort((a, b) => b - a);
+    return ok(c, years);
   });
   app.get('/api/portfolio', async (c) => {
     const { q, year } = c.req.query();
@@ -390,6 +400,11 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const { id } = c.req.param();
     const item = await PortfolioItemEntity.get(c.env, id);
     return item ? ok(c, item) : notFound(c, 'Portfolio item not found');
+  });
+  app.get('/api/portfolio/years', async (c) => {
+    const items = (await PortfolioItemEntity.list(c.env)).items;
+    const years = [...new Set(items.map(item => item.year))].sort((a, b) => b - a);
+    return ok(c, years);
   });
   app.get('/api/posts/:postId/comments', async (c) => {
     const { postId } = c.req.param();
