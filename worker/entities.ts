@@ -22,6 +22,8 @@ export class UserProfileEntity extends IndexedEntity<UserProfile> {
     projectIds: [],
     portfolioItemIds: [],
     savedItemIds: [],
+    followerIds: [],
+    followingIds: [],
     socialLinks: {},
   };
   static seedData = [];

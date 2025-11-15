@@ -14,6 +14,7 @@ import { CommentsSection } from '@/components/CommentsSection';
 import { useAuthStore } from '@/stores/auth-store';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { FollowButton } from '@/components/FollowButton';
 function SaveButton({ itemId }: { itemId: string }) {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
@@ -148,6 +149,9 @@ export function PortfolioPage() {
                   </a>
                 )}
               </div>
+            </div>
+            <div className="flex-shrink-0">
+              <FollowButton lecturer={user} />
             </div>
           </div>
           <div className="mt-12">
