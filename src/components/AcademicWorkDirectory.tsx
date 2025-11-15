@@ -51,38 +51,31 @@ export function AcademicWorkDirectory({
   useDebounce(() => {
     setDebouncedSearchTerm(searchTerm);
   }, 300, [searchTerm]);
+  const queryParams = new URLSearchParams({
+    q: debouncedSearchTerm,
+    year: yearFilter,
+  });
   const { data: items, isLoading: isLoadingItems } = useQuery<AcademicWork[]>({
-    queryKey: [queryKey],
-    queryFn: () => api(apiEndpoint),
+    queryKey: [queryKey, debouncedSearchTerm, yearFilter],
+    queryFn: () => api(`${apiEndpoint}?${queryParams.toString()}`),
   });
   const { data: users, isLoading: isLoadingUsers } = useQuery<UserProfile[]>({
     queryKey: ['users'],
     queryFn: () => api('/api/users'),
+  });
+  const { data: allItemsForYears } = useQuery<AcademicWork[]>({
+    queryKey: [queryKey, 'all'],
+    queryFn: () => api(apiEndpoint),
   });
   const usersMap = useMemo(() => {
     if (!users) return new Map<string, UserProfile>();
     return new Map(users.map(l => [l.id, l]));
   }, [users]);
   const availableYears = useMemo(() => {
-    if (!items) return [];
-    const years = new Set(items.map(item => item.year));
+    if (!allItemsForYears) return [];
+    const years = new Set(allItemsForYears.map(item => item.year));
     return Array.from(years).sort((a, b) => b - a);
-  }, [items]);
-  const filteredItems = useMemo(() => {
-    if (!items) return [];
-    const lowercasedFilter = debouncedSearchTerm.toLowerCase();
-    return items.filter(item => {
-      const matchesSearch = lowercasedFilter
-        ? item.title.toLowerCase().includes(lowercasedFilter) ||
-          (item.type === 'publication' && item.authors.some(author => author.toLowerCase().includes(lowercasedFilter))) ||
-          (item.type === 'publication' && item.journal.toLowerCase().includes(lowercasedFilter)) ||
-          (item.type !== 'publication' && item.description.toLowerCase().includes(lowercasedFilter)) ||
-          (usersMap.get(item.lecturerId)?.name.toLowerCase().includes(lowercasedFilter))
-        : true;
-      const matchesYear = yearFilter ? item.year.toString() === yearFilter : true;
-      return matchesSearch && matchesYear;
-    });
-  }, [items, debouncedSearchTerm, yearFilter, usersMap]);
+  }, [allItemsForYears]);
   const isLoading = isLoadingItems || isLoadingUsers;
   return (
     <PublicLayout>
@@ -123,7 +116,7 @@ export function AcademicWorkDirectory({
             {isLoading ? (
               Array.from({ length: 6 }).map((_, index) => <WorkCardSkeleton key={index} />)
             ) : (
-              filteredItems.map((item, index) => (
+              items?.map((item, index) => (
                 <AcademicWorkCard
                   key={item.id}
                   item={item}
@@ -133,7 +126,7 @@ export function AcademicWorkDirectory({
               ))
             )}
           </div>
-          {!isLoading && filteredItems.length === 0 && (
+          {!isLoading && items?.length === 0 && (
             <div className="text-center col-span-full mt-16">
               <p className="text-muted-foreground">No items found matching your criteria.</p>
             </div>

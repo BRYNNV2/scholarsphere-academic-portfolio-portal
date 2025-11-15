@@ -329,19 +329,63 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const { password, ...rest } = state;
     return ok(c, rest);
   });
-  app.get('/api/publications', async (c) => { return ok(c, (await PublicationEntity.list(c.env)).items); });
+  app.get('/api/publications', async (c) => {
+    const { q, year } = c.req.query();
+    const searchTerm = q?.toLowerCase() || '';
+    let items = (await PublicationEntity.list(c.env)).items;
+    if (searchTerm) {
+      items = items.filter(item =>
+        item.title.toLowerCase().includes(searchTerm) ||
+        item.authors.some(author => author.toLowerCase().includes(searchTerm)) ||
+        item.journal.toLowerCase().includes(searchTerm)
+      );
+    }
+    if (year) {
+      items = items.filter(item => item.year.toString() === year);
+    }
+    return ok(c, items);
+  });
   app.get('/api/publications/:id', async (c) => {
     const { id } = c.req.param();
     const pub = await PublicationEntity.get(c.env, id);
     return pub ? ok(c, pub) : notFound(c, 'Publication not found');
   });
-  app.get('/api/projects', async (c) => { return ok(c, (await ResearchProjectEntity.list(c.env)).items); });
+  app.get('/api/projects', async (c) => {
+    const { q, year } = c.req.query();
+    const searchTerm = q?.toLowerCase() || '';
+    let items = (await ResearchProjectEntity.list(c.env)).items;
+    if (searchTerm) {
+      items = items.filter(item =>
+        item.title.toLowerCase().includes(searchTerm) ||
+        item.description.toLowerCase().includes(searchTerm)
+      );
+    }
+    if (year) {
+      items = items.filter(item => item.year.toString() === year);
+    }
+    return ok(c, items);
+  });
   app.get('/api/research/:id', async (c) => { // Note: frontend uses /research, so API should match
     const { id } = c.req.param();
     const proj = await ResearchProjectEntity.get(c.env, id);
     return proj ? ok(c, proj) : notFound(c, 'Project not found');
   });
-  app.get('/api/portfolio', async (c) => { return ok(c, (await PortfolioItemEntity.list(c.env)).items); });
+  app.get('/api/portfolio', async (c) => {
+    const { q, year } = c.req.query();
+    const searchTerm = q?.toLowerCase() || '';
+    let items = (await PortfolioItemEntity.list(c.env)).items;
+    if (searchTerm) {
+      items = items.filter(item =>
+        item.title.toLowerCase().includes(searchTerm) ||
+        item.description.toLowerCase().includes(searchTerm) ||
+        item.category.toLowerCase().includes(searchTerm)
+      );
+    }
+    if (year) {
+      items = items.filter(item => item.year.toString() === year);
+    }
+    return ok(c, items);
+  });
   app.get('/api/portfolio/:id', async (c) => {
     const { id } = c.req.param();
     const item = await PortfolioItemEntity.get(c.env, id);
