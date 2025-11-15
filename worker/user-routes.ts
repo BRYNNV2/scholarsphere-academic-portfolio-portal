@@ -406,6 +406,16 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const years = [...new Set(items.map(item => item.year))].sort((a, b) => b - a);
     return ok(c, years);
   });
+  app.get('/api/academic-work/:id', async (c) => {
+    const { id } = c.req.param();
+    const publication = await PublicationEntity.get(c.env, id);
+    if (publication) return ok(c, publication);
+    const project = await ResearchProjectEntity.get(c.env, id);
+    if (project) return ok(c, project);
+    const portfolioItem = await PortfolioItemEntity.get(c.env, id);
+    if (portfolioItem) return ok(c, portfolioItem);
+    return notFound(c, 'Academic work not found');
+  });
   app.get('/api/posts/:postId/comments', async (c) => {
     const { postId } = c.req.param();
     const allComments = (await CommentEntity.list(c.env)).items;

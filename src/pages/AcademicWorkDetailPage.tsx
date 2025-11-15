@@ -47,12 +47,10 @@ function AcademicWorkDetailPageSkeleton() {
 }
 export function AcademicWorkDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const location = useLocation();
-  const itemType = location.pathname.split('/')[1]; // 'publications', 'research', or 'portfolio'
   const { data: item, isLoading: isLoadingItem, isError } = useQuery<AcademicWork>({
-    queryKey: [itemType, id],
-    queryFn: () => api(`/api/${itemType}/${id}`),
-    enabled: !!id && !!itemType,
+    queryKey: ['academic-work', id],
+    queryFn: () => api(`/api/academic-work/${id}`),
+    enabled: !!id,
   });
   const { data: author, isLoading: isLoadingAuthor } = useQuery<UserProfile>({
     queryKey: ['user', item?.lecturerId],
@@ -107,7 +105,7 @@ export function AcademicWorkDetailPage() {
           <h1 className="text-2xl font-bold">Item not found</h1>
           <p className="text-muted-foreground mt-2">The academic work you are looking for does not exist.</p>
           <Button asChild className="mt-6">
-            <Link to={`/${itemType}`}>Back to Directory</Link>
+            <Link to="/">Back to Home</Link>
           </Button>
         </div>
       </PublicLayout>
