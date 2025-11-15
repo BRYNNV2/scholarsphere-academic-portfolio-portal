@@ -297,7 +297,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   });
   // --- PUBLIC ROUTES ---
   app.get('/api/users/search', async (c) => {
-    const { q } = c.req.query();
+    const { q, university, department } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
     const page = await UserProfileEntity.list(c.env);
     let users = page.items.map(l => { const { password, ...rest } = l; return rest; });
@@ -307,6 +307,12 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
         user.specializations.some(spec => spec.toLowerCase().includes(searchTerm)) ||
         user.university.toLowerCase().includes(searchTerm)
       );
+    }
+    if (university) {
+      users = users.filter(user => user.university === university);
+    }
+    if (department) {
+      users = users.filter(user => user.department === department);
     }
     return ok(c, users);
   });

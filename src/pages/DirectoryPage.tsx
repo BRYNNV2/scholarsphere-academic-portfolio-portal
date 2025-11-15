@@ -12,6 +12,7 @@ import { api } from '@/lib/api-client';
 import { UserProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from 'react-use';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 function LecturerCardSkeleton() {
   return (
     <Card>
@@ -30,17 +31,37 @@ function LecturerCardSkeleton() {
 }
 export function DirectoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [universityFilter, setUniversityFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   useDebounce(() => {
     setDebouncedSearchTerm(searchTerm);
   }, 500, [searchTerm]);
-  const { data: users, isLoading, isError } = useQuery<UserProfile[]>({
-    queryKey: ['users', debouncedSearchTerm],
-    queryFn: () => api(`/api/users/search?q=${debouncedSearchTerm}`),
+  const queryParams = new URLSearchParams({
+    q: debouncedSearchTerm,
+    university: universityFilter,
+    department: departmentFilter,
   });
-  const lecturers = useMemo(() => {
-    return users?.filter(user => user.role === 'lecturer') ?? [];
-  }, [users]);
+  const { data: lecturers, isLoading, isError } = useQuery<UserProfile[]>({
+    queryKey: ['users', debouncedSearchTerm, universityFilter, departmentFilter],
+    queryFn: () => api(`/api/users/search?${queryParams.toString()}`),
+    select: (users) => users.filter(user => user.role === 'lecturer'),
+  });
+  const { data: allLecturers } = useQuery<UserProfile[]>({
+    queryKey: ['all-lecturers'],
+    queryFn: () => api('/api/users'),
+    select: (users) => users.filter(user => user.role === 'lecturer'),
+  });
+  const availableUniversities = useMemo(() => {
+    if (!allLecturers) return [];
+    const universities = new Set(allLecturers.map(l => l.university));
+    return Array.from(universities).sort();
+  }, [allLecturers]);
+  const availableDepartments = useMemo(() => {
+    if (!allLecturers) return [];
+    const departments = new Set(allLecturers.map(l => l.department));
+    return Array.from(departments).sort();
+  }, [allLecturers]);
   return (
     <PublicLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -51,16 +72,42 @@ export function DirectoryPage() {
               Find and connect with academics from leading institutions around the world.
             </p>
           </div>
-          <div className="mt-12 max-w-2xl mx-auto">
-            <div className="relative">
+          <div className="mt-12 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="relative md:col-span-3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="text"
                 placeholder="Search by name, specialization, or university..."
-                className="w-full pl-10 py-3 text-base"
+                className="w-full pl-10 py-3 text-base h-11"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
+            </div>
+            <div className="md:col-span-1">
+              <Select value={universityFilter} onValueChange={setUniversityFilter}>
+                <SelectTrigger className="w-full h-11">
+                  <SelectValue placeholder="Filter by University" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Universities</SelectItem>
+                  {availableUniversities.map(uni => (
+                    <SelectItem key={uni} value={uni}>{uni}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-1">
+              <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                <SelectTrigger className="w-full h-11">
+                  <SelectValue placeholder="Filter by Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Departments</SelectItem>
+                  {availableDepartments.map(dep => (
+                    <SelectItem key={dep} value={dep}>{dep}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -69,7 +116,7 @@ export function DirectoryPage() {
             ) : isError ? (
               <p className="col-span-full text-center text-destructive">Failed to load lecturers.</p>
             ) : (
-              lecturers.map((lecturer, index) => (
+              lecturers?.map((lecturer, index) => (
                 <motion.div
                   key={lecturer.id}
                   initial={{ opacity: 0, y: 20 }}
