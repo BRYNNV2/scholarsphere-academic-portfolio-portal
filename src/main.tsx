@@ -64,18 +64,8 @@ const router = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
   },
   {
-    path: "/publications/:id",
-    element: <AcademicWorkDetailPage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
     path: "/research",
     element: <ResearchPage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/research/:id",
-    element: <AcademicWorkDetailPage />,
     errorElement: <RouteErrorBoundary />,
   },
   {
@@ -84,7 +74,7 @@ const router = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
   },
   {
-    path: "/portfolio/:id",
+    path: "/work/:id",
     element: <AcademicWorkDetailPage />,
     errorElement: <RouteErrorBoundary />,
   },

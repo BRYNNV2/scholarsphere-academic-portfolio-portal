@@ -43,15 +43,7 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
       default: return null;
     }
   };
-  const getPathForType = (type: AcademicWork['type']) => {
-    switch (type) {
-      case 'project': return 'research';
-      case 'publication': return 'publications';
-      case 'portfolio': return 'portfolio';
-      default: return `${type}s`;
-    }
-  };
-  const itemUrl = `/${getPathForType(item.type)}/${item.id}`;
+  const itemUrl = `/work/${item.id}`;
   return (
     <motion.div
       key={item.id}
