@@ -35,6 +35,8 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       projectIds: [],
       portfolioItemIds: [],
       savedItemIds: [],
+      followerIds: [],
+      followingIds: [],
       specializations: body.specializations || [],
       socialLinks: body.socialLinks || {},
       photoUrl: body.photoUrl || `https://i.pravatar.cc/300?u=${body.email}`,
@@ -130,6 +132,45 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       savedItemIds: (state.savedItemIds ?? []).filter(id => id !== postId)
     }));
     return ok(c, await userEntity.getState());
+  });
+  secured.post('/users/:id/follow', async (c) => {
+    const payload = c.get('jwtPayload');
+    const currentUserId = payload.sub;
+    const { id: targetUserId } = c.req.param();
+    if (currentUserId === targetUserId) return bad(c, 'You cannot follow yourself.');
+    const currentUserEntity = new UserProfileEntity(c.env, currentUserId);
+    const targetUserEntity = new UserProfileEntity(c.env, targetUserId);
+    if (!(await currentUserEntity.exists()) || !(await targetUserEntity.exists())) {
+      return notFound(c, 'User not found');
+    }
+    await currentUserEntity.mutate(state => ({
+      ...state,
+      followingIds: [...new Set([...(state.followingIds || []), targetUserId])]
+    }));
+    await targetUserEntity.mutate(state => ({
+      ...state,
+      followerIds: [...new Set([...(state.followerIds || []), currentUserId])]
+    }));
+    return ok(c, await currentUserEntity.getState());
+  });
+  secured.delete('/users/:id/follow', async (c) => {
+    const payload = c.get('jwtPayload');
+    const currentUserId = payload.sub;
+    const { id: targetUserId } = c.req.param();
+    const currentUserEntity = new UserProfileEntity(c.env, currentUserId);
+    const targetUserEntity = new UserProfileEntity(c.env, targetUserId);
+    if (!(await currentUserEntity.exists()) || !(await targetUserEntity.exists())) {
+      return notFound(c, 'User not found');
+    }
+    await currentUserEntity.mutate(state => ({
+      ...state,
+      followingIds: (state.followingIds || []).filter(id => id !== targetUserId)
+    }));
+    await targetUserEntity.mutate(state => ({
+      ...state,
+      followerIds: (state.followerIds || []).filter(id => id !== currentUserId)
+    }));
+    return ok(c, await currentUserEntity.getState());
   });
   secured.post('/publications', async (c) => {
     const body = await c.req.json<PublicationCreatePayload>();
