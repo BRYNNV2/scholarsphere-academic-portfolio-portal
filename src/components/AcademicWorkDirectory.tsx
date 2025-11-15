@@ -63,19 +63,16 @@ export function AcademicWorkDirectory({
     queryKey: ['users'],
     queryFn: () => api('/api/users'),
   });
-  const { data: allItemsForYears } = useQuery<AcademicWork[]>({
-    queryKey: [queryKey, 'all'],
-    queryFn: () => api(apiEndpoint),
+
+  const { data: availableYears = [] } = useQuery<number[]>({
+    queryKey: [queryKey, 'years'],
+    queryFn: () => api(`${apiEndpoint}/years`),
   });
+
   const usersMap = useMemo(() => {
     if (!users) return new Map<string, UserProfile>();
     return new Map(users.map(l => [l.id, l]));
   }, [users]);
-  const availableYears = useMemo(() => {
-    if (!allItemsForYears) return [];
-    const years = new Set(allItemsForYears.map(item => item.year));
-    return Array.from(years).sort((a, b) => b - a);
-  }, [allItemsForYears]);
   const isLoading = isLoadingItems || isLoadingUsers;
   return (
     <PublicLayout>
