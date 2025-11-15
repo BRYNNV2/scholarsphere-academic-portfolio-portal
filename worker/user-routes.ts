@@ -203,7 +203,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const deleted = await PublicationEntity.delete(c.env, id);
     return ok(c, { id, deleted });
   });
-  secured.post('/projects', async (c) => {
+  secured.post('/research', async (c) => {
     const body = await c.req.json<ProjectCreatePayload>();
     const { lecturerId, ...projData } = body;
     if (!lecturerId) return bad(c, 'lecturerId is required');
@@ -214,7 +214,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     await user.mutate(state => ({ ...state, projectIds: [...(state.projectIds ?? []), newProj.id] }));
     return ok(c, newProj);
   });
-  secured.put('/projects/:id', async (c) => {
+  secured.put('/research/:id', async (c) => {
     const { id } = c.req.param();
     const body = await c.req.json<Partial<ResearchProject>>();
     const proj = new ResearchProjectEntity(c.env, id);
@@ -222,7 +222,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     await proj.patch(body);
     return ok(c, await proj.getState());
   });
-  secured.delete('/projects/:id', async (c) => {
+  secured.delete('/research/:id', async (c) => {
     const { id } = c.req.param();
     const projEntity = new ResearchProjectEntity(c.env, id);
     if (!(await projEntity.exists())) return notFound(c, 'Project not found');
