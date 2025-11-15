@@ -11,6 +11,19 @@ import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ArrowLeft, Book, Briefcase, Building, ExternalLink, FlaskConical, User } from 'lucide-react';
+const getPathForType = (type: AcademicWork['type']) => {
+  switch (type) {
+    case 'publication':
+      return 'publications';
+    case 'project':
+      return 'research';
+    case 'portfolio':
+      return 'portfolio';
+    default:
+      // Fallback to a sensible default, though this should ideally not be reached with valid data
+      return type;
+  }
+};
 function AcademicWorkDetailPageSkeleton() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
@@ -100,13 +113,17 @@ export function AcademicWorkDetailPage() {
       </PublicLayout>
     );
   }
+
+  const backPath = getPathForType(item.type);
+  const backPathTitle = backPath.charAt(0).toUpperCase() + backPath.slice(1);
+
   return (
     <PublicLayout>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         <Button variant="ghost" asChild className="mb-8">
-          <Link to={`/${itemType}`}>
+          <Link to={`/${backPath}`}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to {itemType.charAt(0).toUpperCase() + itemType.slice(1)}
+            Back to {backPathTitle}
           </Link>
         </Button>
         <article>
