@@ -44,13 +44,13 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
   const thumbnailUrlValue = form.watch('thumbnailUrl');
   const mutation = useMutation({
     mutationFn: (data: Partial<ResearchProject> & { lecturerId?: string }) =>
-      api(project ? `/api/projects/${project.id}` : '/api/projects', {
+      api(project ? `/api/research/${project.id}` : '/api/research', {
         method: project ? 'PUT' : 'POST',
         body: JSON.stringify(data),
       }),
     onSuccess: () => {
       toast.success(`Project ${project ? 'updated' : 'added'} successfully!`);
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['research'] });
       queryClient.invalidateQueries({ queryKey: ['user', currentUser?.id] });
       onFinished();
     },
@@ -167,8 +167,8 @@ export function DashboardResearchPage() {
     enabled: !!userId,
   });
   const { data: allProjects, isLoading: isLoadingProjs } = useQuery<ResearchProject[]>({
-    queryKey: ['projects'],
-    queryFn: () => api('/api/projects'),
+    queryKey: ['research'],
+    queryFn: () => api('/api/research'),
   });
   const userProjects = useMemo(() => {
     if (!profile || !allProjects) return [];
@@ -177,10 +177,10 @@ export function DashboardResearchPage() {
   }, [profile, allProjects]);
   const isLoading = isLoadingProfile || isLoadingProjs;
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api(`/api/projects/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: string) => api(`/api/research/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       toast.success('Project deleted successfully!');
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['research'] });
       queryClient.invalidateQueries({ queryKey: ['user', userId] });
     },
     onError: (error) => {
