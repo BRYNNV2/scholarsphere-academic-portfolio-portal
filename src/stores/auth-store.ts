@@ -25,7 +25,7 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage', // unique name
       storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
-      onRehydrateStorage: () => (state) => {
+      onRehydrateStorage: (state) => {
         if (state) {
           state.isAuthenticated = !!state.token;
         }
