@@ -1,7 +1,21 @@
 import { ApiResponse } from "../../shared/types"
-import { useAuthStore, hasHydrated } from "@/stores/auth-store";
+import { useAuthStore } from "@/stores/auth-store";
+
+const waitForHydration = () => {
+  return new Promise<void>(resolve => {
+    const check = () => {
+      if (useAuthStore.persist.hasHydrated()) {
+        resolve();
+      } else {
+        setTimeout(check, 10);
+      }
+    };
+    check();
+  });
+};
+
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  await hasHydrated;
+  await waitForHydration();
   const token = useAuthStore.getState().token;
   const headers = new Headers(init?.headers);
   headers.set('Content-Type', 'application/json');

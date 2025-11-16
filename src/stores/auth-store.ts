@@ -9,20 +9,15 @@ interface AuthState {
   logout: () => void;
   updateUser: (data: Partial<UserProfile>) => void;
 }
-let resolveHydration: (value: boolean) => void;
-const hydratedPromise = new Promise<boolean>((resolve) => {
-  resolveHydration = resolve;
-});
-
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
       token: null,
       isAuthenticated: false,
-      login: (user, token) => set({ user, token, isAuthenticated: true }),
+      login: (user: UserProfile, token: string) => set({ user, token, isAuthenticated: true }),
       logout: () => set({ user: null, token: null, isAuthenticated: false }),
-      updateUser: (data) =>
+      updateUser: (data: Partial<UserProfile>) =>
         set((state) => ({
           user: state.user ? { ...state.user, ...data } : null,
         })),
@@ -30,18 +25,11 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage', // unique name
       storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.isAuthenticated = !!state.token;
+        }
+      },
     }
   )
-);
-
-export const hasHydrated = hydratedPromise;
-
-// Manually check for hydration completion
-useAuthStore.subscribe(
-  (state) => {
-    if (!useAuthStore.persist.hasHydrated()) {
-      return;
-    }
-    resolveHydration(true);
-  }
 );
