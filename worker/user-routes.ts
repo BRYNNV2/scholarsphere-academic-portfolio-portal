@@ -51,10 +51,10 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!email || !password) {
       return bad(c, 'Email and password are required');
     }
-    const users = (await UserProfileEntity.list(c.env)).items;
-    const user = users.find(l => l.email === email);
+    const users = await UserProfileEntity.findBy(c.env, 'email', email);
+    const user = users[0];
     if (!user || user.password !== password) {
-      return c.json({ success: false, error: 'Invalid credentials' }, 401);
+      return bad(c, 'Invalid credentials');
     }
     const { password: _, ...userToReturn } = user;
     const token = await sign({ sub: userToReturn.id, role: userToReturn.role }, JWT_SECRET);
