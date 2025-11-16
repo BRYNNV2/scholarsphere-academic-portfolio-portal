@@ -1,6 +1,7 @@
 import { ApiResponse } from "../../shared/types"
-import { useAuthStore } from "@/stores/auth-store";
+import { useAuthStore, hasHydrated } from "@/stores/auth-store";
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  await hasHydrated;
   const token = useAuthStore.getState().token;
   const headers = new Headers(init?.headers);
   headers.set('Content-Type', 'application/json');

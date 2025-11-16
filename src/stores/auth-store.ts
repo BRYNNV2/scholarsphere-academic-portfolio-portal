@@ -9,6 +9,11 @@ interface AuthState {
   logout: () => void;
   updateUser: (data: Partial<UserProfile>) => void;
 }
+let resolveHydration: (value: boolean) => void;
+const hydratedPromise = new Promise<boolean>((resolve) => {
+  resolveHydration = resolve;
+});
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -27,4 +32,16 @@ export const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
     }
   )
+);
+
+export const hasHydrated = hydratedPromise;
+
+// Manually check for hydration completion
+useAuthStore.subscribe(
+  (state) => {
+    if (!useAuthStore.persist.hasHydrated()) {
+      return;
+    }
+    resolveHydration(true);
+  }
 );

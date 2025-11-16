@@ -5,38 +5,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { ArrowRight, BookCopy, Globe, Share2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
 import { UserProfile } from '@shared/types';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api-client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/stores/auth-store';
 export function HomePage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const [users, setUsers] = useState<UserProfile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetch('/api/users');
-        if (!response.ok) {
-          throw new Error('Failed to fetch users');
-        }
-        const json = await response.json();
-        const data: UserProfile[] = json.data;
-        setUsers(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUsers();
-  }, []);
+  const { data: users = [], isLoading, error } = useQuery({
+    queryKey: ['public', 'users'],
+    queryFn: () => api<UserProfile[]>('/api/users'),
+  });
 
   const featuredLecturers = users.filter(u => u.role === 'lecturer');
   const fadeIn = {
@@ -166,7 +146,7 @@ export function HomePage() {
                 </motion.div>
               ))
             )}
-            {error && <p className="text-center text-destructive col-span-full">{error}</p>}
+            {error && <p className="text-center text-destructive col-span-full">{error.message}</p>}
           </div>
         </div>
       </div>
