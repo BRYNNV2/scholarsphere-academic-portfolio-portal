@@ -1,28 +1,21 @@
-import { ApiResponse } from "../../shared/types";
+import { ApiResponse } from "../../shared/types"
 import { useAuthStore } from "@/stores/auth-store";
-// This promise ensures that the Zustand store is hydrated from localStorage before any API calls are made.
-// This is crucial for ensuring the auth token is available on initial page load.
-const hydrationPromise = new Promise<void>(resolve => {
-  if (useAuthStore.persist.hasHydrated()) {
-    resolve();
-  } else {
-    const unsub = useAuthStore.persist.onFinishHydration(() => {
-      resolve();
-      unsub();
-    });
-  }
-});
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  await hydrationPromise;
+/**
+ * A fixed API client that safely retrieves the auth token from the Zustand store
+ * using `getState()`, making it usable outside of React components.
+ * @param path The API endpoint path.
+ * @param init Optional request initialization options.
+ * @returns A promise that resolves with the API response data.
+ */
+export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  // Correctly retrieve token from Zustand store outside of a React component
   const token = useAuthStore.getState().token;
-  const headers = new Headers(options.headers);
-  if (!headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
-  }
+  const headers = new Headers(init?.headers);
+  headers.set('Content-Type', 'application/json');
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
-  const res = await fetch(path, { ...options, headers });
+  const res = await fetch(path, { ...init, headers });
   if (res.status === 204) { // No Content
     return undefined as T;
   }
@@ -32,25 +25,3 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
   return json.data;
 }
-export const api = {
-  get: <T>(path: string): Promise<T> => {
-    return request<T>(path, { method: 'GET' });
-  },
-  post: <T>(path: string, body?: unknown): Promise<T> => {
-    return request<T>(path, {
-      method: 'POST',
-      body: body ? JSON.stringify(body) : null,
-    });
-  },
-  put: <T>(path: string, body?: unknown): Promise<T> => {
-    return request<T>(path, {
-      method: 'PUT',
-      body: body ? JSON.stringify(body) : null,
-    });
-  },
-  delete: <T>(path: string): Promise<T> => {
-    return request<T>(path, { method: 'DELETE' });
-  },
-};
-// Per client request, the `get` method is also the default export for convenience.
-export default api.get;
