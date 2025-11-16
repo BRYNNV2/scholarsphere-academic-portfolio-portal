@@ -64,7 +64,7 @@ const router = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
   },
   {
-    path: "/research",
+    path: "/projects",
     element: <ResearchPage />,
     errorElement: <RouteErrorBoundary />,
   },
