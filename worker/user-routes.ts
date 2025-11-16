@@ -329,6 +329,12 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const years = [...new Set(items.map(item => item.year))].sort((a, b) => b - a);
     return ok(c, years);
   });
+  app.get('/api/research/:id', async (c) => {
+    const { id } = c.req.param();
+    const project = await ResearchProjectEntity.get(c.env, id);
+    if (!project) return notFound(c, 'Research project not found');
+    return ok(c, project);
+  });
   app.get('/api/portfolio', async (c) => {
     const { q, year } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
