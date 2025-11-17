@@ -34,18 +34,14 @@ export function AppSidebar(): JSX.Element {
           <SidebarGroupHeader>Main</SidebarGroupHeader>
           <SidebarMenu>
             <SidebarMenuItem>
-              <NavLink to="/dashboard">
-                <SidebarMenuButton isActive={isActive("/dashboard")}>
-                  <Home /> <span>Dashboard</span>
-                </SidebarMenuButton>
-              </NavLink>
+              <SidebarMenuButton isActive={isActive("/dashboard")} onClick={() => navigate('/dashboard')}>
+                <Home /> <span>Dashboard</span>
+              </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <NavLink to="/dashboard/profile">
-                <SidebarMenuButton isActive={isActive("/dashboard/profile")}>
-                  <User /> <span>Profile</span>
-                </SidebarMenuButton>
-              </NavLink>
+              <SidebarMenuButton isActive={isActive("/dashboard/profile")} onClick={() => navigate('/dashboard/profile')}>
+                <User /> <span>Profile</span>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
@@ -54,25 +50,19 @@ export function AppSidebar(): JSX.Element {
             <SidebarGroupHeader>Portfolio Management</SidebarGroupHeader>
             <SidebarMenu>
               <SidebarMenuItem>
-                <NavLink to="/dashboard/publications">
-                  <SidebarMenuButton isActive={isActive("/dashboard/publications")}>
-                    <BookCopy /> <span>Publications</span>
-                  </SidebarMenuButton>
-                </NavLink>
+                <SidebarMenuButton isActive={isActive("/dashboard/publications")} onClick={() => navigate('/dashboard/publications')}>
+                  <BookCopy /> <span>Publications</span>
+                </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <NavLink to="/dashboard/research">
-                  <SidebarMenuButton isActive={isActive("/dashboard/research")}>
-                    <FlaskConical /> <span>Research</span>
-                  </SidebarMenuButton>
-                </NavLink>
+                <SidebarMenuButton isActive={isActive("/dashboard/research")} onClick={() => navigate('/dashboard/research')}>
+                  <FlaskConical /> <span>Research</span>
+                </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <NavLink to="/dashboard/portfolio">
-                  <SidebarMenuButton isActive={isActive("/dashboard/portfolio")}>
-                    <Briefcase /> <span>Portfolio</span>
-                  </SidebarMenuButton>
-                </NavLink>
+                <SidebarMenuButton isActive={isActive("/dashboard/portfolio")} onClick={() => navigate('/dashboard/portfolio')}>
+                  <Briefcase /> <span>Portfolio</span>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
@@ -82,25 +72,19 @@ export function AppSidebar(): JSX.Element {
             <SidebarGroupHeader>Support & About</SidebarGroupHeader>
             <SidebarMenu>
               <SidebarMenuItem>
-                <NavLink to="/dashboard/support">
-                  <SidebarMenuButton isActive={isActive("/dashboard/support")}>
-                    <ShieldQuestion /> <span>Support</span>
-                  </SidebarMenuButton>
-                </NavLink>
+                <SidebarMenuButton isActive={isActive("/dashboard/support")} onClick={() => navigate('/dashboard/support')}>
+                  <ShieldQuestion /> <span>Support</span>
+                </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <NavLink to="/dashboard/report-problem">
-                  <SidebarMenuButton isActive={isActive("/dashboard/report-problem")}>
-                    <MessageSquareWarning /> <span>Report a Problem</span>
-                  </SidebarMenuButton>
-                </NavLink>
+                <SidebarMenuButton isActive={isActive("/dashboard/report-problem")} onClick={() => navigate('/dashboard/report-problem')}>
+                  <MessageSquareWarning /> <span>Report a Problem</span>
+                </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <NavLink to="/dashboard/terms-and-policies">
-                  <SidebarMenuButton isActive={isActive("/dashboard/terms-and-policies")}>
-                    <FileText /> <span>Terms & Policies</span>
-                  </SidebarMenuButton>
-                </NavLink>
+                <SidebarMenuButton isActive={isActive("/dashboard/terms-and-policies")} onClick={() => navigate('/dashboard/terms-and-policies')}>
+                  <FileText /> <span>Terms & Policies</span>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
@@ -109,18 +93,14 @@ export function AppSidebar(): JSX.Element {
           <SidebarGroupHeader>Account</SidebarGroupHeader>
           <SidebarMenu>
             <SidebarMenuItem>
-              <NavLink to="/dashboard/settings">
-                <SidebarMenuButton isActive={isActive("/dashboard/settings")}>
-                  <Settings /> <span>Settings</span>
-                </SidebarMenuButton>
-              </NavLink>
+              <SidebarMenuButton isActive={isActive("/dashboard/settings")} onClick={() => navigate('/dashboard/settings')}>
+                <Settings /> <span>Settings</span>
+              </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <NavLink to="/">
-                <SidebarMenuButton>
-                  <Globe /> <span>Homepage</span>
-                </SidebarMenuButton>
-              </NavLink>
+              <SidebarMenuButton onClick={() => navigate('/')}>
+                <Globe /> <span>Homepage</span>
+              </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton onClick={handleLogout}>
