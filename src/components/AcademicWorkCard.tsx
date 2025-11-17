@@ -8,7 +8,7 @@ import { AcademicWork, UserProfile } from '@shared/types';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useAuthStore } from '@/stores/auth-store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api-client';
+import { api } from "../lib/api-client";
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 interface AcademicWorkCardProps {
@@ -23,9 +23,9 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
   const canSave = currentUser?.role === 'student';
   const isSaved = (currentUser?.savedItemIds ?? []).includes(item.id);
   const saveMutation = useMutation({
-    mutationFn: () => isSaved
-      ? api(`/api/users/me/save/${item.id}`, { method: 'DELETE' })
-      : api(`/api/users/me/save/${item.id}`, { method: 'POST' }),
+    mutationFn: () => isSaved ?
+    api(`/api/users/me/save/${item.id}`, { method: 'DELETE' }) :
+    api(`/api/users/me/save/${item.id}`, { method: 'POST' }),
     onSuccess: (updatedProfile: UserProfile) => {
       toast.success(isSaved ? 'Item unsaved!' : 'Item saved for later!');
       queryClient.invalidateQueries({ queryKey: ['user', currentUser?.id] });
@@ -33,14 +33,14 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
     },
     onError: (error) => {
       toast.error((error as Error).message);
-    },
+    }
   });
   const getIcon = () => {
     switch (item.type) {
-      case 'publication': return <BookCopy className="h-12 w-12" />;
-      case 'project': return <FlaskConical className="h-12 w-12" />;
-      case 'portfolio': return <Briefcase className="h-12 w-12" />;
-      default: return null;
+      case 'publication':return <BookCopy className="h-12 w-12" />;
+      case 'project':return <FlaskConical className="h-12 w-12" />;
+      case 'portfolio':return <Briefcase className="h-12 w-12" />;
+      default:return null;
     }
   };
   const itemUrl = `/work/${item.id}`;
@@ -50,29 +50,29 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.05 }}
-      className="h-full"
-    >
+      className="h-full">
+
       <Card className="h-full flex flex-col overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 relative">
-        {canSave && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 z-10 bg-background/70 hover:bg-background"
-            onClick={() => saveMutation.mutate()}
-            disabled={saveMutation.isPending}
-          >
+        {canSave &&
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-2 right-2 z-10 bg-background/70 hover:bg-background"
+          onClick={() => saveMutation.mutate()}
+          disabled={saveMutation.isPending}>
+
             <Bookmark className={cn("h-5 w-5", isSaved && "fill-primary text-primary")} />
           </Button>
-        )}
+        }
         <Link to={itemUrl}>
           <AspectRatio ratio={16 / 9} className="bg-muted">
-            {item.thumbnailUrl ? (
-              <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" />
-            ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
+            {item.thumbnailUrl ?
+            <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" /> :
+
+            <div className="flex items-center justify-center h-full text-muted-foreground">
                 {getIcon()}
               </div>
-            )}
+            }
           </AspectRatio>
         </Link>
         <CardHeader>
@@ -92,24 +92,24 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
             {item.type === 'portfolio' && <p>{item.description}</p>}
           </div>
           <div className="mt-4 pt-4 border-t flex justify-between items-center">
-            {author ? (
-              <Button variant="ghost" size="sm" asChild>
+            {author ?
+            <Button variant="ghost" size="sm" asChild>
                 <Link to={`/users/${author.id}`} className="text-sm">
                   <User className="mr-2 h-4 w-4" />
                   {author.name}
                 </Link>
-              </Button>
-            ) : <div />}
-            {item.url && (
-              <Button variant="outline" size="sm" asChild>
+              </Button> :
+            <div />}
+            {item.url &&
+            <Button variant="outline" size="sm" asChild>
                 <a href={item.url} target="_blank" rel="noopener noreferrer">
                   View <ExternalLink className="ml-2 h-4 w-4" />
                 </a>
               </Button>
-            )}
+            }
           </div>
         </CardContent>
       </Card>
-    </motion.div>
-  );
+    </motion.div>);
+
 }

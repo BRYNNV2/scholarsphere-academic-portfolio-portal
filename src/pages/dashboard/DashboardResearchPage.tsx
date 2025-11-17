@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { api } from '@/lib/api-client';
+import { api } from "../../lib/api-client";
 import { ResearchProject, UserProfile } from '@shared/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button } from '@/components/ui/button';
@@ -24,10 +24,10 @@ const projectSchema = z.object({
   role: z.string().min(1, 'Role is required'),
   year: z.number().int().min(1900, 'Invalid year').max(new Date().getFullYear() + 5, 'Invalid year'),
   url: z.string().url('Invalid URL').optional().or(z.literal('')),
-  thumbnailUrl: z.string().optional(),
+  thumbnailUrl: z.string().optional()
 });
 type ProjectFormData = z.infer<typeof projectSchema>;
-function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFinished: () => void }) {
+function ProjectForm({ project, onFinished }: {project?: ResearchProject;onFinished: () => void;}) {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,16 +39,16 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
       role: project?.role || '',
       year: project?.year || new Date().getFullYear(),
       url: project?.url || '',
-      thumbnailUrl: project?.thumbnailUrl || '',
-    },
+      thumbnailUrl: project?.thumbnailUrl || ''
+    }
   });
   const thumbnailUrlValue = form.watch('thumbnailUrl');
   const mutation = useMutation({
-    mutationFn: (data: Partial<ResearchProject> & { lecturerId?: string }) =>
-      api(project ? `/api/research/${project.id}` : '/api/research', {
-        method: project ? 'PUT' : 'POST',
-        body: JSON.stringify(data),
-      }),
+    mutationFn: (data: Partial<ResearchProject> & {lecturerId?: string;}) =>
+    api(project ? `/api/research/${project.id}` : '/api/research', {
+      method: project ? 'PUT' : 'POST',
+      body: JSON.stringify(data)
+    }),
     onSuccess: () => {
       toast.success(`Project ${project ? 'updated' : 'added'} successfully!`);
       queryClient.invalidateQueries({ queryKey: ['research'] });
@@ -57,7 +57,7 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
     },
     onError: (error) => {
       toast.error(`Failed to ${project ? 'update' : 'add'} project: ${(error as Error).message}`);
-    },
+    }
   });
   const onSubmit = (data: ProjectFormData) => {
     const payload = { ...data };
@@ -70,7 +70,7 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+    const MAX_FILE_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
       toast.error('File is too large. Maximum size is 2MB.');
       return;
@@ -92,36 +92,36 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField control={form.control} name="thumbnailUrl" render={({ field }) => (
-          <FormItem>
+        <FormField control={form.control} name="thumbnailUrl" render={({ field }) =>
+        <FormItem>
             <FormLabel>Cover Image</FormLabel>
             <div className="flex items-center gap-4">
               <div className="w-32">
                 <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden">
-                  {thumbnailUrlValue ? (
-                    <img src={thumbnailUrlValue} alt="Cover image preview" className="object-cover w-full h-full" />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                  {thumbnailUrlValue ?
+                <img src={thumbnailUrlValue} alt="Cover image preview" className="object-cover w-full h-full" /> :
+
+                <div className="flex items-center justify-center h-full text-muted-foreground">
                       <ImageIcon className="h-8 w-8" />
                     </div>
-                  )}
+                }
                 </AspectRatio>
               </div>
               <div className="flex-grow">
                 <FormControl>
                   <Input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/png, image/jpeg, image/gif"
-                    onChange={handleFileChange}
-                  />
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/png, image/jpeg, image/gif"
+                  onChange={handleFileChange} />
+
                 </FormControl>
                 <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                >
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}>
+
                   Upload Image
                 </Button>
                 <FormDescription className="mt-2">
@@ -131,29 +131,29 @@ function ProjectForm({ project, onFinished }: { project?: ResearchProject, onFin
               </div>
             </div>
           </FormItem>
-        )} />
-        <FormField control={form.control} name="title" render={({ field }) => (
-          <FormItem><FormLabel>Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <FormField control={form.control} name="description" render={({ field }) => (
-          <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <FormField control={form.control} name="role" render={({ field }) => (
-          <FormItem><FormLabel>Your Role</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <FormField control={form.control} name="year" render={({ field }) => (
-          <FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <FormField control={form.control} name="url" render={({ field }) => (
-          <FormItem><FormLabel>URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
+        } />
+        <FormField control={form.control} name="title" render={({ field }) =>
+        <FormItem><FormLabel>Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+        } />
+        <FormField control={form.control} name="description" render={({ field }) =>
+        <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+        } />
+        <FormField control={form.control} name="role" render={({ field }) =>
+        <FormItem><FormLabel>Your Role</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+        } />
+        <FormField control={form.control} name="year" render={({ field }) =>
+        <FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>
+        } />
+        <FormField control={form.control} name="url" render={({ field }) =>
+        <FormItem><FormLabel>URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
+        } />
         <DialogFooter>
           <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
           <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? 'Saving...' : 'Save'}</Button>
         </DialogFooter>
       </form>
-    </Form>
-  );
+    </Form>);
+
 }
 export function DashboardResearchPage() {
   const [isFormOpen, setFormOpen] = useState(false);
@@ -165,16 +165,16 @@ export function DashboardResearchPage() {
   const { data: profile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
     queryKey: ['user', userId],
     queryFn: () => api(`/api/users/${userId}`),
-    enabled: !!userId,
+    enabled: !!userId
   });
   const { data: allProjects, isLoading: isLoadingProjs } = useQuery<ResearchProject[]>({
     queryKey: ['research'],
-    queryFn: () => api('/api/research'),
+    queryFn: () => api('/api/research')
   });
   const userProjects = useMemo(() => {
     if (!profile || !allProjects) return [];
     const userProjIds = new Set(profile.projectIds);
-    return allProjects.filter(proj => userProjIds.has(proj.id));
+    return allProjects.filter((proj) => userProjIds.has(proj.id));
   }, [profile, allProjects]);
   const isLoading = isLoadingProfile || isLoadingProjs;
   const deleteMutation = useMutation({
@@ -187,7 +187,7 @@ export function DashboardResearchPage() {
     onError: (error) => {
       toast.error(`Failed to delete project: ${(error as Error).message}`);
     },
-    onSettled: () => setAlertOpen(false),
+    onSettled: () => setAlertOpen(false)
   });
   const handleEdit = (proj: ResearchProject) => {
     setSelectedProj(proj);
@@ -232,18 +232,18 @@ export function DashboardResearchPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <TableRow key={i}>
+            {isLoading ?
+            Array.from({ length: 3 }).map((_, i) =>
+            <TableRow key={i}>
                   <TableCell><Skeleton className="h-5 w-48" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                   <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
                 </TableRow>
-              ))
-            ) : userProjects.length > 0 ? (
-              userProjects.map((proj) => (
-                <TableRow key={proj.id}>
+            ) :
+            userProjects.length > 0 ?
+            userProjects.map((proj) =>
+            <TableRow key={proj.id}>
                   <TableCell className="font-medium">{proj.title}</TableCell>
                   <TableCell>{proj.role}</TableCell>
                   <TableCell>{proj.year}</TableCell>
@@ -252,19 +252,19 @@ export function DashboardResearchPage() {
                     <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(proj)}><Trash2 className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
+            ) :
+
+            <TableRow>
                 <TableCell colSpan={4} className="p-0">
                   <EmptyState
-                    icon={<FlaskConical className="h-8 w-8" />}
-                    title="No Research Projects Yet"
-                    description="Showcase your work by adding your first research project."
-                    action={{ label: 'Add Project', onClick: handleAddNew }}
-                  />
+                  icon={<FlaskConical className="h-8 w-8" />}
+                  title="No Research Projects Yet"
+                  description="Showcase your work by adding your first research project."
+                  action={{ label: 'Add Project', onClick: handleAddNew }} />
+
                 </TableCell>
               </TableRow>
-            )}
+            }
           </TableBody>
         </Table>
       </div>
@@ -284,6 +284,6 @@ export function DashboardResearchPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
+    </div>);
+
 }

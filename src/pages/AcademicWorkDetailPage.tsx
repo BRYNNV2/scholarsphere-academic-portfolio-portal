@@ -1,7 +1,7 @@
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import { api } from '@/lib/api-client';
+import { api } from "../lib/api-client";
 import { AcademicWork, UserProfile } from '@shared/types';
 import { CommentsSection } from '@/components/CommentsSection';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -21,7 +21,7 @@ const getPathForType = (type: AcademicWork['type']) => {
     case 'portfolio':
       return 'portfolio';
     default:
-      // Fallback to a sensible default, though this should ideally not be reached with valid data
+
       return type;
   }
 };
@@ -43,27 +43,27 @@ function AcademicWorkDetailPageSkeleton() {
         <Skeleton className="h-5 w-full" />
         <Skeleton className="h-5 w-5/6" />
       </div>
-    </div>
-  );
+    </div>);
+
 }
 export function AcademicWorkDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{id: string;}>();
   const { data: item, isLoading: isLoadingItem, isError } = useQuery<AcademicWork>({
     queryKey: ['academic-work', id],
     queryFn: () => api(`/api/academic-work/${id}`),
-    enabled: !!id,
+    enabled: !!id
   });
   const { data: author, isLoading: isLoadingAuthor } = useQuery<UserProfile>({
     queryKey: ['user', item?.lecturerId],
     queryFn: () => api(`/api/users/${item?.lecturerId}`),
-    enabled: !!item?.lecturerId,
+    enabled: !!item?.lecturerId
   });
   const getIcon = (type: AcademicWork['type']) => {
     switch (type) {
-      case 'publication': return <Book className="h-10 w-10" />;
-      case 'project': return <FlaskConical className="h-10 w-10" />;
-      case 'portfolio': return <Briefcase className="h-10 w-10" />;
-      default: return null;
+      case 'publication':return <Book className="h-10 w-10" />;
+      case 'project':return <FlaskConical className="h-10 w-10" />;
+      case 'portfolio':return <Briefcase className="h-10 w-10" />;
+      default:return null;
     }
   };
   const renderItemDetails = (item: AcademicWork) => {
@@ -73,15 +73,15 @@ export function AcademicWorkDetailPage() {
           <>
             <p className="text-lg text-muted-foreground">{item.authors.join(', ')}</p>
             <p className="text-md text-muted-foreground"><em>{item.journal}</em>, {item.year}</p>
-          </>
-        );
+          </>);
+
       case 'project':
         return (
           <>
             <p className="text-lg text-muted-foreground"><strong>Role:</strong> {item.role} ({item.year})</p>
             <p className="mt-6 text-lg leading-relaxed whitespace-pre-wrap">{item.description}</p>
-          </>
-        );
+          </>);
+
       case 'portfolio':
         return (
           <>
@@ -90,8 +90,8 @@ export function AcademicWorkDetailPage() {
               <p className="text-lg text-muted-foreground">{item.year}</p>
             </div>
             <p className="mt-6 text-lg leading-relaxed whitespace-pre-wrap">{item.description}</p>
-          </>
-        );
+          </>);
+
       default:
         return null;
     }
@@ -109,8 +109,8 @@ export function AcademicWorkDetailPage() {
             <Link to="/">Back to Home</Link>
           </Button>
         </div>
-      </PublicLayout>
-    );
+      </PublicLayout>);
+
   }
 
   const backPath = getPathForType(item.type);
@@ -128,11 +128,11 @@ export function AcademicWorkDetailPage() {
         <article>
           <header className="mb-8">
             <h1 className="text-4xl md:text-5xl font-display font-bold text-foreground tracking-tight">{item.title}</h1>
-            {author && (
-              <div className="mt-6 flex items-center gap-4">
+            {author &&
+            <div className="mt-6 flex items-center gap-4">
                 <Avatar className="h-16 w-16">
                   <AvatarImage src={author.photoUrl} alt={author.name} />
-                  <AvatarFallback>{author.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  <AvatarFallback>{author.name.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
                 </Avatar>
                 <div>
                   <Link to={`/users/${author.id}`} className="text-lg font-semibold hover:underline">{author.name}</Link>
@@ -141,32 +141,32 @@ export function AcademicWorkDetailPage() {
                   </p>
                 </div>
               </div>
-            )}
+            }
           </header>
           <Card className="overflow-hidden">
             <AspectRatio ratio={16 / 9} className="bg-muted">
-              {item.thumbnailUrl ? (
-                <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" />
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
+              {item.thumbnailUrl ?
+              <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" /> :
+
+              <div className="flex items-center justify-center h-full text-muted-foreground">
                   {getIcon(item.type)}
                 </div>
-              )}
+              }
             </AspectRatio>
             <CardContent className="p-6 md:p-8 space-y-4">
               {renderItemDetails(item)}
-              {item.url && (
-                <Button asChild className="mt-6">
+              {item.url &&
+              <Button asChild className="mt-6">
                   <a href={item.url} target="_blank" rel="noopener noreferrer">
                     View Source <ExternalLink className="ml-2 h-4 w-4" />
                   </a>
                 </Button>
-              )}
+              }
             </CardContent>
             <CommentsSection postId={item.id} />
           </Card>
         </article>
       </div>
-    </PublicLayout>
-  );
+    </PublicLayout>);
+
 }

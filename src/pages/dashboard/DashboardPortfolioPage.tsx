@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { api } from '@/lib/api-client';
+import { api } from "../../lib/api-client";
 import { PortfolioItem, UserProfile } from '@shared/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button } from '@/components/ui/button';
@@ -24,10 +24,10 @@ const portfolioItemSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   year: z.number().int().min(1900, 'Invalid year').max(new Date().getFullYear() + 5, 'Invalid year'),
   url: z.string().url('Invalid URL').optional().or(z.literal('')),
-  thumbnailUrl: z.string().optional(),
+  thumbnailUrl: z.string().optional()
 });
 type PortfolioItemFormData = z.infer<typeof portfolioItemSchema>;
-function PortfolioItemForm({ item, onFinished }: { item?: PortfolioItem, onFinished: () => void }) {
+function PortfolioItemForm({ item, onFinished }: {item?: PortfolioItem;onFinished: () => void;}) {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,16 +39,16 @@ function PortfolioItemForm({ item, onFinished }: { item?: PortfolioItem, onFinis
       description: item?.description || '',
       year: item?.year || new Date().getFullYear(),
       url: item?.url || '',
-      thumbnailUrl: item?.thumbnailUrl || '',
-    },
+      thumbnailUrl: item?.thumbnailUrl || ''
+    }
   });
   const thumbnailUrlValue = form.watch('thumbnailUrl');
   const mutation = useMutation({
-    mutationFn: (data: Partial<PortfolioItem> & { lecturerId?: string }) =>
-      api(item ? `/api/portfolio/${item.id}` : '/api/portfolio', {
-        method: item ? 'PUT' : 'POST',
-        body: JSON.stringify(data),
-      }),
+    mutationFn: (data: Partial<PortfolioItem> & {lecturerId?: string;}) =>
+    api(item ? `/api/portfolio/${item.id}` : '/api/portfolio', {
+      method: item ? 'PUT' : 'POST',
+      body: JSON.stringify(data)
+    }),
     onSuccess: () => {
       toast.success(`Portfolio item ${item ? 'updated' : 'added'} successfully!`);
       queryClient.invalidateQueries({ queryKey: ['portfolio'] });
@@ -57,7 +57,7 @@ function PortfolioItemForm({ item, onFinished }: { item?: PortfolioItem, onFinis
     },
     onError: (error) => {
       toast.error(`Failed to ${item ? 'update' : 'add'} item: ${(error as Error).message}`);
-    },
+    }
   });
   const onSubmit = (data: PortfolioItemFormData) => {
     const payload = { ...data };
@@ -70,7 +70,7 @@ function PortfolioItemForm({ item, onFinished }: { item?: PortfolioItem, onFinis
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+    const MAX_FILE_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
       toast.error('File is too large. Maximum size is 2MB.');
       return;
@@ -92,36 +92,36 @@ function PortfolioItemForm({ item, onFinished }: { item?: PortfolioItem, onFinis
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField control={form.control} name="thumbnailUrl" render={({ field }) => (
-          <FormItem>
+        <FormField control={form.control} name="thumbnailUrl" render={({ field }) =>
+        <FormItem>
             <FormLabel>Cover Image</FormLabel>
             <div className="flex items-center gap-4">
               <div className="w-32">
                 <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden">
-                  {thumbnailUrlValue ? (
-                    <img src={thumbnailUrlValue} alt="Cover image preview" className="object-cover w-full h-full" />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                  {thumbnailUrlValue ?
+                <img src={thumbnailUrlValue} alt="Cover image preview" className="object-cover w-full h-full" /> :
+
+                <div className="flex items-center justify-center h-full text-muted-foreground">
                       <ImageIcon className="h-8 w-8" />
                     </div>
-                  )}
+                }
                 </AspectRatio>
               </div>
               <div className="flex-grow">
                 <FormControl>
                   <Input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/png, image/jpeg, image/gif"
-                    onChange={handleFileChange}
-                  />
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/png, image/jpeg, image/gif"
+                  onChange={handleFileChange} />
+
                 </FormControl>
                 <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                >
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}>
+
                   Upload Image
                 </Button>
                 <FormDescription className="mt-2">
@@ -131,29 +131,29 @@ function PortfolioItemForm({ item, onFinished }: { item?: PortfolioItem, onFinis
               </div>
             </div>
           </FormItem>
-        )} />
-        <FormField control={form.control} name="title" render={({ field }) => (
-          <FormItem><FormLabel>Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <FormField control={form.control} name="category" render={({ field }) => (
-          <FormItem><FormLabel>Category</FormLabel><FormControl><Input placeholder="e.g., Award, Grant, Teaching" {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <FormField control={form.control} name="description" render={({ field }) => (
-          <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <FormField control={form.control} name="year" render={({ field }) => (
-          <FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <FormField control={form.control} name="url" render={({ field }) => (
-          <FormItem><FormLabel>URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
+        } />
+        <FormField control={form.control} name="title" render={({ field }) =>
+        <FormItem><FormLabel>Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+        } />
+        <FormField control={form.control} name="category" render={({ field }) =>
+        <FormItem><FormLabel>Category</FormLabel><FormControl><Input placeholder="e.g., Award, Grant, Teaching" {...field} /></FormControl><FormMessage /></FormItem>
+        } />
+        <FormField control={form.control} name="description" render={({ field }) =>
+        <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+        } />
+        <FormField control={form.control} name="year" render={({ field }) =>
+        <FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)} /></FormControl><FormMessage /></FormItem>
+        } />
+        <FormField control={form.control} name="url" render={({ field }) =>
+        <FormItem><FormLabel>URL</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
+        } />
         <DialogFooter>
           <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
           <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? 'Saving...' : 'Save'}</Button>
         </DialogFooter>
       </form>
-    </Form>
-  );
+    </Form>);
+
 }
 export function DashboardPortfolioPage() {
   const [isFormOpen, setFormOpen] = useState(false);
@@ -165,16 +165,16 @@ export function DashboardPortfolioPage() {
   const { data: profile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
     queryKey: ['user', userId],
     queryFn: () => api(`/api/users/${userId}`),
-    enabled: !!userId,
+    enabled: !!userId
   });
   const { data: allItems, isLoading: isLoadingItems } = useQuery<PortfolioItem[]>({
     queryKey: ['portfolio'],
-    queryFn: () => api('/api/portfolio'),
+    queryFn: () => api('/api/portfolio')
   });
   const userPortfolioItems = useMemo(() => {
     if (!profile || !allItems) return [];
     const userItemIds = new Set(profile.portfolioItemIds);
-    return allItems.filter(item => userItemIds.has(item.id));
+    return allItems.filter((item) => userItemIds.has(item.id));
   }, [profile, allItems]);
   const isLoading = isLoadingProfile || isLoadingItems;
   const deleteMutation = useMutation({
@@ -187,7 +187,7 @@ export function DashboardPortfolioPage() {
     onError: (error) => {
       toast.error(`Failed to delete item: ${(error as Error).message}`);
     },
-    onSettled: () => setAlertOpen(false),
+    onSettled: () => setAlertOpen(false)
   });
   const handleEdit = (item: PortfolioItem) => {
     setSelectedItem(item);
@@ -232,18 +232,18 @@ export function DashboardPortfolioPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <TableRow key={i}>
+            {isLoading ?
+            Array.from({ length: 3 }).map((_, i) =>
+            <TableRow key={i}>
                   <TableCell><Skeleton className="h-5 w-48" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                   <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
                 </TableRow>
-              ))
-            ) : userPortfolioItems.length > 0 ? (
-              userPortfolioItems.map((item) => (
-                <TableRow key={item.id}>
+            ) :
+            userPortfolioItems.length > 0 ?
+            userPortfolioItems.map((item) =>
+            <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.title}</TableCell>
                   <TableCell>{item.category}</TableCell>
                   <TableCell>{item.year}</TableCell>
@@ -252,19 +252,19 @@ export function DashboardPortfolioPage() {
                     <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(item)}><Trash2 className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
+            ) :
+
+            <TableRow>
                 <TableCell colSpan={4} className="p-0">
                    <EmptyState
-                    icon={<Briefcase className="h-8 w-8" />}
-                    title="No Portfolio Items Yet"
-                    description="Highlight your awards, grants, and other activities by adding them here."
-                    action={{ label: 'Add Item', onClick: handleAddNew }}
-                  />
+                  icon={<Briefcase className="h-8 w-8" />}
+                  title="No Portfolio Items Yet"
+                  description="Highlight your awards, grants, and other activities by adding them here."
+                  action={{ label: 'Add Item', onClick: handleAddNew }} />
+
                 </TableCell>
               </TableRow>
-            )}
+            }
           </TableBody>
         </Table>
       </div>
@@ -284,6 +284,6 @@ export function DashboardPortfolioPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
+    </div>);
+
 }

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api-client';
+import { api } from "../lib/api-client";
 import { AcademicWork, UserProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from 'react-use';
@@ -35,15 +35,15 @@ function WorkCardSkeleton() {
           <Skeleton className="h-9 w-24" />
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }
 export function AcademicWorkDirectory({
   pageTitle,
   pageDescription,
   searchPlaceholder,
   apiEndpoint,
-  queryKey,
+  queryKey
 }: AcademicWorkDirectoryProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [yearFilter, setYearFilter] = useState('');
@@ -53,23 +53,23 @@ export function AcademicWorkDirectory({
   }, 300, [searchTerm]);
   const queryParams = new URLSearchParams({
     q: debouncedSearchTerm,
-    year: yearFilter,
+    year: yearFilter
   });
   const { data: items, isLoading: isLoadingItems } = useQuery<AcademicWork[]>({
     queryKey: [queryKey, debouncedSearchTerm, yearFilter],
-    queryFn: () => api(`${apiEndpoint}?${queryParams.toString()}`),
+    queryFn: () => api(`${apiEndpoint}?${queryParams.toString()}`)
   });
   const { data: users, isLoading: isLoadingUsers } = useQuery<UserProfile[]>({
     queryKey: ['users'],
-    queryFn: () => api('/api/users'),
+    queryFn: () => api('/api/users')
   });
   const { data: availableYears = [] } = useQuery<number[]>({
     queryKey: [queryKey, 'years'],
-    queryFn: () => api(`${apiEndpoint}/years`),
+    queryFn: () => api(`${apiEndpoint}/years`)
   });
   const usersMap = useMemo(() => {
     if (!users) return new Map<string, UserProfile>();
-    return new Map(users.map(l => [l.id, l]));
+    return new Map(users.map((l) => [l.id, l]));
   }, [users]);
   const isLoading = isLoadingItems || isLoadingUsers;
   return (
@@ -90,8 +90,8 @@ export function AcademicWorkDirectory({
                 placeholder={searchPlaceholder}
                 className="w-full pl-10 py-3 text-base h-11"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+                onChange={(e) => setSearchTerm(e.target.value)} />
+
             </div>
             <div>
               <Select value={yearFilter || 'all'} onValueChange={(value) => setYearFilter(value === 'all' ? '' : value)}>
@@ -100,34 +100,34 @@ export function AcademicWorkDirectory({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Years</SelectItem>
-                  {availableYears.map(year => (
-                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                  ))}
+                  {availableYears.map((year) =>
+                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
           </div>
           <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {isLoading ? (
-              Array.from({ length: 6 }).map((_, index) => <WorkCardSkeleton key={index} />)
-            ) : (
-              items?.map((item, index) => (
-                <AcademicWorkCard
-                  key={item.id}
-                  item={item}
-                  author={usersMap.get(item.lecturerId)}
-                  index={index}
-                />
-              ))
-            )}
+            {isLoading ?
+            Array.from({ length: 6 }).map((_, index) => <WorkCardSkeleton key={index} />) :
+
+            items?.map((item, index) =>
+            <AcademicWorkCard
+              key={item.id}
+              item={item}
+              author={usersMap.get(item.lecturerId)}
+              index={index} />
+
+            )
+            }
           </div>
-          {!isLoading && items?.length === 0 && (
-            <div className="text-center col-span-full mt-16">
+          {!isLoading && items?.length === 0 &&
+          <div className="text-center col-span-full mt-16">
               <p className="text-muted-foreground">No items found matching your criteria.</p>
             </div>
-          )}
+          }
         </div>
       </div>
-    </PublicLayout>
-  );
+    </PublicLayout>);
+
 }
