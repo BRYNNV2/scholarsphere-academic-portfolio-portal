@@ -43,6 +43,7 @@ export interface PortfolioItem {
   likeIds: string[];
 }
 export type AcademicWork = Publication | ResearchProject | PortfolioItem;
+export type SavedItem = AcademicWork & { authorName: string };
 export interface UserProfile {
   id:string;
   name: string;
