@@ -50,12 +50,12 @@ export function AcademicWorkDetailPage() {
   const { id } = useParams<{id: string;}>();
   const { data: item, isLoading: isLoadingItem, isError } = useQuery<AcademicWork>({
     queryKey: ['academic-work', id],
-    queryFn: () => api(`/api/academic-work/${id}`),
+    queryFn: () => api.get(`/api/academic-work/${id}`),
     enabled: !!id
   });
   const { data: author, isLoading: isLoadingAuthor } = useQuery<UserProfile>({
     queryKey: ['user', item?.lecturerId],
-    queryFn: () => api(`/api/users/${item?.lecturerId}`),
+    queryFn: () => api.get(`/api/users/${item?.lecturerId}`),
     enabled: !!item?.lecturerId
   });
   const getIcon = (type: AcademicWork['type']) => {
