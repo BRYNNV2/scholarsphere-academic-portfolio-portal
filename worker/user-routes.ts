@@ -3,7 +3,7 @@ import { jwt, sign } from 'hono/jwt'
 import type { Env } from './core-utils';
 import { UserProfileEntity, PublicationEntity, ResearchProjectEntity, PortfolioItemEntity, CommentEntity, LikeEntity } from "./entities";
 import { ok, bad, notFound } from './core-utils';
-import type { UserProfile, Publication, ResearchProject, PortfolioItem, Comment, Like } from "@shared/types";
+import type { UserProfile, Publication, ResearchProject, PortfolioItem, Comment, Like, AnalyticsData, WorkAnalytics } from "@shared/types";
 type PublicationCreatePayload = Omit<Publication, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
 type ProjectCreatePayload = Omit<ResearchProject, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
 type PortfolioItemCreatePayload = Omit<PortfolioItem, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
@@ -62,6 +62,70 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   // --- SECURED ROUTES ---
   const secured = new Hono<{ Bindings: Env }>();
   secured.use('*', jwt({ secret: JWT_SECRET }));
+  secured.get('/users/me/analytics', async (c) => {
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+    if (!userId || payload.role !== 'lecturer') {
+      return c.json({ success: false, error: 'Unauthorized' }, 403);
+    }
+    const lecturer = await new UserProfileEntity(c.env, userId).getState();
+    const lecturerWorkIds = new Set([
+      ...(lecturer.publicationIds || []),
+      ...(lecturer.projectIds || []),
+      ...(lecturer.portfolioItemIds || []),
+    ]);
+    if (lecturerWorkIds.size === 0) {
+      return ok(c, { totalLikes: 0, totalSaves: 0, workBreakdown: [] });
+    }
+    const [allLikes, allUsersPage] = await Promise.all([
+      LikeEntity.list(c.env),
+      UserProfileEntity.list(c.env),
+    ]);
+    const allStudentProfiles = allUsersPage.items.filter(u => u.role === 'student');
+    let totalSaves = 0;
+    const savesPerPost = new Map<string, number>();
+    for (const student of allStudentProfiles) {
+      for (const savedId of student.savedItemIds || []) {
+        if (lecturerWorkIds.has(savedId)) {
+          totalSaves++;
+          savesPerPost.set(savedId, (savesPerPost.get(savedId) || 0) + 1);
+        }
+      }
+    }
+    const likesPerPost = new Map<string, number>();
+    for (const like of allLikes.items) {
+      if (lecturerWorkIds.has(like.postId)) {
+        likesPerPost.set(like.postId, (likesPerPost.get(like.postId) || 0) + 1);
+      }
+    }
+    const totalLikes = allLikes.items.filter(like => lecturerWorkIds.has(like.postId)).length;
+    const [allPublications, allProjects, allPortfolioItems] = await Promise.all([
+      PublicationEntity.list(c.env),
+      ResearchProjectEntity.list(c.env),
+      PortfolioItemEntity.list(c.env),
+    ]);
+    const allWork = [
+      ...allPublications.items,
+      ...allProjects.items,
+      ...allPortfolioItems.items,
+    ];
+    const workBreakdown: WorkAnalytics[] = allWork
+      .filter(work => lecturerWorkIds.has(work.id))
+      .map(work => ({
+        id: work.id,
+        title: work.title,
+        type: work.type,
+        likes: likesPerPost.get(work.id) || 0,
+        saves: savesPerPost.get(work.id) || 0,
+      }))
+      .sort((a, b) => (b.likes + b.saves) - (a.likes + a.saves));
+    const analyticsData: AnalyticsData = {
+      totalLikes,
+      totalSaves,
+      workBreakdown,
+    };
+    return ok(c, analyticsData);
+  });
   secured.put('/users/:id', async (c) => {
     const { id } = c.req.param();
     const body = await c.req.json<Partial<UserProfile>>();
@@ -378,39 +442,31 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const postLikes = allLikes.filter(like => like.postId === postId);
     return ok(c, postLikes);
   });
-
   app.post('/api/saved-items', async (c) => {
     const { itemIds } = await c.req.json<{ itemIds?: string[] }>();
-
     if (!itemIds || !Array.isArray(itemIds)) {
       return bad(c, 'itemIds array is required');
     }
-
     const [publications, projects, portfolioItems, usersPage] = await Promise.all([
       PublicationEntity.list(c.env),
       ResearchProjectEntity.list(c.env),
       PortfolioItemEntity.list(c.env),
       UserProfileEntity.list(c.env)
     ]);
-
     const allAcademicWork = [
       ...publications.items,
       ...projects.items,
       ...portfolioItems.items
     ];
-
     const users = usersPage.items;
     const userMap = new Map(users.map(u => [u.id, u.name]));
-
     const savedItems = allAcademicWork
       .filter(item => itemIds.includes(item.id))
       .map(item => ({
         ...item,
         authorName: userMap.get(item.lecturerId) || 'Unknown Author'
       }));
-
     return ok(c, savedItems);
   });
-
   app.route('/api', secured);
 }
