@@ -107,7 +107,7 @@ export function PortfolioPage() {
   return (
     <PublicLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="py-16 md:py-24">
+        <div className="py-16 md:py-24 space-y-12">
           <div className="flex flex-col md:flex-row items-start gap-8">
             <Avatar className="h-32 w-32 md:h-40 md:w-40">
               <AvatarImage src={user.photoUrl} alt={user.name} />
@@ -150,16 +150,16 @@ export function PortfolioPage() {
               </div>
             </div>
           </div>
-          <div className="mt-12">
-            <Card>
-              <CardHeader><CardTitle>Biography</CardTitle></CardHeader>
-              <CardContent><p className="text-muted-foreground whitespace-pre-wrap">{user.bio}</p></CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader><CardTitle>Biography</CardTitle></CardHeader>
+            <CardContent><p className="text-muted-foreground whitespace-pre-wrap">{user.bio}</p></CardContent>
+          </Card>
           {userPortfolioItems.length > 0 && (
-            <div className="mt-12">
-              <h2 className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><Briefcase /> Portfolio</h2>
-              <div className="mt-6 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><Briefcase /> Portfolio</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 {userPortfolioItems.map(item => (
                   <Card key={item.id} className="overflow-hidden">
                     <div className="flex flex-col sm:flex-row">
@@ -193,13 +193,15 @@ export function PortfolioPage() {
                     <CommentsSection postId={item.id} />
                   </Card>
                 ))}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
           {userPublications.length > 0 && (
-            <div className="mt-12">
-              <h2 className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><Book /> Publications</h2>
-              <div className="mt-6 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><Book /> Publications</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 {userPublications.map(pub => (
                   <Card key={pub.id} className="overflow-hidden">
                      <div className="flex flex-col sm:flex-row">
@@ -229,13 +231,15 @@ export function PortfolioPage() {
                     <CommentsSection postId={pub.id} />
                   </Card>
                 ))}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
           {userProjects.length > 0 && (
-            <div className="mt-12">
-              <h2 className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><FlaskConical /> Research Projects</h2>
-              <div className="mt-6 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><FlaskConical /> Research Projects</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 {userProjects.map(proj => (
                   <Card key={proj.id} className="overflow-hidden">
                     <div className="flex flex-col sm:flex-row">
@@ -265,8 +269,8 @@ export function PortfolioPage() {
                     <CommentsSection postId={proj.id} />
                   </Card>
                 ))}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>

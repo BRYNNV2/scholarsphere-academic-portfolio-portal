@@ -13,9 +13,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { toast } from '@/components/ui/sonner';
-import { PlusCircle, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Image as ImageIcon, BookCopy } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { EmptyState } from '@/components/EmptyState';
 const publicationSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   authors: z.string().min(1, 'Authors are required'),
@@ -242,7 +243,7 @@ export function DashboardPublicationsPage() {
                   <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
                 </TableRow>
               ))
-            ) : userPublications.length ? (
+            ) : userPublications.length > 0 ? (
               userPublications.map((pub) => (
                 <TableRow key={pub.id}>
                   <TableCell className="font-medium">{pub.title}</TableCell>
@@ -256,7 +257,14 @@ export function DashboardPublicationsPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">No publications found.</TableCell>
+                <TableCell colSpan={4} className="p-0">
+                  <EmptyState
+                    icon={<BookCopy className="h-8 w-8" />}
+                    title="No Publications Yet"
+                    description="Get started by adding your first publication to your portfolio."
+                    action={{ label: 'Add Publication', onClick: handleAddNew }}
+                  />
+                </TableCell>
               </TableRow>
             )}
           </TableBody>
