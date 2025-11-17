@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api-client';
+import { api } from '@/lib/api-client-fixed';
 import { useAuthStore } from '@/stores/auth-store';
 import { UserProfile, SavedItem } from '@shared/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
