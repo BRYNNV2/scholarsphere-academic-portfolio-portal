@@ -1,7 +1,7 @@
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { PublicLayout } from '@/components/layout/PublicLayout';
-import { api } from "../lib/api-client";
+import { api } from "../lib/api-client-fixed";
 import { AcademicWork, UserProfile } from '@shared/types';
 import { CommentsSection } from '@/components/CommentsSection';
 import { Skeleton } from '@/components/ui/skeleton';
