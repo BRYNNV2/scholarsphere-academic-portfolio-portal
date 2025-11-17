@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookCopy, FlaskConical, User, Briefcase } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { AnalyticsOverview } from '@/components/AnalyticsOverview';
 export function LecturerDashboard() {
   return (
     <div className="space-y-8">
@@ -62,17 +63,7 @@ export function LecturerDashboard() {
           </Link>
         </Card>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Portfolio Overview</CardTitle>
-          <CardDescription>
-            This is your central hub. Use the links above or the sidebar to navigate through your portfolio sections.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>Your public portfolio is a reflection of your academic journey. Keep it updated to showcase your latest achievements to the world.</p>
-        </CardContent>
-      </Card>
+      <AnalyticsOverview />
     </div>
   );
 }

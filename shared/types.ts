@@ -80,3 +80,15 @@ export interface Like {
   postId: string;
   userId: string;
 }
+export interface WorkAnalytics {
+  id: string;
+  title: string;
+  type: AcademicWork['type'];
+  likes: number;
+  saves: number;
+}
+export interface AnalyticsData {
+  totalLikes: number;
+  totalSaves: number;
+  workBreakdown: WorkAnalytics[];
+}
