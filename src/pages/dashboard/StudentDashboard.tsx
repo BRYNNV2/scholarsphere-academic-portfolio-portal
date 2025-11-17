@@ -5,8 +5,8 @@ import { UserProfile, SavedItem } from '@shared/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
-import { Bookmark, User, ShieldQuestion } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Bookmark, User } from 'lucide-react';
+import { RecentActivityFeed } from '@/components/RecentActivityFeed';
 function SmallAcademicWorkCard({ item }: { item: SavedItem }) {
   const itemUrl = `/work/${item.id}`;
   return (
@@ -44,8 +44,7 @@ export function StudentDashboard() {
         <Skeleton className="h-10 w-1/2" />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent className="space-y-2"><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></CardContent></Card>
-          <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent className="space-y-2"><Skeleton className="h-12 w-full" /></CardContent></Card>
-          <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent className="space-y-2"><Skeleton className="h-12 w-full" /></CardContent></Card>
+          <Card className="lg:col-span-2"><CardHeader><Skeleton className="h-6 w-1/2" /></CardHeader><CardContent className="space-y-2"><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></CardContent></Card>
         </div>
       </div>
     );
@@ -56,50 +55,36 @@ export function StudentDashboard() {
         <h1 className="text-3xl font-bold tracking-tight">Student Dashboard</h1>
         <p className="text-muted-foreground">Welcome, {currentUser?.name}! Here's your activity overview.</p>
       </div>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Bookmark className="h-5 w-5" /> Saved for Later</CardTitle>
-            <CardDescription>Items you've bookmarked to read.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {(savedItems && savedItems.length > 0) ? (
-              <div className="space-y-2">
-                {savedItems.slice(0, 5).map(item => (
-                  <SmallAcademicWorkCard key={item.id} item={item} />
-                ))}
-              </div>
-            ) : <p className="text-sm text-muted-foreground">No saved items yet. You can save items from any directory page.</p>}
-          </CardContent>
-        </Card>
-        <Card className="hover:border-primary transition-colors">
-          <Link to="/dashboard/profile" className="block h-full">
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
+        <div className="lg:col-span-1 space-y-6">
+          <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><User className="h-5 w-5" /> Manage Profile</CardTitle>
-              <CardDescription>Update your profile picture.</CardDescription>
+              <CardTitle className="flex items-center gap-2"><Bookmark className="h-5 w-5" /> Saved for Later</CardTitle>
+              <CardDescription>Items you've bookmarked to read.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Keep your profile image up to date so others can recognize you.</p>
+              {(savedItems && savedItems.length > 0) ? (
+                <div className="space-y-2">
+                  {savedItems.slice(0, 5).map(item => (
+                    <SmallAcademicWorkCard key={item.id} item={item} />
+                  ))}
+                </div>
+              ) : <p className="text-sm text-muted-foreground">No saved items yet. You can save items from any directory page.</p>}
             </CardContent>
-          </Link>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><ShieldQuestion className="h-5 w-5" /> Support & About</CardTitle>
-            <CardDescription>Get help or review our policies.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col space-y-2">
-            <Button variant="outline" asChild className="justify-start">
-              <Link to="/dashboard/support">Support Center</Link>
-            </Button>
-            <Button variant="outline" asChild className="justify-start">
-              <Link to="/dashboard/report-problem">Report a Problem</Link>
-            </Button>
-            <Button variant="outline" asChild className="justify-start">
-              <Link to="/dashboard/terms-and-policies">Terms & Policies</Link>
-            </Button>
-          </CardContent>
-        </Card>
+          </Card>
+          <Card className="hover:border-primary transition-colors">
+            <Link to="/dashboard/profile" className="block h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><User className="h-5 w-5" /> Manage Profile</CardTitle>
+                <CardDescription>Update your profile picture.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Keep your profile image up to date so others can recognize you.</p>
+              </CardContent>
+            </Link>
+          </Card>
+        </div>
+        <RecentActivityFeed />
       </div>
     </div>
   );

@@ -56,7 +56,8 @@ export function AnalyticsOverview() {
   }
   const hasEngagement = analytics.totalLikes > 0 || analytics.totalSaves > 0;
   const chartData = analytics.workBreakdown.map(item => ({
-    name: item.title.length > 30 ? `${item.title.substring(0, 27)}...` : item.title,
+    name: item.title.length > 25 ? `${item.title.substring(0, 22)}...` : item.title,
+    fullTitle: item.title,
     likes: item.likes,
     saves: item.saves,
   }));
@@ -110,9 +111,19 @@ export function AnalyticsOverview() {
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} angle={-30} textAnchor="end" height={80} interval={0} />
                     <YAxis allowDecimals={false} />
                     <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--background))',
-                        borderColor: 'hsl(var(--border))',
+                      cursor={{ fill: 'hsl(var(--muted))' }}
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="p-2 bg-background border rounded-md shadow-lg">
+                              <p className="font-bold mb-1 max-w-xs">{data.fullTitle}</p>
+                              <p className="text-sm" style={{ color: 'hsl(var(--primary))' }}>{`Likes: ${data.likes}`}</p>
+                              <p className="text-sm" style={{ color: 'hsl(var(--primary) / 0.5)' }}>{`Saves: ${data.saves}`}</p>
+                            </div>
+                          );
+                        }
+                        return null;
                       }}
                     />
                     <Legend />

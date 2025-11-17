@@ -15,6 +15,7 @@ export interface Publication {
   thumbnailUrl?: string;
   commentIds: string[];
   likeIds: string[];
+  createdAt: number;
 }
 export interface ResearchProject {
   id: string;
@@ -28,6 +29,7 @@ export interface ResearchProject {
   thumbnailUrl?: string;
   commentIds: string[];
   likeIds: string[];
+  createdAt: number;
 }
 export interface PortfolioItem {
   id: string;
@@ -41,6 +43,7 @@ export interface PortfolioItem {
   thumbnailUrl?: string;
   commentIds: string[];
   likeIds: string[];
+  createdAt: number;
 }
 export type AcademicWork = Publication | ResearchProject | PortfolioItem;
 export type SavedItem = AcademicWork & { authorName: string };

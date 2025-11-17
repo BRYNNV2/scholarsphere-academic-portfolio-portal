@@ -3,7 +3,7 @@ import { jwt, sign } from 'hono/jwt'
 import type { Env } from './core-utils';
 import { UserProfileEntity, PublicationEntity, ResearchProjectEntity, PortfolioItemEntity, CommentEntity, LikeEntity } from "./entities";
 import { ok, bad, notFound } from './core-utils';
-import type { UserProfile, Publication, ResearchProject, PortfolioItem, Comment, Like, AnalyticsData, WorkAnalytics } from "@shared/types";
+import type { UserProfile, Publication, ResearchProject, PortfolioItem, Comment, Like, AnalyticsData, WorkAnalytics, AcademicWork } from "@shared/types";
 type PublicationCreatePayload = Omit<Publication, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
 type ProjectCreatePayload = Omit<ResearchProject, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
 type PortfolioItemCreatePayload = Omit<PortfolioItem, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
@@ -201,7 +201,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!lecturerId) return bad(c, 'lecturerId is required');
     const user = new UserProfileEntity(c.env, lecturerId);
     if (!(await user.exists())) return notFound(c, 'User not found');
-    const newPub: Publication = { ...pubData, id: crypto.randomUUID(), type: 'publication', lecturerId, commentIds: [], likeIds: [] };
+    const newPub: Publication = { ...pubData, id: crypto.randomUUID(), type: 'publication', lecturerId, commentIds: [], likeIds: [], createdAt: Date.now() };
     await PublicationEntity.create(c.env, newPub);
     await user.mutate(state => ({ ...state, publicationIds: [...(state.publicationIds ?? []), newPub.id] }));
     return ok(c, newPub);
@@ -232,7 +232,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!lecturerId) return bad(c, 'lecturerId is required');
     const user = new UserProfileEntity(c.env, lecturerId);
     if (!(await user.exists())) return notFound(c, 'User not found');
-    const newProj: ResearchProject = { ...projData, id: crypto.randomUUID(), type: 'project', lecturerId, commentIds: [], likeIds: [] };
+    const newProj: ResearchProject = { ...projData, id: crypto.randomUUID(), type: 'project', lecturerId, commentIds: [], likeIds: [], createdAt: Date.now() };
     await ResearchProjectEntity.create(c.env, newProj);
     await user.mutate(state => ({ ...state, projectIds: [...(state.projectIds ?? []), newProj.id] }));
     return ok(c, newProj);
@@ -263,7 +263,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!lecturerId) return bad(c, 'lecturerId is required');
     const user = new UserProfileEntity(c.env, lecturerId);
     if (!(await user.exists())) return notFound(c, 'User not found');
-    const newItem: PortfolioItem = { ...itemData, id: crypto.randomUUID(), type: 'portfolio', lecturerId, commentIds: [], likeIds: [] };
+    const newItem: PortfolioItem = { ...itemData, id: crypto.randomUUID(), type: 'portfolio', lecturerId, commentIds: [], likeIds: [], createdAt: Date.now() };
     await PortfolioItemEntity.create(c.env, newItem);
     await user.mutate(state => ({ ...state, portfolioItemIds: [...(state.portfolioItemIds ?? []), newItem.id] }));
     return ok(c, newItem);
@@ -319,6 +319,22 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     return ok(c, { id: likeToDelete.id, deleted: true });
   });
   // --- PUBLIC ROUTES ---
+  app.get('/api/activity/recent', async (c) => {
+    const [publications, projects, portfolioItems] = await Promise.all([
+      PublicationEntity.list(c.env),
+      ResearchProjectEntity.list(c.env),
+      PortfolioItemEntity.list(c.env),
+    ]);
+    const allWork: AcademicWork[] = [
+      ...publications.items,
+      ...projects.items,
+      ...portfolioItems.items,
+    ];
+    const recentWork = allWork
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 10);
+    return ok(c, recentWork);
+  });
   app.get('/api/users/search', async (c) => {
     const { q, university, department } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';

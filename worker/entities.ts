@@ -42,6 +42,7 @@ export class PublicationEntity extends IndexedEntity<Publication> {
     thumbnailUrl: "",
     commentIds: [],
     likeIds: [],
+    createdAt: 0,
   };
   static seedData = MOCK_PUBLICATIONS;
   static async get(env: Env, id: string): Promise<Publication | null> {
@@ -65,6 +66,7 @@ export class ResearchProjectEntity extends IndexedEntity<ResearchProject> {
     thumbnailUrl: "",
     commentIds: [],
     likeIds: [],
+    createdAt: 0,
   };
   static seedData = MOCK_PROJECTS;
   static async get(env: Env, id: string): Promise<ResearchProject | null> {
@@ -88,6 +90,7 @@ export class PortfolioItemEntity extends IndexedEntity<PortfolioItem> {
     thumbnailUrl: "",
     commentIds: [],
     likeIds: [],
+    createdAt: 0,
   };
   static seedData = MOCK_PORTFOLIO_ITEMS;
   static async get(env: Env, id: string): Promise<PortfolioItem | null> {
