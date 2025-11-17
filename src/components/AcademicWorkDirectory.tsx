@@ -63,12 +63,10 @@ export function AcademicWorkDirectory({
     queryKey: ['users'],
     queryFn: () => api('/api/users'),
   });
-
   const { data: availableYears = [] } = useQuery<number[]>({
     queryKey: [queryKey, 'years'],
     queryFn: () => api(`${apiEndpoint}/years`),
   });
-
   const usersMap = useMemo(() => {
     if (!users) return new Map<string, UserProfile>();
     return new Map(users.map(l => [l.id, l]));
@@ -96,12 +94,12 @@ export function AcademicWorkDirectory({
               />
             </div>
             <div>
-              <Select value={yearFilter} onValueChange={setYearFilter}>
+              <Select value={yearFilter || 'all'} onValueChange={(value) => setYearFilter(value === 'all' ? '' : value)}>
                 <SelectTrigger className="w-full h-11">
                   <SelectValue placeholder="Filter by Year" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Years</SelectItem>
+                  <SelectItem value="all">All Years</SelectItem>
                   {availableYears.map(year => (
                     <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                   ))}
