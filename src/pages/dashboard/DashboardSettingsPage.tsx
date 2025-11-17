@@ -22,7 +22,7 @@ import {
   AlertDialogTitle } from
 "@/components/ui/alert-dialog";
 import { useTheme } from '@/hooks/use-theme';
-import { api } from "../../lib/api-client";
+import { api } from "../../lib/api-client-fixed";
 import { useAuthStore } from '@/stores/auth-store';
 import { toast } from 'sonner';
 const passwordSchema = z.object({

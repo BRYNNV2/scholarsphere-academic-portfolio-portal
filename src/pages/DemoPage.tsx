@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Toaster, toast } from '@/components/ui/sonner';
-import { api } from "../lib/api-client";
+import { api } from "../lib/api-client-fixed";
 import { AppLayout } from '@/components/layout/AppLayout';
 
 

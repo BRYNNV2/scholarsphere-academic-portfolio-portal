@@ -8,7 +8,7 @@ import { AcademicWork, UserProfile } from '@shared/types';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useAuthStore } from '@/stores/auth-store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from "../lib/api-client";
+import { api } from "../lib/api-client-fixed";
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 interface AcademicWorkCardProps {

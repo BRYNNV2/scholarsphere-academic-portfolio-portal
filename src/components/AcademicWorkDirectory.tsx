@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { api } from "../lib/api-client";
+import { api } from "../lib/api-client-fixed";
 import { AcademicWork, UserProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from 'react-use';
