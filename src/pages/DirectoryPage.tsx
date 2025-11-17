@@ -84,12 +84,12 @@ export function DirectoryPage() {
               />
             </div>
             <div className="md:col-span-1">
-              <Select value={universityFilter} onValueChange={setUniversityFilter}>
+              <Select value={universityFilter || 'all'} onValueChange={(value) => setUniversityFilter(value === 'all' ? '' : value)}>
                 <SelectTrigger className="w-full h-11">
                   <SelectValue placeholder="Filter by University" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Universities</SelectItem>
+                  <SelectItem value="all">All Universities</SelectItem>
                   {availableUniversities.map(uni => (
                     <SelectItem key={uni} value={uni}>{uni}</SelectItem>
                   ))}
@@ -97,12 +97,12 @@ export function DirectoryPage() {
               </Select>
             </div>
             <div className="md:col-span-1">
-              <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+              <Select value={departmentFilter || 'all'} onValueChange={(value) => setDepartmentFilter(value === 'all' ? '' : value)}>
                 <SelectTrigger className="w-full h-11">
                   <SelectValue placeholder="Filter by Department" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Departments</SelectItem>
+                  <SelectItem value="all">All Departments</SelectItem>
                   {availableDepartments.map(dep => (
                     <SelectItem key={dep} value={dep}>{dep}</SelectItem>
                   ))}
