@@ -3,34 +3,35 @@ import { SidebarProvider, SidebarInset, SidebarTrigger, useSidebar } from "@/com
 import { AppSidebar } from "@/components/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
-
 type AppLayoutProps = {
   children: React.ReactNode;
   container?: boolean;
   className?: string;
   contentClassName?: string;
 };
-
-function AppLayoutRenderer({ children, container, className, contentClassName }: AppLayoutProps) {
+function AppLayoutContent({ children, container, className, contentClassName }: AppLayoutProps) {
   const { isMobile } = useSidebar();
-
   return (
     <>
-      <AppSidebar />
-      <SidebarInset className={className}>
+      {isMobile ? (
         <div className="absolute left-2 top-2 z-20">
-          {isMobile ? (
-            <SidebarTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu />
-              </Button>
-            </SidebarTrigger>
-          ) : (
-            <SidebarTrigger />
-          )}
+          <SidebarTrigger>
+            <AppSidebar />
+          </SidebarTrigger>
         </div>
+      ) : (
+        <>
+          <AppSidebar />
+          <div className="absolute left-2 top-2 z-20">
+            <SidebarTrigger />
+          </div>
+        </>
+      )}
+      <SidebarInset className={className}>
         {container ? (
-          <div className={"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 lg:py-12" + (contentClassName ? ` ${contentClassName}` : "")}>{children}</div>
+          <div className={"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 lg:py-12" + (contentClassName ? ` ${contentClassName}` : "")}>
+            {children}
+          </div>
         ) : (
           children
         )}
@@ -38,13 +39,12 @@ function AppLayoutRenderer({ children, container, className, contentClassName }:
     </>
   );
 }
-
 export function AppLayout({ children, container = false, className, contentClassName }: AppLayoutProps): JSX.Element {
   return (
     <SidebarProvider>
-      <AppLayoutRenderer container={container} className={className} contentClassName={contentClassName}>
+      <AppLayoutContent container={container} className={className} contentClassName={contentClassName}>
         {children}
-      </AppLayoutRenderer>
+      </AppLayoutContent>
     </SidebarProvider>
   );
 }
