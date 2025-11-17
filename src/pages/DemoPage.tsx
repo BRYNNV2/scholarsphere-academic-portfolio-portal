@@ -39,15 +39,15 @@ export function DemoPage() {
 
   const loadBasics = useCallback(async () => {
     const [uPage, cPage] = await Promise.all([
-    api<{items: User[];next: string | null;}>('/api/users'),
-    api<{items: Chat[];next: string | null;}>('/api/chats')]
+    api.get<{items: User[];next: string | null;}>('/api/users'),
+    api.get<{items: Chat[];next: string | null;}>('/api/chats')]
     );
     updateUsers(uPage.items);
     updateChats(cPage.items);
   }, []);
 
   const loadMessages = useCallback(async (chatId: string) => {
-    const m = await api<ChatMessage[]>(`/api/chats/${chatId}/messages`);
+    const m = await api.get<ChatMessage[]>(`/api/chats/${chatId}/messages`);
     updateMessages(m);
   }, []);
 
@@ -70,7 +70,7 @@ export function DemoPage() {
 
   const createUser = useCallback(async () => {
     if (!name.trim()) return;
-    const u = await api<User>('/api/users', { method: 'POST', body: JSON.stringify({ name: name.trim() }) });
+    const u = await api.post<User>('/api/users', { name: name.trim() });
     updateUsers((prev) => [...prev, u]);
     updateName('');
     toast.success('User created');
@@ -79,7 +79,7 @@ export function DemoPage() {
 
   const createChat = useCallback(async () => {
     if (!title.trim()) return;
-    const c = await api<Chat>('/api/chats', { method: 'POST', body: JSON.stringify({ title: title.trim() }) });
+    const c = await api.post<Chat>('/api/chats', { title: title.trim() });
     updateChats((prev) => [...prev, c]);
     updateTitle('');
     toast.success('Chat created');
@@ -88,7 +88,7 @@ export function DemoPage() {
 
   const send = useCallback(async () => {
     if (!selectedUserId || !selectedChatId || !text.trim()) return;
-    const m = await api<ChatMessage>(`/api/chats/${selectedChatId}/messages`, { method: 'POST', body: JSON.stringify({ userId: selectedUserId, text: text.trim() }) });
+    const m = await api.post<ChatMessage>(`/api/chats/${selectedChatId}/messages`, { userId: selectedUserId, text: text.trim() });
     updateMessages((prev) => [...prev, m]);
     updateText('');
   }, [selectedUserId, selectedChatId, text]);

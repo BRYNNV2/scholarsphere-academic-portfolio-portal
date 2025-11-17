@@ -44,10 +44,9 @@ function PublicationForm({ publication, onFinished }: {publication?: Publication
   const thumbnailUrlValue = form.watch('thumbnailUrl');
   const mutation = useMutation({
     mutationFn: (data: Partial<Publication> & {lecturerId?: string;}) =>
-    api(publication ? `/api/publications/${publication.id}` : '/api/publications', {
-      method: publication ? 'PUT' : 'POST',
-      body: JSON.stringify(data)
-    }),
+    publication
+        ? api.put(`/api/publications/${publication.id}`, data)
+        : api.post('/api/publications', data),
     onSuccess: () => {
       toast.success(`Publication ${publication ? 'updated' : 'added'} successfully!`);
       queryClient.invalidateQueries({ queryKey: ['publications'] });
@@ -166,12 +165,12 @@ export function DashboardPublicationsPage() {
   const userId = currentUser?.id;
   const { data: profile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
     queryKey: ['user', userId],
-    queryFn: () => api(`/api/users/${userId}`),
+    queryFn: () => api.get(`/api/users/${userId}`),
     enabled: !!userId
   });
   const { data: allPublications, isLoading: isLoadingPubs } = useQuery<Publication[]>({
     queryKey: ['publications'],
-    queryFn: () => api('/api/publications')
+    queryFn: () => api.get('/api/publications')
   });
   const userPublications = useMemo(() => {
     if (!profile || !allPublications) return [];
@@ -180,7 +179,7 @@ export function DashboardPublicationsPage() {
   }, [profile, allPublications]);
   const isLoading = isLoadingProfile || isLoadingPubs;
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api(`/api/publications/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: string) => api.delete(`/api/publications/${id}`),
     onSuccess: () => {
       toast.success('Publication deleted successfully!');
       queryClient.invalidateQueries({ queryKey: ['publications'] });

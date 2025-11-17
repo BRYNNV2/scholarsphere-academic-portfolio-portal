@@ -45,10 +45,9 @@ function PortfolioItemForm({ item, onFinished }: {item?: PortfolioItem;onFinishe
   const thumbnailUrlValue = form.watch('thumbnailUrl');
   const mutation = useMutation({
     mutationFn: (data: Partial<PortfolioItem> & {lecturerId?: string;}) =>
-    api(item ? `/api/portfolio/${item.id}` : '/api/portfolio', {
-      method: item ? 'PUT' : 'POST',
-      body: JSON.stringify(data)
-    }),
+      item
+        ? api.put(`/api/portfolio/${item.id}`, data)
+        : api.post('/api/portfolio', data),
     onSuccess: () => {
       toast.success(`Portfolio item ${item ? 'updated' : 'added'} successfully!`);
       queryClient.invalidateQueries({ queryKey: ['portfolio'] });
@@ -164,12 +163,12 @@ export function DashboardPortfolioPage() {
   const userId = currentUser?.id;
   const { data: profile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
     queryKey: ['user', userId],
-    queryFn: () => api(`/api/users/${userId}`),
+    queryFn: () => api.get(`/api/users/${userId}`),
     enabled: !!userId
   });
   const { data: allItems, isLoading: isLoadingItems } = useQuery<PortfolioItem[]>({
     queryKey: ['portfolio'],
-    queryFn: () => api('/api/portfolio')
+    queryFn: () => api.get('/api/portfolio')
   });
   const userPortfolioItems = useMemo(() => {
     if (!profile || !allItems) return [];
@@ -178,7 +177,7 @@ export function DashboardPortfolioPage() {
   }, [profile, allItems]);
   const isLoading = isLoadingProfile || isLoadingItems;
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api(`/api/portfolio/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: string) => api.delete(`/api/portfolio/${id}`),
     onSuccess: () => {
       toast.success('Portfolio item deleted successfully!');
       queryClient.invalidateQueries({ queryKey: ['portfolio'] });

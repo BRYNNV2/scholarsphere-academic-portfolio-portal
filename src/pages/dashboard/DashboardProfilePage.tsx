@@ -38,7 +38,7 @@ export function DashboardProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: profile, isLoading, isError } = useQuery<UserProfile>({
     queryKey: ['user', userId],
-    queryFn: () => api(`/api/users/${userId}`),
+    queryFn: () => api.get(`/api/users/${userId}`),
     enabled: !!userId
   });
   const form = useForm<ProfileFormData>({
@@ -75,10 +75,7 @@ export function DashboardProfilePage() {
   }, [profile, form]);
   const mutation = useMutation({
     mutationFn: (data: Partial<UserProfile>) =>
-    api<UserProfile>(`/api/users/${userId}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
-    }),
+    api.put<UserProfile>(`/api/users/${userId}`, data),
     onSuccess: (updatedProfile) => {
       toast.success('Profile updated successfully!');
       queryClient.invalidateQueries({ queryKey: ['user', userId] });
