@@ -7,7 +7,7 @@ import { ArrowRight, BookCopy, Globe, Share2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { UserProfile } from '@shared/types';
 import { useQuery } from '@tanstack/react-query';
-import { api } from "../lib/api-client";
+import { api } from "../lib/api-client-fixed";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/stores/auth-store';
 export function HomePage() {

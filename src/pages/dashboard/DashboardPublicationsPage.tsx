@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { api } from "../../lib/api-client";
+import { api } from "../../lib/api-client-fixed";
 import { Publication, UserProfile } from '@shared/types';
 import { useAuthStore } from '@/stores/auth-store';
 import { Button } from '@/components/ui/button';
