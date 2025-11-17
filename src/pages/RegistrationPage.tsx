@@ -55,10 +55,7 @@ export function RegistrationPage() {
   const onSubmit = async (data: RegistrationFormData) => {
     setIsLoading(true);
     try {
-      const response = await api<{user: UserProfile;token: string;}>('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(data)
-      });
+      const response = await api.post<{user: UserProfile;token: string;}>('/api/auth/register', data);
       login(response.user, response.token);
       toast.success(`Welcome, ${response.user.name}! Your account has been created.`);
       await queryClient.invalidateQueries({ queryKey: ['users'] });

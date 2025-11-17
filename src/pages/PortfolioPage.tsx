@@ -22,8 +22,8 @@ function SaveButton({ itemId }: {itemId: string;}) {
   const isSaved = (currentUser?.savedItemIds ?? []).includes(itemId);
   const saveMutation = useMutation({
     mutationFn: () => isSaved ?
-    api(`/api/users/me/save/${itemId}`, { method: 'DELETE' }) :
-    api(`/api/users/me/save/${itemId}`, { method: 'POST' }),
+    api.delete(`/api/users/me/save/${itemId}`) :
+    api.post(`/api/users/me/save/${itemId}`),
     onSuccess: (updatedProfile: UserProfile) => {
       toast.success(isSaved ? 'Item unsaved!' : 'Item saved for later!');
       queryClient.invalidateQueries({ queryKey: ['user', currentUser?.id] });
@@ -69,20 +69,20 @@ export function PortfolioPage() {
   const { id } = useParams<{id: string;}>();
   const { data: user, isLoading: isLoadingUser } = useQuery<UserProfile>({
     queryKey: ['user', id],
-    queryFn: () => api(`/api/users/${id}`),
+    queryFn: () => api.get(`/api/users/${id}`),
     enabled: !!id
   });
   const { data: publications, isLoading: isLoadingPubs } = useQuery<Publication[]>({
     queryKey: ['publications'],
-    queryFn: () => api('/api/publications')
+    queryFn: () => api.get('/api/publications')
   });
   const { data: projects, isLoading: isLoadingProjs } = useQuery<ResearchProject[]>({
     queryKey: ['projects'],
-    queryFn: () => api('/api/projects')
+    queryFn: () => api.get('/api/projects')
   });
   const { data: portfolioItems, isLoading: isLoadingPortfolio } = useQuery<PortfolioItem[]>({
     queryKey: ['portfolio'],
-    queryFn: () => api('/api/portfolio')
+    queryFn: () => api.get('/api/portfolio')
   });
   const isLoading = isLoadingUser || isLoadingPubs || isLoadingProjs || isLoadingPortfolio;
   if (isLoading) {

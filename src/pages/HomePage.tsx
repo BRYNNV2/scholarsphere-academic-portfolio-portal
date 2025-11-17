@@ -15,7 +15,7 @@ export function HomePage() {
 
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['public', 'users'],
-    queryFn: () => api<UserProfile[]>('/api/users')
+    queryFn: () => api.get<UserProfile[]>('/api/users')
   });
 
   const featuredLecturers = users.filter((u) => u.role === 'lecturer');

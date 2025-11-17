@@ -27,9 +27,9 @@ export function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await api<{user: UserProfile;token: string;}>('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password })
+      const response = await api.post<{user: UserProfile;token: string;}>('/api/auth/login', {
+        email,
+        password
       });
       login(response.user, response.token);
       toast.success(`Welcome back, ${response.user.name}!`);

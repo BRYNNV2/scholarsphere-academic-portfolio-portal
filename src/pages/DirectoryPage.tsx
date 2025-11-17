@@ -44,12 +44,12 @@ export function DirectoryPage() {
   });
   const { data: lecturers, isLoading, isError } = useQuery<UserProfile[]>({
     queryKey: ['users', debouncedSearchTerm, universityFilter, departmentFilter],
-    queryFn: () => api(`/api/users/search?${queryParams.toString()}`),
+    queryFn: () => api.get(`/api/users/search?${queryParams.toString()}`),
     select: (users) => users.filter((user) => user.role === 'lecturer')
   });
   const { data: allLecturers } = useQuery<UserProfile[]>({
     queryKey: ['all-lecturers'],
-    queryFn: () => api('/api/users'),
+    queryFn: () => api.get('/api/users'),
     select: (users) => users.filter((user) => user.role === 'lecturer')
   });
   const availableUniversities = useMemo(() => {

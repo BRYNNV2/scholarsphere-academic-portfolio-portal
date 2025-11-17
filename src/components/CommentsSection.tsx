@@ -21,15 +21,15 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { data: comments, isLoading: isLoadingComments } = useQuery<Comment[]>({
     queryKey: ['comments', postId],
-    queryFn: () => api(`/api/posts/${postId}/comments`)
+    queryFn: () => api.get(`/api/posts/${postId}/comments`)
   });
   const { data: likes, isLoading: isLoadingLikes } = useQuery<Like[]>({
     queryKey: ['likes', postId],
-    queryFn: () => api(`/api/posts/${postId}/likes`)
+    queryFn: () => api.get(`/api/posts/${postId}/likes`)
   });
   const hasLiked = likes?.some((like) => like.userId === currentUser?.id);
   const likeMutation = useMutation({
-    mutationFn: () => hasLiked ? api(`/api/likes/${postId}`, { method: 'DELETE' }) : api('/api/likes', { method: 'POST', body: JSON.stringify({ postId }) }),
+    mutationFn: () => hasLiked ? api.delete(`/api/likes/${postId}`) : api.post('/api/likes', { postId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['likes', postId] });
     },
@@ -38,7 +38,7 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
     }
   });
   const commentMutation = useMutation({
-    mutationFn: (content: string) => api('/api/comments', { method: 'POST', body: JSON.stringify({ postId, content }) }),
+    mutationFn: (content: string) => api.post('/api/comments', { postId, content }),
     onSuccess: () => {
       setComment('');
       queryClient.invalidateQueries({ queryKey: ['comments', postId] });

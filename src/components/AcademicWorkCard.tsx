@@ -24,8 +24,8 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
   const isSaved = (currentUser?.savedItemIds ?? []).includes(item.id);
   const saveMutation = useMutation({
     mutationFn: () => isSaved ?
-    api(`/api/users/me/save/${item.id}`, { method: 'DELETE' }) :
-    api(`/api/users/me/save/${item.id}`, { method: 'POST' }),
+    api.delete(`/api/users/me/save/${item.id}`) :
+    api.post(`/api/users/me/save/${item.id}`, {}),
     onSuccess: (updatedProfile: UserProfile) => {
       toast.success(isSaved ? 'Item unsaved!' : 'Item saved for later!');
       queryClient.invalidateQueries({ queryKey: ['user', currentUser?.id] });
