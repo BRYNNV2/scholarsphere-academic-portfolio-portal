@@ -378,5 +378,39 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const postLikes = allLikes.filter(like => like.postId === postId);
     return ok(c, postLikes);
   });
+
+  app.post('/api/saved-items', async (c) => {
+    const { itemIds } = await c.req.json<{ itemIds?: string[] }>();
+
+    if (!itemIds || !Array.isArray(itemIds)) {
+      return bad(c, 'itemIds array is required');
+    }
+
+    const [publications, projects, portfolioItems, usersPage] = await Promise.all([
+      PublicationEntity.list(c.env),
+      ResearchProjectEntity.list(c.env),
+      PortfolioItemEntity.list(c.env),
+      UserProfileEntity.list(c.env)
+    ]);
+
+    const allAcademicWork = [
+      ...publications.items,
+      ...projects.items,
+      ...portfolioItems.items
+    ];
+
+    const users = usersPage.items;
+    const userMap = new Map(users.map(u => [u.id, u.name]));
+
+    const savedItems = allAcademicWork
+      .filter(item => itemIds.includes(item.id))
+      .map(item => ({
+        ...item,
+        authorName: userMap.get(item.lecturerId) || 'Unknown Author'
+      }));
+
+    return ok(c, savedItems);
+  });
+
   app.route('/api', secured);
 }

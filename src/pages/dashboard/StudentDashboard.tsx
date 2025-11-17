@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
-import { AcademicWork, UserProfile } from '@shared/types';
+import { AcademicWork, UserProfile, SavedItem } from '@shared/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 import { Bookmark, User } from 'lucide-react';
-function SmallAcademicWorkCard({ item, authorName }: { item: AcademicWork, authorName: string }) {
+function SmallAcademicWorkCard({ item }: { item: SavedItem }) {
   const itemUrl = `/work/${item.id}`;
   return (
     <Link to={itemUrl} className="block">
@@ -16,37 +16,33 @@ function SmallAcademicWorkCard({ item, authorName }: { item: AcademicWork, autho
         </div>
         <div className="flex-1 overflow-hidden">
           <p className="text-sm font-medium truncate">{item.title}</p>
-          <p className="text-xs text-muted-foreground truncate">by {authorName}</p>
+          <p className="text-xs text-muted-foreground truncate">by {item.authorName}</p>
         </div>
       </div>
     </Link>
   );
 }
+
 export function StudentDashboard() {
   const currentUser = useAuthStore((state) => state.user);
   const userId = currentUser?.id;
+
   const { data: profile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
     queryKey: ['user', userId],
     queryFn: () => api(`/api/users/${userId}`),
     enabled: !!userId,
   });
-  const { data: allAcademicWork, isLoading: isLoadingWork } = useQuery<(AcademicWork)[]>({
-    queryKey: ['all-academic-work'],
-    queryFn: async () => {
-      const [publications, projects, portfolio] = await Promise.all([
-        api<AcademicWork[]>('/api/publications'),
-        api<AcademicWork[]>('/api/projects'),
-        api<AcademicWork[]>('/api/portfolio'),
-      ]);
-      return [...publications, ...projects, ...portfolio];
-    },
+
+  const savedItemIds = profile?.savedItemIds;
+
+  const { data: savedItems, isLoading: isLoadingSavedItems } = useQuery<SavedItem[]>({
+    queryKey: ['saved-items', savedItemIds],
+    queryFn: () => api.post('/api/saved-items', { ids: savedItemIds }),
+    enabled: !!savedItemIds && savedItemIds.length > 0,
   });
-  const { data: users, isLoading: isLoadingUsers } = useQuery<UserProfile[]>({
-    queryKey: ['users'],
-    queryFn: () => api('/api/users'),
-  });
-  const isLoading = isLoadingProfile || isLoadingWork || isLoadingUsers;
-  const savedItems = allAcademicWork?.filter(item => profile?.savedItemIds?.includes(item.id)) ?? [];
+
+  const isLoading = isLoadingProfile || (!!savedItemIds && savedItemIds.length > 0 && isLoadingSavedItems);
+
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -71,12 +67,11 @@ export function StudentDashboard() {
             <CardDescription>Items you've bookmarked to read.</CardDescription>
           </CardHeader>
           <CardContent>
-            {savedItems.length > 0 ? (
+            {(savedItems && savedItems.length > 0) ? (
               <div className="space-y-2">
-                {savedItems.slice(0, 5).map(item => {
-                  const author = users?.find(u => u.id === item.lecturerId);
-                  return <SmallAcademicWorkCard key={item.id} item={item} authorName={author?.name || '...'} />;
-                })}
+                {savedItems.slice(0, 5).map(item => (
+                  <SmallAcademicWorkCard key={item.id} item={item} />
+                ))}
               </div>
             ) : <p className="text-sm text-muted-foreground">No saved items yet. You can save items from any directory page.</p>}
           </CardContent>
