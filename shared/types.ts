@@ -18,7 +18,7 @@ export interface Publication {
 }
 export interface ResearchProject {
   id: string;
-  type: 'project';
+  type: 'project' | 'research';
   lecturerId: string;
   title: string;
   description: string;
