@@ -41,7 +41,13 @@ const Sidebar = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEle
   ({ className, ...props }, ref) => {
     const { open, isMobile } = useSidebar()
     if (isMobile) {
-      return null
+      return (
+        <div
+          ref={ref}
+          className={cn("fixed-none relative h-full w-full", className)}
+          {...props}
+        />
+      )
     }
     return (
       <div
@@ -152,7 +158,7 @@ const SidebarInset = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
 )
 SidebarInset.displayName = "SidebarInset"
 const SidebarTrigger = React.forwardRef<HTMLButtonElement, React.HTMLAttributes<HTMLButtonElement>>(
-  ({ className, ...props }, ref) => {
+  ({ className, children, ...props }, ref) => {
     const { open, setOpen, isMobile } = useSidebar()
     if (isMobile) {
       return (
@@ -163,7 +169,7 @@ const SidebarTrigger = React.forwardRef<HTMLButtonElement, React.HTMLAttributes<
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-60 p-0">
-            <Sidebar className="fixed left-0 top-0 z-20 h-screen w-60" />
+            {children}
           </SheetContent>
         </Sheet>
       )
