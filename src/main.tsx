@@ -31,6 +31,9 @@ import { AcademicWorkDetailPage } from './pages/AcademicWorkDetailPage';
 import { TermsOfServicePage } from './pages/TermsOfServicePage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { DashboardProfileRouterPage } from './pages/dashboard/DashboardProfileRouterPage';
+import { ReportProblemPage } from './pages/dashboard/ReportProblemPage';
+import { SupportPage } from './pages/dashboard/SupportPage';
+import { TermsAndPoliciesPage } from './pages/dashboard/TermsAndPoliciesPage';
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
@@ -120,6 +123,18 @@ const router = createBrowserRouter([
       {
         path: "settings",
         element: <DashboardSettingsPage />,
+      },
+      {
+        path: "support",
+        element: <SupportPage />,
+      },
+      {
+        path: "report-problem",
+        element: <ReportProblemPage />,
+      },
+      {
+        path: "terms-and-policies",
+        element: <TermsAndPoliciesPage />,
       },
     ]
   },

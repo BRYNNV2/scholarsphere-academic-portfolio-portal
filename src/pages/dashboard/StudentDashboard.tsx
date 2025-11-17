@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
-import { AcademicWork, UserProfile, SavedItem } from '@shared/types';
+import { UserProfile, SavedItem } from '@shared/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
-import { Bookmark, User } from 'lucide-react';
+import { Bookmark, User, ShieldQuestion } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 function SmallAcademicWorkCard({ item }: { item: SavedItem }) {
   const itemUrl = `/work/${item.id}`;
   return (
@@ -22,33 +23,28 @@ function SmallAcademicWorkCard({ item }: { item: SavedItem }) {
     </Link>
   );
 }
-
 export function StudentDashboard() {
   const currentUser = useAuthStore((state) => state.user);
   const userId = currentUser?.id;
-
   const { data: profile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
     queryKey: ['user', userId],
-    queryFn: () => api(`/api/users/${userId}`),
+    queryFn: () => api.get(`/api/users/${userId}`),
     enabled: !!userId,
   });
-
   const savedItemIds = profile?.savedItemIds;
-
   const { data: savedItems, isLoading: isLoadingSavedItems } = useQuery<SavedItem[]>({
     queryKey: ['saved-items', savedItemIds],
     queryFn: () => api.post('/api/saved-items', { itemIds: savedItemIds }),
     enabled: !!savedItemIds && savedItemIds.length > 0,
   });
-
   const isLoading = isLoadingProfile || (!!savedItemIds && savedItemIds.length > 0 && isLoadingSavedItems);
-
   if (isLoading) {
     return (
       <div className="space-y-8">
         <Skeleton className="h-10 w-1/2" />
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent className="space-y-2"><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></CardContent></Card>
+          <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent className="space-y-2"><Skeleton className="h-12 w-full" /></CardContent></Card>
           <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent className="space-y-2"><Skeleton className="h-12 w-full" /></CardContent></Card>
         </div>
       </div>
@@ -60,7 +56,7 @@ export function StudentDashboard() {
         <h1 className="text-3xl font-bold tracking-tight">Student Dashboard</h1>
         <p className="text-muted-foreground">Welcome, {currentUser?.name}! Here's your activity overview.</p>
       </div>
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Bookmark className="h-5 w-5" /> Saved for Later</CardTitle>
@@ -86,6 +82,23 @@ export function StudentDashboard() {
               <p className="text-sm text-muted-foreground">Keep your profile image up to date so others can recognize you.</p>
             </CardContent>
           </Link>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><ShieldQuestion className="h-5 w-5" /> Support & About</CardTitle>
+            <CardDescription>Get help or review our policies.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col space-y-2">
+            <Button variant="outline" asChild className="justify-start">
+              <Link to="/dashboard/support">Support Center</Link>
+            </Button>
+            <Button variant="outline" asChild className="justify-start">
+              <Link to="/dashboard/report-problem">Report a Problem</Link>
+            </Button>
+            <Button variant="outline" asChild className="justify-start">
+              <Link to="/dashboard/terms-and-policies">Terms & Policies</Link>
+            </Button>
+          </CardContent>
         </Card>
       </div>
     </div>
