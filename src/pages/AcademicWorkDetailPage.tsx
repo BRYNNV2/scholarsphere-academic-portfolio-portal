@@ -16,6 +16,7 @@ const getPathForType = (type: AcademicWork['type']) => {
     case 'publication':
       return 'publications';
     case 'project':
+    case 'research':
       return 'projects';
     case 'portfolio':
       return 'portfolio';
