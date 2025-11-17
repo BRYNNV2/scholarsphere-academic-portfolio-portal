@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Heart, Bookmark, BookCopy, FlaskConical, Briefcase, TrendingUp } from 'lucide-react';
 import { EmptyState } from './EmptyState';
 import { Link } from 'react-router-dom';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 const getTypeIcon = (type: AcademicWork['type']) => {
   switch (type) {
     case 'publication':
@@ -37,6 +38,7 @@ export function AnalyticsOverview() {
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-24 w-full" />
           </div>
+          <Skeleton className="h-64 w-full" />
           <Skeleton className="h-40 w-full" />
         </CardContent>
       </Card>
@@ -53,6 +55,11 @@ export function AnalyticsOverview() {
     );
   }
   const hasEngagement = analytics.totalLikes > 0 || analytics.totalSaves > 0;
+  const chartData = analytics.workBreakdown.map(item => ({
+    name: item.title.length > 30 ? `${item.title.substring(0, 27)}...` : item.title,
+    likes: item.likes,
+    saves: item.saves,
+  }));
   return (
     <Card>
       <CardHeader>
@@ -61,7 +68,7 @@ export function AnalyticsOverview() {
           See how students are engaging with your academic work.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-8">
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -84,45 +91,76 @@ export function AnalyticsOverview() {
             </CardContent>
           </Card>
         </div>
-        <div>
-          <h3 className="text-lg font-medium mb-2">Engagement Breakdown</h3>
-          {hasEngagement ? (
-            <div className="border rounded-md">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead className="text-center">Likes</TableHead>
-                    <TableHead className="text-center">Saves</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {analytics.workBreakdown.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {getTypeIcon(item.type)}
-                          <Link to={`/work/${item.id}`} className="font-medium hover:underline truncate" title={item.title}>
-                            {item.title}
-                          </Link>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">{item.likes}</TableCell>
-                      <TableCell className="text-center">{item.saves}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+        {hasEngagement ? (
+          <>
+            <div>
+              <h3 className="text-lg font-medium mb-4">Engagement Chart</h3>
+              <div className="h-[350px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={chartData}
+                    margin={{
+                      top: 5,
+                      right: 20,
+                      left: -10,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} angle={-30} textAnchor="end" height={80} interval={0} />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        borderColor: 'hsl(var(--border))',
+                      }}
+                    />
+                    <Legend />
+                    <Bar dataKey="likes" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="saves" fill="hsl(var(--primary) / 0.5)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-          ) : (
-            <EmptyState
-              icon={<TrendingUp className="h-8 w-8" />}
-              title="No Engagement Data Yet"
-              description="Once students start liking or saving your work, you'll see detailed analytics here."
-              className="py-12"
-            />
-          )}
-        </div>
+            <div>
+              <h3 className="text-lg font-medium mb-2">Engagement Breakdown</h3>
+              <div className="border rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead className="text-center">Likes</TableHead>
+                      <TableHead className="text-center">Saves</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {analytics.workBreakdown.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getTypeIcon(item.type)}
+                            <Link to={`/work/${item.id}`} className="font-medium hover:underline truncate" title={item.title}>
+                              {item.title}
+                            </Link>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">{item.likes}</TableCell>
+                        <TableCell className="text-center">{item.saves}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </>
+        ) : (
+          <EmptyState
+            icon={<TrendingUp className="h-8 w-8" />}
+            title="No Engagement Data Yet"
+            description="Once students start liking or saving your work, you'll see detailed analytics here."
+            className="py-12"
+          />
+        )}
       </CardContent>
     </Card>
   );
