@@ -1,6 +1,6 @@
 # ScholarSphere: Academic Portfolio Portal
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/BRYNNV2/scholarsphere-academic-portfolio-portal)
 
 ScholarSphere is an elegant, modern, and scalable web platform designed for academics to create, manage, and showcase their professional portfolios. It provides a stunning public interface for visitors to explore lecturers' profiles, research, publications, and projects. Authenticated users get access to a clean, intuitive dashboard to effortlessly manage their content. The application is built with a focus on visual excellence, user experience, and a modular frontend architecture that consumes a well-defined API, making it a masterpiece of both form and function.
 
@@ -81,7 +81,7 @@ This project is configured for one-click deployment to Cloudflare.
 1.  **Deploy with the button:**
     Click the button below to deploy this application to your Cloudflare account.
 
-    [cloudflarebutton]
+    [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/BRYNNV2/scholarsphere-academic-portfolio-portal)
 
 2.  **Manual Deployment via CLI:**
     You can also deploy the application using the Wrangler CLI. This will build the application and deploy it to your Cloudflare account.
