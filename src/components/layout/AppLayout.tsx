@@ -19,8 +19,10 @@ function AppLayoutRenderer({ children, container, className, contentClassName }:
       <AppSidebar />
       <SidebarInset className={className}>
         <div className="absolute left-2 top-2 z-20">
-          <SidebarTrigger variant="ghost" size="icon">
-            <Menu />
+          <SidebarTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Menu />
+            </Button>
           </SidebarTrigger>
         </div>
         {container ? (
