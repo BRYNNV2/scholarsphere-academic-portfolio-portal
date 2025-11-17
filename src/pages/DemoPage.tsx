@@ -5,9 +5,24 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Toaster, toast } from '@/components/ui/sonner'
-import type { User, Chat, ChatMessage } from '@shared/types'
 import { api } from '@/lib/api-client'
 import { AppLayout } from '@/components/layout/AppLayout'
+
+// Basic types inferred from usage in the component
+interface User {
+  id: string
+  name: string
+}
+interface Chat {
+  id: string
+  title: string
+}
+interface ChatMessage {
+  id: string
+  userId: string
+  text: string
+  ts: string
+}
 
 export function DemoPage() {
   // Minimal state — small demo for AI to extend
