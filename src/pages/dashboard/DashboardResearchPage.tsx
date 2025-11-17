@@ -14,9 +14,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { toast } from '@/components/ui/sonner';
-import { PlusCircle, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Image as ImageIcon, FlaskConical } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { EmptyState } from '@/components/EmptyState';
 const projectSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(1, 'Description is required'),
@@ -240,7 +241,7 @@ export function DashboardResearchPage() {
                   <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
                 </TableRow>
               ))
-            ) : userProjects.length ? (
+            ) : userProjects.length > 0 ? (
               userProjects.map((proj) => (
                 <TableRow key={proj.id}>
                   <TableCell className="font-medium">{proj.title}</TableCell>
@@ -254,7 +255,14 @@ export function DashboardResearchPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">No projects found.</TableCell>
+                <TableCell colSpan={4} className="p-0">
+                  <EmptyState
+                    icon={<FlaskConical className="h-8 w-8" />}
+                    title="No Research Projects Yet"
+                    description="Showcase your work by adding your first research project."
+                    action={{ label: 'Add Project', onClick: handleAddNew }}
+                  />
+                </TableCell>
               </TableRow>
             )}
           </TableBody>

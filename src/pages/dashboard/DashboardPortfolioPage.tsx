@@ -14,9 +14,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { toast } from '@/components/ui/sonner';
-import { PlusCircle, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Image as ImageIcon, Briefcase } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { EmptyState } from '@/components/EmptyState';
 const portfolioItemSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   category: z.string().min(1, 'Category is required'),
@@ -240,7 +241,7 @@ export function DashboardPortfolioPage() {
                   <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
                 </TableRow>
               ))
-            ) : userPortfolioItems.length ? (
+            ) : userPortfolioItems.length > 0 ? (
               userPortfolioItems.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.title}</TableCell>
@@ -254,7 +255,14 @@ export function DashboardPortfolioPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">No portfolio items found.</TableCell>
+                <TableCell colSpan={4} className="p-0">
+                   <EmptyState
+                    icon={<Briefcase className="h-8 w-8" />}
+                    title="No Portfolio Items Yet"
+                    description="Highlight your awards, grants, and other activities by adding them here."
+                    action={{ label: 'Add Item', onClick: handleAddNew }}
+                  />
+                </TableCell>
               </TableRow>
             )}
           </TableBody>
