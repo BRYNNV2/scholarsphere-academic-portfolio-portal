@@ -37,7 +37,7 @@ export function StudentDashboard() {
 
   const { data: savedItems, isLoading: isLoadingSavedItems } = useQuery<SavedItem[]>({
     queryKey: ['saved-items', savedItemIds],
-    queryFn: () => api.post('/api/saved-items', { ids: savedItemIds }),
+    queryFn: () => api.post('/api/saved-items', { itemIds: savedItemIds }),
     enabled: !!savedItemIds && savedItemIds.length > 0,
   });
 
