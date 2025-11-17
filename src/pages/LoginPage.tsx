@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth-store';
-import { api } from '@/lib/api-client';
+import { api } from "../lib/api-client";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,9 +27,9 @@ export function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await api<{ user: UserProfile; token: string }>('/api/auth/login', {
+      const response = await api<{user: UserProfile;token: string;}>('/api/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password })
       });
       login(response.user, response.token);
       toast.success(`Welcome back, ${response.user.name}!`);
@@ -63,8 +63,8 @@ export function LoginPage() {
                   placeholder="e.g., e.reed@stanford.edu"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                  required />
+
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -73,8 +73,8 @@ export function LoginPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                  required />
+
               </div>
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? 'Signing In...' : 'Sign In'}
@@ -94,6 +94,6 @@ export function LoginPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 }

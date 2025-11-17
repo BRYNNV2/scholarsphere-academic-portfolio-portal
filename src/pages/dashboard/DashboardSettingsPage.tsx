@@ -19,39 +19,39 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  AlertDialogTitle } from
+"@/components/ui/alert-dialog";
 import { useTheme } from '@/hooks/use-theme';
-import { api } from '@/lib/api-client';
+import { api } from "../../lib/api-client";
 import { useAuthStore } from '@/stores/auth-store';
 import { toast } from 'sonner';
 const passwordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
   newPassword: z.string().min(8, 'New password must be at least 8 characters'),
-  confirmPassword: z.string(),
-}).refine(data => data.newPassword === data.confirmPassword, {
+  confirmPassword: z.string()
+}).refine((data) => data.newPassword === data.confirmPassword, {
   message: "Passwords don't match",
-  path: ['confirmPassword'],
+  path: ['confirmPassword']
 });
 type PasswordFormData = z.infer<typeof passwordSchema>;
-function ChangePasswordForm({ onFinished }: { onFinished: () => void }) {
+function ChangePasswordForm({ onFinished }: {onFinished: () => void;}) {
   const form = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
-    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
+    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' }
   });
   const mutation = useMutation({
     mutationFn: (data: Omit<PasswordFormData, 'confirmPassword'>) =>
-      api('/api/users/me/change-password', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+    api('/api/users/me/change-password', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
     onSuccess: () => {
       toast.success('Password changed successfully!');
       onFinished();
     },
     onError: (error) => {
       toast.error(`Failed to change password: ${(error as Error).message}`);
-    },
+    }
   });
   const onSubmit = (data: PasswordFormData) => {
     const { confirmPassword, ...payload } = data;
@@ -60,22 +60,22 @@ function ChangePasswordForm({ onFinished }: { onFinished: () => void }) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField control={form.control} name="currentPassword" render={({ field }) => (
-          <FormItem><FormLabel>Current Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <FormField control={form.control} name="newPassword" render={({ field }) => (
-          <FormItem><FormLabel>New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
-        <FormField control={form.control} name="confirmPassword" render={({ field }) => (
-          <FormItem><FormLabel>Confirm New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
+        <FormField control={form.control} name="currentPassword" render={({ field }) =>
+        <FormItem><FormLabel>Current Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
+        } />
+        <FormField control={form.control} name="newPassword" render={({ field }) =>
+        <FormItem><FormLabel>New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
+        } />
+        <FormField control={form.control} name="confirmPassword" render={({ field }) =>
+        <FormItem><FormLabel>Confirm New Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
+        } />
         <DialogFooter>
           <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
           <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? 'Saving...' : 'Save Changes'}</Button>
         </DialogFooter>
       </form>
-    </Form>
-  );
+    </Form>);
+
 }
 export function DashboardSettingsPage() {
   const { isDark, toggleTheme } = useTheme();
@@ -94,7 +94,7 @@ export function DashboardSettingsPage() {
     },
     onError: (error) => {
       toast.error(`Failed to delete account: ${(error as Error).message}`);
-    },
+    }
   });
   return (
     <>
@@ -119,8 +119,8 @@ export function DashboardSettingsPage() {
               <Switch
                 id="dark-mode"
                 checked={isDark}
-                onCheckedChange={toggleTheme}
-              />
+                onCheckedChange={toggleTheme} />
+
             </div>
           </CardContent>
         </Card>
@@ -173,13 +173,13 @@ export function DashboardSettingsPage() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteMutation.mutate()}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+
               Continue
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
-  );
+    </>);
+
 }

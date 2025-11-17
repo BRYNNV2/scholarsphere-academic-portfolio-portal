@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api-client';
+import { api } from "../../lib/api-client";
 import { UserProfile } from '@shared/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/stores/auth-store';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 const studentProfileSchema = z.object({
-  photoUrl: z.string().optional(),
+  photoUrl: z.string().optional()
 });
 type StudentProfileFormData = z.infer<typeof studentProfileSchema>;
 export function StudentProfilePage() {
@@ -26,28 +26,28 @@ export function StudentProfilePage() {
   const { data: profile, isLoading, isError } = useQuery<UserProfile>({
     queryKey: ['user', userId],
     queryFn: () => api(`/api/users/${userId}`),
-    enabled: !!userId,
+    enabled: !!userId
   });
   const form = useForm<StudentProfileFormData>({
     resolver: zodResolver(studentProfileSchema),
     defaultValues: {
-      photoUrl: '',
-    },
+      photoUrl: ''
+    }
   });
   const photoUrlValue = form.watch('photoUrl');
   useEffect(() => {
     if (profile) {
       form.reset({
-        photoUrl: profile.photoUrl,
+        photoUrl: profile.photoUrl
       });
     }
   }, [profile, form]);
   const mutation = useMutation({
     mutationFn: (data: Partial<UserProfile>) =>
-      api<UserProfile>(`/api/users/${userId}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
+    api<UserProfile>(`/api/users/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    }),
     onSuccess: (updatedProfile) => {
       toast.success('Profile picture updated successfully!');
       queryClient.invalidateQueries({ queryKey: ['user', userId] });
@@ -55,7 +55,7 @@ export function StudentProfilePage() {
     },
     onError: (error) => {
       toast.error(`Failed to update profile: ${(error as Error).message}`);
-    },
+    }
   });
   const onSubmit = (data: StudentProfileFormData) => {
     mutation.mutate(data);
@@ -63,7 +63,7 @@ export function StudentProfilePage() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+    const MAX_FILE_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
       toast.error('File is too large. Maximum size is 2MB.');
       return;
@@ -103,8 +103,8 @@ export function StudentProfilePage() {
             <Skeleton className="h-10 w-24" />
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>);
+
   }
   if (isError || !profile) {
     return <div>Error loading profile data. Please try again later.</div>;
@@ -126,29 +126,29 @@ export function StudentProfilePage() {
               <FormField
                 control={form.control}
                 name="photoUrl"
-                render={({ field }) => (
-                  <FormItem>
+                render={({ field }) =>
+                <FormItem>
                     <FormLabel>Your Avatar</FormLabel>
                     <div className="flex items-center gap-4">
                       <Avatar className="h-24 w-24">
                         <AvatarImage src={photoUrlValue} alt={profile.name} />
-                        <AvatarFallback>{profile.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                        <AvatarFallback>{profile.name.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
                       </Avatar>
                       <div className="flex-grow">
                         <FormControl>
                           <Input
-                            type="file"
-                            ref={fileInputRef}
-                            className="hidden"
-                            accept="image/png, image/jpeg, image/gif"
-                            onChange={handleFileChange}
-                          />
+                          type="file"
+                          ref={fileInputRef}
+                          className="hidden"
+                          accept="image/png, image/jpeg, image/gif"
+                          onChange={handleFileChange} />
+
                         </FormControl>
                         <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => fileInputRef.current?.click()}
-                        >
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}>
+
                           Upload Image
                         </Button>
                         <FormDescription className="mt-2">
@@ -158,8 +158,8 @@ export function StudentProfilePage() {
                       </div>
                     </div>
                   </FormItem>
-                )}
-              />
+                } />
+
               <Button type="submit" disabled={mutation.isPending || !form.formState.isDirty}>
                 {mutation.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
@@ -167,6 +167,6 @@ export function StudentProfilePage() {
           </Form>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }

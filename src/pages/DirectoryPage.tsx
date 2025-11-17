@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api-client';
+import { api } from "../lib/api-client";
 import { UserProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from 'react-use';
@@ -26,8 +26,8 @@ function LecturerCardSkeleton() {
           <Skeleton className="h-5 w-24 rounded-full" />
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 }
 export function DirectoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,26 +40,26 @@ export function DirectoryPage() {
   const queryParams = new URLSearchParams({
     q: debouncedSearchTerm,
     university: universityFilter,
-    department: departmentFilter,
+    department: departmentFilter
   });
   const { data: lecturers, isLoading, isError } = useQuery<UserProfile[]>({
     queryKey: ['users', debouncedSearchTerm, universityFilter, departmentFilter],
     queryFn: () => api(`/api/users/search?${queryParams.toString()}`),
-    select: (users) => users.filter(user => user.role === 'lecturer'),
+    select: (users) => users.filter((user) => user.role === 'lecturer')
   });
   const { data: allLecturers } = useQuery<UserProfile[]>({
     queryKey: ['all-lecturers'],
     queryFn: () => api('/api/users'),
-    select: (users) => users.filter(user => user.role === 'lecturer'),
+    select: (users) => users.filter((user) => user.role === 'lecturer')
   });
   const availableUniversities = useMemo(() => {
     if (!allLecturers) return [];
-    const universities = new Set(allLecturers.map(l => l.university));
+    const universities = new Set(allLecturers.map((l) => l.university));
     return Array.from(universities).sort();
   }, [allLecturers]);
   const availableDepartments = useMemo(() => {
     if (!allLecturers) return [];
-    const departments = new Set(allLecturers.map(l => l.department));
+    const departments = new Set(allLecturers.map((l) => l.department));
     return Array.from(departments).sort();
   }, [allLecturers]);
   return (
@@ -80,8 +80,8 @@ export function DirectoryPage() {
                 placeholder="Search by name, specialization, or university..."
                 className="w-full pl-10 py-3 text-base h-11"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+                onChange={(e) => setSearchTerm(e.target.value)} />
+
             </div>
             <div className="md:col-span-1">
               <Select value={universityFilter || 'all'} onValueChange={(value) => setUniversityFilter(value === 'all' ? '' : value)}>
@@ -90,9 +90,9 @@ export function DirectoryPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Universities</SelectItem>
-                  {availableUniversities.map(uni => (
-                    <SelectItem key={uni} value={uni}>{uni}</SelectItem>
-                  ))}
+                  {availableUniversities.map((uni) =>
+                  <SelectItem key={uni} value={uni}>{uni}</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -103,26 +103,26 @@ export function DirectoryPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Departments</SelectItem>
-                  {availableDepartments.map(dep => (
-                    <SelectItem key={dep} value={dep}>{dep}</SelectItem>
-                  ))}
+                  {availableDepartments.map((dep) =>
+                  <SelectItem key={dep} value={dep}>{dep}</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
           </div>
           <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {isLoading ? (
-              Array.from({ length: 6 }).map((_, index) => <LecturerCardSkeleton key={index} />)
-            ) : isError ? (
-              <p className="col-span-full text-center text-destructive">Failed to load lecturers.</p>
-            ) : (
-              lecturers?.map((lecturer, index) => (
-                <motion.div
-                  key={lecturer.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.05 }}
-                >
+            {isLoading ?
+            Array.from({ length: 6 }).map((_, index) => <LecturerCardSkeleton key={index} />) :
+            isError ?
+            <p className="col-span-full text-center text-destructive">Failed to load lecturers.</p> :
+
+            lecturers?.map((lecturer, index) =>
+            <motion.div
+              key={lecturer.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.05 }}>
+
                   <Link to={`/users/${lecturer.id}`} className="block h-full">
                     <Card className="h-full transition-all hover:shadow-xl hover:-translate-y-1">
                       <CardContent className="p-6 flex flex-col items-center text-center">
@@ -134,19 +134,19 @@ export function DirectoryPage() {
                         <p className="text-primary">{lecturer.title}</p>
                         <p className="text-sm text-muted-foreground mt-1">{lecturer.university}</p>
                         <div className="mt-4 flex flex-wrap justify-center gap-2">
-                          {lecturer.specializations.slice(0, 3).map(spec => (
-                            <Badge key={spec} variant="secondary">{spec}</Badge>
-                          ))}
+                          {lecturer.specializations.slice(0, 3).map((spec) =>
+                      <Badge key={spec} variant="secondary">{spec}</Badge>
+                      )}
                         </div>
                       </CardContent>
                     </Card>
                   </Link>
                 </motion.div>
-              ))
-            )}
+            )
+            }
           </div>
         </div>
       </div>
-    </PublicLayout>
-  );
+    </PublicLayout>);
+
 }

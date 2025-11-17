@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api-client';
+import { api } from "../../lib/api-client";
 import { UserProfile } from '@shared/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,8 +26,8 @@ const profileSchema = z.object({
   socialLinks: z.object({
     twitter: z.string().url().optional().or(z.literal('')),
     linkedin: z.string().url().optional().or(z.literal('')),
-    github: z.string().url().optional().or(z.literal('')),
-  }).optional(),
+    github: z.string().url().optional().or(z.literal(''))
+  }).optional()
 });
 type ProfileFormData = z.infer<typeof profileSchema>;
 export function DashboardProfilePage() {
@@ -39,7 +39,7 @@ export function DashboardProfilePage() {
   const { data: profile, isLoading, isError } = useQuery<UserProfile>({
     queryKey: ['user', userId],
     queryFn: () => api(`/api/users/${userId}`),
-    enabled: !!userId, // Only run query if userId is available
+    enabled: !!userId
   });
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -55,9 +55,9 @@ export function DashboardProfilePage() {
       socialLinks: {
         twitter: '',
         linkedin: '',
-        github: '',
-      },
-    },
+        github: ''
+      }
+    }
   });
   const photoUrlValue = form.watch('photoUrl');
   useEffect(() => {
@@ -68,17 +68,17 @@ export function DashboardProfilePage() {
         socialLinks: {
           twitter: profile.socialLinks?.twitter || '',
           linkedin: profile.socialLinks?.linkedin || '',
-          github: profile.socialLinks?.github || '',
+          github: profile.socialLinks?.github || ''
         }
       });
     }
   }, [profile, form]);
   const mutation = useMutation({
     mutationFn: (data: Partial<UserProfile>) =>
-      api<UserProfile>(`/api/users/${userId}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
+    api<UserProfile>(`/api/users/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    }),
     onSuccess: (updatedProfile) => {
       toast.success('Profile updated successfully!');
       queryClient.invalidateQueries({ queryKey: ['user', userId] });
@@ -86,19 +86,19 @@ export function DashboardProfilePage() {
     },
     onError: (error) => {
       toast.error(`Failed to update profile: ${error.message}`);
-    },
+    }
   });
   const onSubmit = (data: ProfileFormData) => {
     const payload = {
       ...data,
-      specializations: data.specializations.split(',').map(s => s.trim()).filter(Boolean),
+      specializations: data.specializations.split(',').map((s) => s.trim()).filter(Boolean)
     };
     mutation.mutate(payload);
   };
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+    const MAX_FILE_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
       toast.error('File is too large. Maximum size is 2MB.');
       return;
@@ -134,8 +134,8 @@ export function DashboardProfilePage() {
             <Skeleton className="h-10 w-24" />
           </CardContent>
         </Card>
-      </div>
-    );
+      </div>);
+
   }
   if (isError || !profile) {
     return <div>Error loading profile data. Please try again later.</div>;
@@ -154,29 +154,29 @@ export function DashboardProfilePage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField control={form.control} name="photoUrl" render={({ field }) => (
-                <FormItem>
+              <FormField control={form.control} name="photoUrl" render={({ field }) =>
+              <FormItem>
                   <FormLabel>Profile Picture</FormLabel>
                   <div className="flex items-center gap-4">
                     <Avatar className="h-24 w-24">
                       <AvatarImage src={photoUrlValue} alt={profile.name} />
-                      <AvatarFallback>{profile.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      <AvatarFallback>{profile.name.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                     <div className="flex-grow">
                       <FormControl>
                         <Input
-                          type="file"
-                          ref={fileInputRef}
-                          className="hidden"
-                          accept="image/png, image/jpeg, image/gif"
-                          onChange={handleFileChange}
-                        />
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept="image/png, image/jpeg, image/gif"
+                        onChange={handleFileChange} />
+
                       </FormControl>
                       <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}>
+
                         Upload Image
                       </Button>
                       <FormDescription className="mt-2">
@@ -186,42 +186,42 @@ export function DashboardProfilePage() {
                     </div>
                   </div>
                 </FormItem>
-              )} />
+              } />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField control={form.control} name="name" render={({ field }) => (
-                  <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="title" render={({ field }) => (
-                  <FormItem><FormLabel>Title</FormLabel><FormControl><Input placeholder="e.g., Professor of Computer Science" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="university" render={({ field }) => (
-                  <FormItem><FormLabel>University</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="department" render={({ field }) => (
-                  <FormItem><FormLabel>Department</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
+                <FormField control={form.control} name="name" render={({ field }) =>
+                <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                } />
+                <FormField control={form.control} name="title" render={({ field }) =>
+                <FormItem><FormLabel>Title</FormLabel><FormControl><Input placeholder="e.g., Professor of Computer Science" {...field} /></FormControl><FormMessage /></FormItem>
+                } />
+                <FormField control={form.control} name="university" render={({ field }) =>
+                <FormItem><FormLabel>University</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                } />
+                <FormField control={form.control} name="department" render={({ field }) =>
+                <FormItem><FormLabel>Department</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                } />
               </div>
-              <FormField control={form.control} name="email" render={({ field }) => (
-                <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={form.control} name="bio" render={({ field }) => (
-                <FormItem><FormLabel>Biography</FormLabel><FormControl><Textarea rows={5} {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={form.control} name="specializations" render={({ field }) => (
-                <FormItem><FormLabel>Specializations</FormLabel><FormControl><Input {...field} /></FormControl><FormDescription>Enter a comma-separated list of your specializations.</FormDescription><FormMessage /></FormItem>
-              )} />
+              <FormField control={form.control} name="email" render={({ field }) =>
+              <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
+              } />
+              <FormField control={form.control} name="bio" render={({ field }) =>
+              <FormItem><FormLabel>Biography</FormLabel><FormControl><Textarea rows={5} {...field} /></FormControl><FormMessage /></FormItem>
+              } />
+              <FormField control={form.control} name="specializations" render={({ field }) =>
+              <FormItem><FormLabel>Specializations</FormLabel><FormControl><Input {...field} /></FormControl><FormDescription>Enter a comma-separated list of your specializations.</FormDescription><FormMessage /></FormItem>
+              } />
               <div>
                 <h3 className="text-lg font-medium">Social Links</h3>
                 <div className="space-y-4 mt-2">
-                  <FormField control={form.control} name="socialLinks.twitter" render={({ field }) => (
-                    <FormItem><FormLabel>Twitter URL</FormLabel><FormControl><Input placeholder="https://twitter.com/username" {...field} /></FormControl><FormMessage /></FormItem>
-                  )} />
-                  <FormField control={form.control} name="socialLinks.linkedin" render={({ field }) => (
-                    <FormItem><FormLabel>LinkedIn URL</FormLabel><FormControl><Input placeholder="https://linkedin.com/in/username" {...field} /></FormControl><FormMessage /></FormItem>
-                  )} />
-                  <FormField control={form.control} name="socialLinks.github" render={({ field }) => (
-                    <FormItem><FormLabel>GitHub URL</FormLabel><FormControl><Input placeholder="https://github.com/username" {...field} /></FormControl><FormMessage /></FormItem>
-                  )} />
+                  <FormField control={form.control} name="socialLinks.twitter" render={({ field }) =>
+                  <FormItem><FormLabel>Twitter URL</FormLabel><FormControl><Input placeholder="https://twitter.com/username" {...field} /></FormControl><FormMessage /></FormItem>
+                  } />
+                  <FormField control={form.control} name="socialLinks.linkedin" render={({ field }) =>
+                  <FormItem><FormLabel>LinkedIn URL</FormLabel><FormControl><Input placeholder="https://linkedin.com/in/username" {...field} /></FormControl><FormMessage /></FormItem>
+                  } />
+                  <FormField control={form.control} name="socialLinks.github" render={({ field }) =>
+                  <FormItem><FormLabel>GitHub URL</FormLabel><FormControl><Input placeholder="https://github.com/username" {...field} /></FormControl><FormMessage /></FormItem>
+                  } />
                 </div>
               </div>
               <Button type="submit" disabled={mutation.isPending}>
@@ -231,6 +231,6 @@ export function DashboardProfilePage() {
           </Form>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>);
+
 }

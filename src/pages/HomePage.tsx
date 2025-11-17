@@ -7,7 +7,7 @@ import { ArrowRight, BookCopy, Globe, Share2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { UserProfile } from '@shared/types';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api-client';
+import { api } from "../lib/api-client";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/stores/auth-store';
 export function HomePage() {
@@ -15,17 +15,17 @@ export function HomePage() {
 
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['public', 'users'],
-    queryFn: () => api<UserProfile[]>('/api/users'),
+    queryFn: () => api<UserProfile[]>('/api/users')
   });
 
-  const featuredLecturers = users.filter(u => u.role === 'lecturer');
+  const featuredLecturers = users.filter((u) => u.role === 'lecturer');
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
   };
   return (
     <PublicLayout>
-      {/* Hero Section */}
+      {}
       <div className="relative bg-background">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -33,8 +33,8 @@ export function HomePage() {
             className="py-24 md:py-32 lg:py-40 text-center"
             initial="hidden"
             animate="visible"
-            variants={fadeIn}
-          >
+            variants={fadeIn}>
+
             <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground tracking-tight">
               Showcase Your <span className="text-primary">Academic Legacy</span>
             </h1>
@@ -52,7 +52,7 @@ export function HomePage() {
           </motion.div>
         </div>
       </div>
-      {/* Features Section */}
+      {}
       <div className="py-16 md:py-24 bg-muted/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
@@ -104,7 +104,7 @@ export function HomePage() {
           </div>
         </div>
       </div>
-      {/* Featured Lecturers Section */}
+      {}
       <div className="py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
@@ -114,9 +114,9 @@ export function HomePage() {
             </p>
           </div>
           <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            {isLoading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i} className="overflow-hidden text-center">
+            {isLoading ?
+            Array.from({ length: 4 }).map((_, i) =>
+            <Card key={i} className="overflow-hidden text-center">
                   <CardContent className="p-6">
                     <Skeleton className="h-24 w-24 rounded-full mx-auto mb-4" />
                     <Skeleton className="h-5 w-3/4 mx-auto mb-2" />
@@ -125,10 +125,10 @@ export function HomePage() {
                     <Skeleton className="h-9 w-24 mx-auto mt-4" />
                   </CardContent>
                 </Card>
-              ))
-            ) : (
-              featuredLecturers.map((lecturer, index) => (
-                <motion.div key={lecturer.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.5 }} transition={{ delay: index * 0.1 }}>
+            ) :
+
+            featuredLecturers.map((lecturer, index) =>
+            <motion.div key={lecturer.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.5 }} transition={{ delay: index * 0.1 }}>
                   <Card className="overflow-hidden text-center transition-all hover:shadow-xl hover:-translate-y-1">
                     <CardContent className="p-6">
                       <Avatar className="h-24 w-24 mx-auto mb-4">
@@ -144,13 +144,13 @@ export function HomePage() {
                     </CardContent>
                   </Card>
                 </motion.div>
-              ))
-            )}
+            )
+            }
             {error && <p className="text-center text-destructive col-span-full">{error.message}</p>}
           </div>
         </div>
       </div>
-      {/* CTA Section */}
+      {}
       <div className="bg-muted/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="text-center">
@@ -166,6 +166,6 @@ export function HomePage() {
           </div>
         </div>
       </div>
-    </PublicLayout>
-  );
+    </PublicLayout>);
+
 }

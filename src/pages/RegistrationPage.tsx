@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth-store';
-import { api } from '@/lib/api-client';
+import { api } from "../lib/api-client";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,15 +22,15 @@ const registrationSchema = z.object({
   title: z.string().optional(),
   university: z.string().optional(),
   department: z.string().optional(),
-  bio: z.string().optional(),
-}).refine(data => {
+  bio: z.string().optional()
+}).refine((data) => {
   if (data.role === 'lecturer') {
     return !!data.title && !!data.university && !!data.department && !!data.bio;
   }
   return true;
 }, {
   message: 'Lecturer fields are required',
-  path: ['title'], // Show error on one of the fields
+  path: ['title']
 });
 type RegistrationFormData = z.infer<typeof registrationSchema>;
 export function RegistrationPage() {
@@ -48,16 +48,16 @@ export function RegistrationPage() {
       title: '',
       university: '',
       department: '',
-      bio: '',
-    },
+      bio: ''
+    }
   });
   const role = form.watch('role');
   const onSubmit = async (data: RegistrationFormData) => {
     setIsLoading(true);
     try {
-      const response = await api<{ user: UserProfile; token: string }>('/api/auth/register', {
+      const response = await api<{user: UserProfile;token: string;}>('/api/auth/register', {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify(data)
       });
       login(response.user, response.token);
       toast.success(`Welcome, ${response.user.name}! Your account has been created.`);
@@ -86,8 +86,8 @@ export function RegistrationPage() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField control={form.control} name="role" render={({ field }) => (
-                  <FormItem className="space-y-3"><FormLabel>I am a...</FormLabel>
+                <FormField control={form.control} name="role" render={({ field }) =>
+                <FormItem className="space-y-3"><FormLabel>I am a...</FormLabel>
                     <FormControl>
                       <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-4">
                         <FormItem className="flex items-center space-x-2 space-y-0">
@@ -99,32 +99,32 @@ export function RegistrationPage() {
                       </RadioGroup>
                     </FormControl><FormMessage />
                   </FormItem>
-                )} />
-                <FormField control={form.control} name="name" render={({ field }) => (
-                  <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="email" render={({ field }) => (
-                  <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="password" render={({ field }) => (
-                  <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                {role === 'lecturer' && (
-                  <>
-                    <FormField control={form.control} name="title" render={({ field }) => (
-                      <FormItem><FormLabel>Title</FormLabel><FormControl><Input placeholder="e.g., Professor of Computer Science" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={form.control} name="university" render={({ field }) => (
-                      <FormItem><FormLabel>University</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={form.control} name="department" render={({ field }) => (
-                      <FormItem><FormLabel>Department</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                    <FormField control={form.control} name="bio" render={({ field }) => (
-                      <FormItem><FormLabel>Short Bio</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
+                } />
+                <FormField control={form.control} name="name" render={({ field }) =>
+                <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                } />
+                <FormField control={form.control} name="email" render={({ field }) =>
+                <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
+                } />
+                <FormField control={form.control} name="password" render={({ field }) =>
+                <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>
+                } />
+                {role === 'lecturer' &&
+                <>
+                    <FormField control={form.control} name="title" render={({ field }) =>
+                  <FormItem><FormLabel>Title</FormLabel><FormControl><Input placeholder="e.g., Professor of Computer Science" {...field} /></FormControl><FormMessage /></FormItem>
+                  } />
+                    <FormField control={form.control} name="university" render={({ field }) =>
+                  <FormItem><FormLabel>University</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                  } />
+                    <FormField control={form.control} name="department" render={({ field }) =>
+                  <FormItem><FormLabel>Department</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                  } />
+                    <FormField control={form.control} name="bio" render={({ field }) =>
+                  <FormItem><FormLabel>Short Bio</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                  } />
                   </>
-                )}
+                }
                 <Button type="submit" disabled={isLoading} className="w-full">
                   {isLoading ? 'Creating Account...' : 'Create Account'}
                 </Button>
@@ -144,6 +144,6 @@ export function RegistrationPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 }
