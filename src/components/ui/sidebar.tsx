@@ -190,6 +190,7 @@ const SidebarTrigger = React.forwardRef<HTMLButtonElement, React.HTMLAttributes<
 )
 SidebarTrigger.displayName = "SidebarTrigger"
 export {
+  useSidebar,
   SidebarProvider,
   Sidebar,
   SidebarHeader,
