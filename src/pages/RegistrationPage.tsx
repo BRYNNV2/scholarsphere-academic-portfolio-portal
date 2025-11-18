@@ -10,12 +10,15 @@ import { BookOpenCheck } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { UserProfile } from '@shared/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 const registrationSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
+  username: z.string()
+    .min(3, 'Username must be at least 3 characters')
+    .regex(/^[a-z0-9-]+$/, 'Username can only contain lowercase letters, numbers, and hyphens.'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   role: z.enum(['student', 'lecturer']),
@@ -42,6 +45,7 @@ export function RegistrationPage() {
     resolver: zodResolver(registrationSchema),
     defaultValues: {
       name: '',
+      username: '',
       email: '',
       password: '',
       role: 'student',
@@ -100,6 +104,14 @@ export function RegistrationPage() {
                 <FormField control={form.control} name="name" render={({ field }) =>
                 <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 } />
+                <FormField control={form.control} name="username" render={({ field }) =>
+                <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl><Input {...field} /></FormControl>
+                    <FormDescription>This will be your public profile URL (e.g., /u/your-username).</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                } />
                 <FormField control={form.control} name="email" render={({ field }) =>
                 <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
                 } />
@@ -142,5 +154,4 @@ export function RegistrationPage() {
         </Card>
       </div>
     </div>);
-
 }

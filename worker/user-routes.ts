@@ -13,16 +13,21 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   const auth = new Hono<{ Bindings: Env }>();
   auth.post('/register', async (c) => {
     const body = await c.req.json<Partial<UserProfile>>();
-    if (!body.email || !body.password || !body.role) {
-      return bad(c, 'Email, password, and role are required');
+    if (!body.email || !body.password || !body.role || !body.username) {
+      return bad(c, 'Email, username, password, and role are required');
     }
     const users = (await UserProfileEntity.list(c.env)).items;
-    const existingUser = users.find(l => l.email === body.email);
-    if (existingUser) {
+    const existingUserByEmail = users.find(l => l.email === body.email);
+    if (existingUserByEmail) {
       return bad(c, 'User with this email already exists');
+    }
+    const existingUserByUsername = users.find(u => u.username === body.username);
+    if (existingUserByUsername) {
+      return bad(c, 'Username is already taken');
     }
     const newUser: UserProfile = {
       id: crypto.randomUUID(),
+      username: body.username,
       name: body.name || '',
       email: body.email,
       password: body.password,
@@ -359,6 +364,14 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const page = await UserProfileEntity.list(c.env);
     const users = page.items.map(l => { const { password, ...rest } = l; return rest; });
     return ok(c, users);
+  });
+  app.get('/api/users/by-username/:username', async (c) => {
+    const { username } = c.req.param();
+    const users = (await UserProfileEntity.list(c.env)).items;
+    const user = users.find(u => u.username === username);
+    if (!user) return notFound(c, 'User not found');
+    const { password, ...rest } = user;
+    return ok(c, rest);
   });
   app.get('/api/users/:id', async (c) => {
     const { id } = c.req.param();

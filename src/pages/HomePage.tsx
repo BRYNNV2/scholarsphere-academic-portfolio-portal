@@ -12,12 +12,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/stores/auth-store';
 export function HomePage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['public', 'users'],
     queryFn: () => api.get<UserProfile[]>('/api/users')
   });
-
   const featuredLecturers = users.filter((u) => u.role === 'lecturer');
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
@@ -34,7 +32,6 @@ export function HomePage() {
             initial="hidden"
             animate="visible"
             variants={fadeIn}>
-
             <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground tracking-tight">
               Showcase Your <span className="text-primary">Academic Legacy</span>
             </h1>
@@ -126,7 +123,6 @@ export function HomePage() {
                   </CardContent>
                 </Card>
             ) :
-
             featuredLecturers.map((lecturer, index) =>
             <motion.div key={lecturer.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.5 }} transition={{ delay: index * 0.1 }}>
                   <Card className="overflow-hidden text-center transition-all hover:shadow-xl hover:-translate-y-1">
@@ -139,7 +135,7 @@ export function HomePage() {
                       <p className="text-sm text-primary">{lecturer.title}</p>
                       <p className="text-sm text-muted-foreground mt-1">{lecturer.university}</p>
                       <Button variant="outline" size="sm" className="mt-4" asChild>
-                        <Link to={`/users/${lecturer.id}`}>View Profile</Link>
+                        <Link to={`/u/${lecturer.username}`}>View Profile</Link>
                       </Button>
                     </CardContent>
                   </Card>
@@ -167,5 +163,4 @@ export function HomePage() {
         </div>
       </div>
     </PublicLayout>);
-
 }

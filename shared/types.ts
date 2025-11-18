@@ -49,6 +49,7 @@ export type AcademicWork = Publication | ResearchProject | PortfolioItem;
 export type SavedItem = AcademicWork & { authorName: string };
 export interface UserProfile {
   id:string;
+  username: string;
   name: string;
   role: 'lecturer' | 'student';
   title: string; // e.g., "Professor of Computer Science"

@@ -132,7 +132,6 @@ export function DashboardProfilePage() {
           </CardContent>
         </Card>
       </div>);
-
   }
   if (isError || !profile) {
     return <div>Error loading profile data. Please try again later.</div>;
@@ -167,13 +166,11 @@ export function DashboardProfilePage() {
                         className="hidden"
                         accept="image/png, image/jpeg, image/gif"
                         onChange={handleFileChange} />
-
                       </FormControl>
                       <Button
                       type="button"
                       variant="outline"
                       onClick={() => fileInputRef.current?.click()}>
-
                         Upload Image
                       </Button>
                       <FormDescription className="mt-2">
@@ -188,6 +185,11 @@ export function DashboardProfilePage() {
                 <FormField control={form.control} name="name" render={({ field }) =>
                 <FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 } />
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl><Input value={profile.username} disabled /></FormControl>
+                  <FormDescription>Username cannot be changed.</FormDescription>
+                </FormItem>
                 <FormField control={form.control} name="title" render={({ field }) =>
                 <FormItem><FormLabel>Title</FormLabel><FormControl><Input placeholder="e.g., Professor of Computer Science" {...field} /></FormControl><FormMessage /></FormItem>
                 } />
@@ -229,5 +231,4 @@ export function DashboardProfilePage() {
         </CardContent>
       </Card>
     </div>);
-
 }

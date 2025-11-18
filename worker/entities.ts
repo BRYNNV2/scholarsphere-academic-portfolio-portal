@@ -8,6 +8,7 @@ export class UserProfileEntity extends IndexedEntity<UserProfile> {
   static readonly indexName = "users";
   static readonly initialState: UserProfile = {
     id: "",
+    username: "",
     name: "",
     role: 'lecturer',
     title: "",

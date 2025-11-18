@@ -27,7 +27,6 @@ function LecturerCardSkeleton() {
         </div>
       </CardContent>
     </Card>);
-
 }
 export function DirectoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -81,7 +80,6 @@ export function DirectoryPage() {
                 className="w-full pl-10 py-3 text-base h-11"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)} />
-
             </div>
             <div className="md:col-span-1">
               <Select value={universityFilter || 'all'} onValueChange={(value) => setUniversityFilter(value === 'all' ? '' : value)}>
@@ -115,15 +113,13 @@ export function DirectoryPage() {
             Array.from({ length: 6 }).map((_, index) => <LecturerCardSkeleton key={index} />) :
             isError ?
             <p className="col-span-full text-center text-destructive">Failed to load lecturers.</p> :
-
             lecturers?.map((lecturer, index) =>
             <motion.div
               key={lecturer.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.05 }}>
-
-                  <Link to={`/users/${lecturer.id}`} className="block h-full">
+                  <Link to={`/u/${lecturer.username}`} className="block h-full">
                     <Card className="h-full transition-all hover:shadow-xl hover:-translate-y-1">
                       <CardContent className="p-6 flex flex-col items-center text-center">
                         <Avatar className="h-24 w-24 mb-4">
@@ -148,5 +144,4 @@ export function DirectoryPage() {
         </div>
       </div>
     </PublicLayout>);
-
 }

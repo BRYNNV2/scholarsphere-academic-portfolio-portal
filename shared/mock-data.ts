@@ -24,6 +24,7 @@ export const MOCK_PORTFOLIO_ITEMS: PortfolioItem[] = [
 export const MOCK_LECTURERS: UserProfile[] = [
   {
     id: 'l1',
+    username: 'evelyn-reed',
     name: 'Dr. Evelyn Reed',
     role: 'lecturer',
     title: 'Professor of Computer Science',
@@ -42,6 +43,7 @@ export const MOCK_LECTURERS: UserProfile[] = [
   },
   {
     id: 'l2',
+    username: 'ben-carter',
     name: 'Dr. Ben Carter',
     role: 'lecturer',
     title: 'Associate Professor of Physics',
@@ -60,6 +62,7 @@ export const MOCK_LECTURERS: UserProfile[] = [
   },
   {
     id: 'l3',
+    username: 'aisha-khan',
     name: 'Dr. Aisha Khan',
     role: 'lecturer',
     title: 'Professor of Philosophy',
@@ -78,6 +81,7 @@ export const MOCK_LECTURERS: UserProfile[] = [
   },
   {
     id: 'l4',
+    username: 'maria-garcia',
     name: 'Dr. Maria Garcia',
     role: 'lecturer',
     title: 'Professor of Materials Science',
@@ -96,6 +100,7 @@ export const MOCK_LECTURERS: UserProfile[] = [
   },
   {
     id: 'l5',
+    username: 'samuel-chen',
     name: 'Dr. Samuel Chen',
     role: 'lecturer',
     title: 'Professor of Neuroscience',
@@ -114,6 +119,7 @@ export const MOCK_LECTURERS: UserProfile[] = [
   },
   {
     id: 'l6',
+    username: 'kenji-tanaka',
     name: 'Dr. Kenji Tanaka',
     role: 'lecturer',
     title: 'Assistant Professor of AI',

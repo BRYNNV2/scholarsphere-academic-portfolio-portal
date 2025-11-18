@@ -40,11 +40,9 @@ function SaveButton({ itemId }: {itemId: string;}) {
       size="sm"
       onClick={() => saveMutation.mutate()}
       disabled={saveMutation.isPending}>
-
       <Bookmark className={cn("mr-2 h-4 w-4", isSaved && "fill-primary text-primary")} />
       {isSaved ? 'Saved' : 'Save'}
     </Button>);
-
 }
 function PortfolioPageSkeleton() {
   return (
@@ -63,14 +61,13 @@ function PortfolioPageSkeleton() {
       <Skeleton className="h-24 w-full mt-6" />
       <Skeleton className="h-24 w-full mt-4" />
     </div>);
-
 }
 export function PortfolioPage() {
-  const { id } = useParams<{id: string;}>();
+  const { username } = useParams<{username: string;}>();
   const { data: user, isLoading: isLoadingUser } = useQuery<UserProfile>({
-    queryKey: ['user', id],
-    queryFn: () => api.get(`/api/users/${id}`),
-    enabled: !!id
+    queryKey: ['user-by-username', username],
+    queryFn: () => api.get(`/api/users/by-username/${username}`),
+    enabled: !!username
   });
   const { data: publications, isLoading: isLoadingPubs } = useQuery<Publication[]>({
     queryKey: ['publications'],
@@ -99,7 +96,6 @@ export function PortfolioPage() {
           </Button>
         </div>
       </PublicLayout>);
-
   }
   const userPublications = publications?.filter((p) => user.publicationIds.includes(p.id)) ?? [];
   const userProjects = projects?.filter((p) => user.projectIds.includes(p.id)) ?? [];
@@ -167,7 +163,6 @@ export function PortfolioPage() {
                         <AspectRatio ratio={16 / 9} className="bg-muted">
                           {item.thumbnailUrl ?
                       <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" /> :
-
                       <div className="flex items-center justify-center h-full text-muted-foreground">
                               <Briefcase className="h-10 w-10" />
                             </div>
@@ -209,7 +204,6 @@ export function PortfolioPage() {
                         <AspectRatio ratio={16 / 9} className="bg-muted">
                           {pub.thumbnailUrl ?
                       <img src={pub.thumbnailUrl} alt={pub.title} className="object-cover w-full h-full" /> :
-
                       <div className="flex items-center justify-center h-full text-muted-foreground">
                               <Book className="h-10 w-10" />
                             </div>
@@ -247,7 +241,6 @@ export function PortfolioPage() {
                         <AspectRatio ratio={16 / 9} className="bg-muted">
                           {proj.thumbnailUrl ?
                       <img src={proj.thumbnailUrl} alt={proj.title} className="object-cover w-full h-full" /> :
-
                       <div className="flex items-center justify-center h-full text-muted-foreground">
                               <FlaskConical className="h-10 w-10" />
                             </div>
@@ -275,5 +268,4 @@ export function PortfolioPage() {
         </div>
       </div>
     </PublicLayout>);
-
 }

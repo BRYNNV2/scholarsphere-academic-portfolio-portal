@@ -21,7 +21,6 @@ const getPathForType = (type: AcademicWork['type']) => {
     case 'portfolio':
       return 'portfolio';
     default:
-
       return type;
   }
 };
@@ -44,7 +43,6 @@ function AcademicWorkDetailPageSkeleton() {
         <Skeleton className="h-5 w-5/6" />
       </div>
     </div>);
-
 }
 export function AcademicWorkDetailPage() {
   const { id } = useParams<{id: string;}>();
@@ -74,14 +72,12 @@ export function AcademicWorkDetailPage() {
             <p className="text-lg text-muted-foreground">{item.authors.join(', ')}</p>
             <p className="text-md text-muted-foreground"><em>{item.journal}</em>, {item.year}</p>
           </>);
-
       case 'project':
         return (
           <>
             <p className="text-lg text-muted-foreground"><strong>Role:</strong> {item.role} ({item.year})</p>
             <p className="mt-6 text-lg leading-relaxed whitespace-pre-wrap">{item.description}</p>
           </>);
-
       case 'portfolio':
         return (
           <>
@@ -91,7 +87,6 @@ export function AcademicWorkDetailPage() {
             </div>
             <p className="mt-6 text-lg leading-relaxed whitespace-pre-wrap">{item.description}</p>
           </>);
-
       default:
         return null;
     }
@@ -110,12 +105,9 @@ export function AcademicWorkDetailPage() {
           </Button>
         </div>
       </PublicLayout>);
-
   }
-
   const backPath = getPathForType(item.type);
   const backPathTitle = backPath.charAt(0).toUpperCase() + backPath.slice(1);
-
   return (
     <PublicLayout>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
@@ -135,7 +127,7 @@ export function AcademicWorkDetailPage() {
                   <AvatarFallback>{author.name.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <Link to={`/users/${author.id}`} className="text-lg font-semibold hover:underline">{author.name}</Link>
+                  <Link to={`/u/${author.username}`} className="text-lg font-semibold hover:underline">{author.name}</Link>
                   <p className="text-muted-foreground flex items-center gap-2">
                     <Building className="h-4 w-4" /> {author.university}
                   </p>
@@ -147,7 +139,6 @@ export function AcademicWorkDetailPage() {
             <AspectRatio ratio={16 / 9} className="bg-muted">
               {item.thumbnailUrl ?
               <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" /> :
-
               <div className="flex items-center justify-center h-full text-muted-foreground">
                   {getIcon(item.type)}
                 </div>
@@ -168,5 +159,4 @@ export function AcademicWorkDetailPage() {
         </article>
       </div>
     </PublicLayout>);
-
 }

@@ -51,7 +51,6 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.05 }}
       className="h-full">
-
       <Card className="h-full flex flex-col overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 relative">
         {canSave &&
         <Button
@@ -60,7 +59,6 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
           className="absolute top-2 right-2 z-10 bg-background/70 hover:bg-background"
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending}>
-
             <Bookmark className={cn("h-5 w-5", isSaved && "fill-primary text-primary")} />
           </Button>
         }
@@ -68,7 +66,6 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
           <AspectRatio ratio={16 / 9} className="bg-muted">
             {item.thumbnailUrl ?
             <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" /> :
-
             <div className="flex items-center justify-center h-full text-muted-foreground">
                 {getIcon()}
               </div>
@@ -94,7 +91,7 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
           <div className="mt-4 pt-4 border-t flex justify-between items-center">
             {author ?
             <Button variant="ghost" size="sm" asChild>
-                <Link to={`/users/${author.id}`} className="text-sm">
+                <Link to={`/u/${author.username}`} className="text-sm">
                   <User className="mr-2 h-4 w-4" />
                   {author.name}
                 </Link>
@@ -111,5 +108,4 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
         </CardContent>
       </Card>
     </motion.div>);
-
 }
