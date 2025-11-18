@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Heart, MessageSquare, Lock, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import { Heart, MessageSquare, Lock, MoreVertical, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { Skeleton } from './ui/skeleton';
@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from './ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 interface CommentsSectionProps {
   postId: string;
@@ -85,6 +85,17 @@ export function CommentsSection({ postId, authorId }: CommentsSectionProps) {
       toast.error((error as Error).message);
     }
   });
+  const updateVisibilityMutation = useMutation({
+    mutationFn: (data: { commentId: string; visibility: 'public' | 'private' }) =>
+      api.put(`/api/comments/${data.commentId}/visibility`, { visibility: data.visibility }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
+      toast.success('Comment visibility updated!');
+    },
+    onError: (error) => {
+      toast.error((error as Error).message);
+    }
+  });
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!comment.trim()) return;
@@ -95,6 +106,7 @@ export function CommentsSection({ postId, authorId }: CommentsSectionProps) {
     updateCommentMutation.mutate({ commentId: editingCommentId, content: editedContent.trim() });
   };
   const canInteract = isAuthenticated && currentUser?.role === 'student';
+  const isAuthor = currentUser?.id === authorId;
   return (
     <>
       <div className="border-t p-6">
@@ -180,7 +192,7 @@ export function CommentsSection({ postId, authorId }: CommentsSectionProps) {
                         <p className="text-sm text-muted-foreground">{c.content}</p>
                       )}
                     </div>
-                    {currentUser?.id === c.userId && editingCommentId !== c.id && (
+                    {(currentUser?.id === c.userId || isAuthor) && editingCommentId !== c.id && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-7 w-7">
@@ -188,12 +200,30 @@ export function CommentsSection({ postId, authorId }: CommentsSectionProps) {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => { setEditingCommentId(c.id); setEditedContent(c.content); }}>
-                            <Edit className="mr-2 h-4 w-4" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setDeletingComment(c)} className="text-destructive">
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
-                          </DropdownMenuItem>
+                          {currentUser?.id === c.userId && (
+                            <>
+                              <DropdownMenuItem onClick={() => { setEditingCommentId(c.id); setEditedContent(c.content); }}>
+                                <Edit className="mr-2 h-4 w-4" /> Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setDeletingComment(c)} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                          {isAuthor && (
+                            <>
+                              {currentUser?.id === c.userId && <DropdownMenuSeparator />}
+                              {c.visibility === 'public' ? (
+                                <DropdownMenuItem onClick={() => updateVisibilityMutation.mutate({ commentId: c.id, visibility: 'private' })}>
+                                  <EyeOff className="mr-2 h-4 w-4" /> Make Private
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => updateVisibilityMutation.mutate({ commentId: c.id, visibility: 'public' })}>
+                                  <Eye className="mr-2 h-4 w-4" /> Make Public
+                                </DropdownMenuItem>
+                              )}
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     )}

@@ -336,6 +336,21 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     await commentEntity.patch({ content });
     return ok(c, await commentEntity.getState());
   });
+  secured.put('/comments/:id/visibility', async (c) => {
+    const payload = c.get('jwtPayload');
+    const { id } = c.req.param();
+    const { visibility } = await c.req.json<{ visibility: 'public' | 'private' }>();
+    const commentEntity = new CommentEntity(c.env, id);
+    if (!(await commentEntity.exists())) return notFound(c, 'Comment not found');
+    const comment = await commentEntity.getState();
+    const work = await getAcademicWork(c.env, comment.postId);
+    if (!work) return notFound(c, 'Associated academic work not found');
+    if (work.lecturerId !== payload.sub) {
+      return c.json({ success: false, error: 'You can only moderate comments on your own work' }, 403);
+    }
+    await commentEntity.patch({ visibility });
+    return ok(c, await commentEntity.getState());
+  });
   secured.delete('/comments/:id', async (c) => {
     const payload = c.get('jwtPayload');
     const { id } = c.req.param();
