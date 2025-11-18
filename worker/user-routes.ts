@@ -67,6 +67,18 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   // --- SECURED ROUTES ---
   const secured = new Hono<{ Bindings: Env }>();
   secured.use('*', jwt({ secret: JWT_SECRET }));
+  secured.get('/users/me/comments', async (c) => {
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+    if (!userId || payload.role !== 'student') {
+      return c.json({ success: false, error: 'Unauthorized' }, 403);
+    }
+    const allComments = (await CommentEntity.list(c.env)).items;
+    const userComments = allComments
+      .filter(comment => comment.userId === userId)
+      .sort((a, b) => b.createdAt - a.createdAt);
+    return ok(c, userComments);
+  });
   secured.get('/users/me/analytics', async (c) => {
     const payload = c.get('jwtPayload');
     const userId = payload.sub;

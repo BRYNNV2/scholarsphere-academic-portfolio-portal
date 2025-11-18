@@ -1,5 +1,7 @@
 import { AcademicWorkDirectory } from '@/components/AcademicWorkDirectory';
+import { usePageTitle } from '@/hooks/usePageTitle';
 export function PortfolioDirectoryPage() {
+  usePageTitle('Portfolio Directory | ScholarSphere');
   return (
     <AcademicWorkDirectory
       pageTitle="Explore Portfolios"

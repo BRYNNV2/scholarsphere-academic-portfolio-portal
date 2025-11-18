@@ -13,6 +13,7 @@ import { UserProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from 'react-use';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { usePageTitle } from '@/hooks/usePageTitle';
 function LecturerCardSkeleton() {
   return (
     <Card>
@@ -29,6 +30,7 @@ function LecturerCardSkeleton() {
     </Card>);
 }
 export function DirectoryPage() {
+  usePageTitle('Lecturer Directory | ScholarSphere');
   const [searchTerm, setSearchTerm] = useState('');
   const [universityFilter, setUniversityFilter] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');

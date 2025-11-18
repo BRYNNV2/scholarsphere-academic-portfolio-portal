@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client-fixed';
 import { useAuthStore } from '@/stores/auth-store';
-import { UserProfile, SavedItem } from '@shared/types';
+import { UserProfile, SavedItem, Comment, AcademicWork } from '@shared/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
-import { Bookmark, User } from 'lucide-react';
+import { Bookmark, User, MessageSquare } from 'lucide-react';
 import { RecentActivityFeed } from '@/components/RecentActivityFeed';
+import { formatDistanceToNow } from 'date-fns';
+import { useMemo } from 'react';
 function SmallAcademicWorkCard({ item }: { item: SavedItem }) {
   const itemUrl = `/work/${item.id}`;
   return (
@@ -20,6 +22,16 @@ function SmallAcademicWorkCard({ item }: { item: SavedItem }) {
           <p className="text-xs text-muted-foreground truncate">by {item.authorName}</p>
         </div>
       </div>
+    </Link>
+  );
+}
+function MyCommentCard({ comment, workTitle }: { comment: Comment; workTitle: string }) {
+  return (
+    <Link to={`/work/${comment.postId}`} className="block p-2 rounded-md hover:bg-muted">
+      <p className="text-sm text-muted-foreground italic">"{comment.content}"</p>
+      <p className="text-xs text-muted-foreground mt-1">
+        Commented on <span className="font-medium text-primary">{workTitle}</span> &middot; {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+      </p>
     </Link>
   );
 }
@@ -37,7 +49,28 @@ export function StudentDashboard() {
     queryFn: () => api.post('/api/saved-items', { itemIds: savedItemIds }),
     enabled: !!savedItemIds && savedItemIds.length > 0,
   });
-  const isLoading = isLoadingProfile || (!!savedItemIds && savedItemIds.length > 0 && isLoadingSavedItems);
+  const { data: myComments, isLoading: isLoadingComments } = useQuery<Comment[]>({
+    queryKey: ['my-comments', userId],
+    queryFn: () => api.get('/api/users/me/comments'),
+    enabled: !!userId,
+  });
+  const { data: allWork, isLoading: isLoadingAllWork } = useQuery<AcademicWork[]>({
+    queryKey: ['all-work-for-comments'],
+    queryFn: async () => {
+      const [pubs, projs, ports] = await Promise.all([
+        api.get<AcademicWork[]>('/api/publications'),
+        api.get<AcademicWork[]>('/api/research'),
+        api.get<AcademicWork[]>('/api/portfolio'),
+      ]);
+      return [...pubs, ...projs, ...ports];
+    },
+    enabled: !!myComments && myComments.length > 0,
+  });
+  const workMap = useMemo(() => {
+    if (!allWork) return new Map<string, string>();
+    return new Map(allWork.map(w => [w.id, w.title]));
+  }, [allWork]);
+  const isLoading = isLoadingProfile || isLoadingComments || (!!savedItemIds && savedItemIds.length > 0 && isLoadingSavedItems) || (!!myComments && myComments.length > 0 && isLoadingAllWork);
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -72,16 +105,20 @@ export function StudentDashboard() {
               ) : <p className="text-sm text-muted-foreground">No saved items yet. You can save items from any directory page.</p>}
             </CardContent>
           </Card>
-          <Card className="hover:border-primary transition-colors">
-            <Link to="/dashboard/profile" className="block h-full">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><User className="h-5 w-5" /> Manage Profile</CardTitle>
-                <CardDescription>Update your profile picture.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">Keep your profile image up to date so others can recognize you.</p>
-              </CardContent>
-            </Link>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><MessageSquare className="h-5 w-5" /> My Recent Comments</CardTitle>
+              <CardDescription>Your latest contributions.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {(myComments && myComments.length > 0) ? (
+                <div className="space-y-3">
+                  {myComments.slice(0, 5).map(comment => (
+                    <MyCommentCard key={comment.id} comment={comment} workTitle={workMap.get(comment.postId) || 'an item'} />
+                  ))}
+                </div>
+              ) : <p className="text-sm text-muted-foreground">You haven't made any comments yet.</p>}
+            </CardContent>
           </Card>
         </div>
         <RecentActivityFeed />

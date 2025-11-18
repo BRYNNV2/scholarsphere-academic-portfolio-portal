@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ArrowLeft, Book, Briefcase, Building, ExternalLink, FlaskConical, User } from 'lucide-react';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { useEffect } from 'react';
 const getPathForType = (type: AcademicWork['type']) => {
   switch (type) {
     case 'publication':
@@ -51,6 +53,12 @@ export function AcademicWorkDetailPage() {
     queryFn: () => api.get(`/api/academic-work/${id}`),
     enabled: !!id
   });
+  usePageTitle(item ? `${item.title} | ScholarSphere` : 'Loading...');
+  useEffect(() => {
+    if (item) {
+      document.title = `${item.title} | ScholarSphere`;
+    }
+  }, [item]);
   const { data: author, isLoading: isLoadingAuthor } = useQuery<UserProfile>({
     queryKey: ['user', item?.lecturerId],
     queryFn: () => api.get(`/api/users/${item?.lecturerId}`),

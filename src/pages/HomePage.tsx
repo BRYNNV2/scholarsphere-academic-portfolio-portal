@@ -10,7 +10,9 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from "../lib/api-client-fixed";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/stores/auth-store';
+import { usePageTitle } from '@/hooks/usePageTitle';
 export function HomePage() {
+  usePageTitle('ScholarSphere: Showcase Your Academic Legacy');
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['public', 'users'],

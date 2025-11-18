@@ -14,6 +14,8 @@ import { CommentsSection } from '@/components/CommentsSection';
 import { useAuthStore } from '@/stores/auth-store';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { useEffect } from 'react';
 function SaveButton({ itemId }: {itemId: string;}) {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
@@ -69,6 +71,12 @@ export function PortfolioPage() {
     queryFn: () => api.get(`/api/users/by-username/${username}`),
     enabled: !!username
   });
+  usePageTitle(user ? `${user.name} | ScholarSphere` : 'Loading Profile...');
+  useEffect(() => {
+    if (user) {
+      document.title = `${user.name} | ScholarSphere`;
+    }
+  }, [user]);
   const { data: publications, isLoading: isLoadingPubs } = useQuery<Publication[]>({
     queryKey: ['publications'],
     queryFn: () => api.get('/api/publications')
