@@ -50,7 +50,8 @@ export class PublicationEntity extends IndexedEntity<Publication> {
   static async get(env: Env, id: string): Promise<Publication | null> {
     const inst = new this(env, id);
     if (!(await inst.exists())) return null;
-    return inst.getState();
+    const state = await inst.getState();
+    return { ...state, visibility: state.visibility || 'public' };
   }
 }
 // ResearchProject ENTITY
@@ -75,7 +76,8 @@ export class ResearchProjectEntity extends IndexedEntity<ResearchProject> {
   static async get(env: Env, id: string): Promise<ResearchProject | null> {
     const inst = new this(env, id);
     if (!(await inst.exists())) return null;
-    return inst.getState();
+    const state = await inst.getState();
+    return { ...state, visibility: state.visibility || 'public' };
   }
 }
 // PortfolioItem ENTITY
@@ -100,7 +102,8 @@ export class PortfolioItemEntity extends IndexedEntity<PortfolioItem> {
   static async get(env: Env, id: string): Promise<PortfolioItem | null> {
     const inst = new this(env, id);
     if (!(await inst.exists())) return null;
-    return inst.getState();
+    const state = await inst.getState();
+    return { ...state, visibility: state.visibility || 'public' };
   }
 }
 // Comment ENTITY

@@ -250,14 +250,16 @@ export function DashboardPortfolioPage() {
                 </TableRow>
             ) :
             userPortfolioItems && userPortfolioItems.length > 0 ?
-            userPortfolioItems.map((item) =>
-            <TableRow key={item.id}>
+            userPortfolioItems.map((item) => {
+              const visibility = item.visibility || 'public';
+              return (
+                <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.title}</TableCell>
                   <TableCell>{item.category}</TableCell>
                   <TableCell>{item.year}</TableCell>
                   <TableCell>
-                    <Badge variant={item.visibility === 'public' ? 'default' : 'secondary'}>
-                      {item.visibility.charAt(0).toUpperCase() + item.visibility.slice(1)}
+                    <Badge variant={visibility === 'public' ? 'default' : 'secondary'}>
+                      {visibility.charAt(0).toUpperCase() + visibility.slice(1)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -267,7 +269,7 @@ export function DashboardPortfolioPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleEdit(item)}><Edit className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
-                        {item.visibility === 'public' ? (
+                        {visibility === 'public' ? (
                           <DropdownMenuItem onClick={() => visibilityMutation.mutate({ id: item.id, visibility: 'private' })}>
                             <EyeOff className="mr-2 h-4 w-4" />Make Private
                           </DropdownMenuItem>
@@ -281,7 +283,8 @@ export function DashboardPortfolioPage() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-            ) :
+              );
+            }) :
             <TableRow>
                 <TableCell colSpan={5} className="p-0">
                    <EmptyState
