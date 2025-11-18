@@ -14,6 +14,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 export function HomePage() {
   usePageTitle('ScholarSphere: Showcase Your Academic Legacy');
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['public', 'users'],
     queryFn: () => api.get<UserProfile[]>('/api/users')
@@ -22,6 +23,23 @@ export function HomePage() {
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+  };
+  const getCtaButton = () => {
+    let text = "Create Your Portfolio";
+    let link = "/register";
+    if (isAuthenticated && user) {
+      link = "/dashboard";
+      if (user.role === 'student') {
+        text = "Go to Your Dashboard";
+      } else if (user.role === 'lecturer') {
+        text = "Manage Your Portfolio";
+      }
+    }
+    return (
+      <Button size="lg" asChild>
+        <Link to={link}>{text} <ArrowRight className="ml-2 h-4 w-4" /></Link>
+      </Button>
+    );
   };
   return (
     <PublicLayout>
@@ -157,9 +175,7 @@ export function HomePage() {
               Join ScholarSphere today and create a professional portfolio that truly represents your academic contributions and expertise.
             </p>
             <div className="mt-8">
-              <Button size="lg" asChild>
-                <Link to={isAuthenticated ? "/dashboard" : "/register"}>Create Your Portfolio <ArrowRight className="ml-2 h-4 w-4" /></Link>
-              </Button>
+              {getCtaButton()}
             </div>
           </div>
         </div>
