@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { jwt, sign } from 'hono/jwt'
+import { jwt, sign, verify } from 'hono/jwt'
 import type { Env } from './core-utils';
 import { UserProfileEntity, PublicationEntity, ResearchProjectEntity, PortfolioItemEntity, CommentEntity, LikeEntity } from "./entities";
 import { ok, bad, notFound } from './core-utils';
@@ -323,6 +323,31 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     await CommentEntity.create(c.env, newComment);
     return ok(c, newComment);
   });
+  secured.put('/comments/:id', async (c) => {
+    const payload = c.get('jwtPayload');
+    const { id } = c.req.param();
+    const { content } = await c.req.json<{ content: string }>();
+    const commentEntity = new CommentEntity(c.env, id);
+    if (!(await commentEntity.exists())) return notFound(c, 'Comment not found');
+    const comment = await commentEntity.getState();
+    if (comment.userId !== payload.sub) {
+      return c.json({ success: false, error: 'You can only edit your own comments' }, 403);
+    }
+    await commentEntity.patch({ content });
+    return ok(c, await commentEntity.getState());
+  });
+  secured.delete('/comments/:id', async (c) => {
+    const payload = c.get('jwtPayload');
+    const { id } = c.req.param();
+    const commentEntity = new CommentEntity(c.env, id);
+    if (!(await commentEntity.exists())) return notFound(c, 'Comment not found');
+    const comment = await commentEntity.getState();
+    if (comment.userId !== payload.sub) {
+      return c.json({ success: false, error: 'You can only delete your own comments' }, 403);
+    }
+    const deleted = await CommentEntity.delete(c.env, id);
+    return ok(c, { id, deleted });
+  });
   secured.post('/likes', async (c) => {
     const payload = c.get('jwtPayload');
     if (payload.role !== 'student') return c.json({ success: false, error: 'Only students can like posts' }, 403);
@@ -488,7 +513,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (authHeader) {
       const token = authHeader.split(' ')[1];
       try {
-        const payload = await jwt.verify(token, JWT_SECRET);
+        const payload = await verify(token, JWT_SECRET);
         currentUserId = payload.sub as string;
       } catch (e) {
         // Invalid token, user is not authenticated
