@@ -14,10 +14,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { toast } from '@/components/ui/sonner';
-import { PlusCircle, Edit, Trash2, Image as ImageIcon, Briefcase } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Image as ImageIcon, Briefcase, MoreVertical, Eye, EyeOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { EmptyState } from '@/components/EmptyState';
+import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 const portfolioItemSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   category: z.string().min(1, 'Category is required'),
@@ -50,7 +52,7 @@ function PortfolioItemForm({ item, onFinished }: {item?: PortfolioItem;onFinishe
         : api.post('/api/portfolio', data),
     onSuccess: () => {
       toast.success(`Portfolio item ${item ? 'updated' : 'added'} successfully!`);
-      queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+      queryClient.invalidateQueries({ queryKey: ['userPortfolioItems', currentUser?.id] });
       queryClient.invalidateQueries({ queryKey: ['user', currentUser?.id] });
       onFinished();
     },
@@ -99,7 +101,6 @@ function PortfolioItemForm({ item, onFinished }: {item?: PortfolioItem;onFinishe
                 <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden">
                   {thumbnailUrlValue ?
                 <img src={thumbnailUrlValue} alt="Cover image preview" className="object-cover w-full h-full" /> :
-
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                       <ImageIcon className="h-8 w-8" />
                     </div>
@@ -114,13 +115,11 @@ function PortfolioItemForm({ item, onFinished }: {item?: PortfolioItem;onFinishe
                   className="hidden"
                   accept="image/png, image/jpeg, image/gif"
                   onChange={handleFileChange} />
-
                 </FormControl>
                 <Button
                 type="button"
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}>
-
                   Upload Image
                 </Button>
                 <FormDescription className="mt-2">
@@ -152,7 +151,6 @@ function PortfolioItemForm({ item, onFinished }: {item?: PortfolioItem;onFinishe
         </DialogFooter>
       </form>
     </Form>);
-
 }
 export function DashboardPortfolioPage() {
   const [isFormOpen, setFormOpen] = useState(false);
@@ -161,32 +159,41 @@ export function DashboardPortfolioPage() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
   const userId = currentUser?.id;
-  const { data: profile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
-    queryKey: ['user', userId],
-    queryFn: () => api.get(`/api/users/${userId}`),
-    enabled: !!userId
+  const { data: userPortfolioItems, isLoading } = useQuery<PortfolioItem[]>({
+    queryKey: ['userPortfolioItems', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const user = await api.get<UserProfile>(`/api/users/${userId}`);
+      if (!user.portfolioItemIds || user.portfolioItemIds.length === 0) return [];
+      const items = await Promise.all(
+        user.portfolioItemIds.map(id => api.get<PortfolioItem>(`/api/academic-work/${id}`))
+      );
+      return items.filter(Boolean) as PortfolioItem[];
+    },
+    enabled: !!userId,
   });
-  const { data: allItems, isLoading: isLoadingItems } = useQuery<PortfolioItem[]>({
-    queryKey: ['portfolio'],
-    queryFn: () => api.get('/api/portfolio')
-  });
-  const userPortfolioItems = useMemo(() => {
-    if (!profile || !allItems) return [];
-    const userItemIds = new Set(profile.portfolioItemIds);
-    return allItems.filter((item) => userItemIds.has(item.id));
-  }, [profile, allItems]);
-  const isLoading = isLoadingProfile || isLoadingItems;
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/api/portfolio/${id}`),
     onSuccess: () => {
       toast.success('Portfolio item deleted successfully!');
-      queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+      queryClient.invalidateQueries({ queryKey: ['userPortfolioItems', userId] });
       queryClient.invalidateQueries({ queryKey: ['user', userId] });
     },
     onError: (error) => {
       toast.error(`Failed to delete item: ${(error as Error).message}`);
     },
     onSettled: () => setAlertOpen(false)
+  });
+  const visibilityMutation = useMutation({
+    mutationFn: ({ id, visibility }: { id: string; visibility: 'public' | 'private' }) =>
+      api.put(`/api/portfolio/${id}/visibility`, { visibility }),
+    onSuccess: () => {
+      toast.success('Item visibility updated!');
+      queryClient.invalidateQueries({ queryKey: ['userPortfolioItems', userId] });
+    },
+    onError: (error) => {
+      toast.error(`Failed to update visibility: ${(error as Error).message}`);
+    },
   });
   const handleEdit = (item: PortfolioItem) => {
     setSelectedItem(item);
@@ -227,6 +234,7 @@ export function DashboardPortfolioPage() {
               <TableHead>Title</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Year</TableHead>
+              <TableHead>Visibility</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -237,30 +245,50 @@ export function DashboardPortfolioPage() {
                   <TableCell><Skeleton className="h-5 w-48" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                  <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                 </TableRow>
             ) :
-            userPortfolioItems.length > 0 ?
+            userPortfolioItems && userPortfolioItems.length > 0 ?
             userPortfolioItems.map((item) =>
             <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.title}</TableCell>
                   <TableCell>{item.category}</TableCell>
                   <TableCell>{item.year}</TableCell>
+                  <TableCell>
+                    <Badge variant={item.visibility === 'public' ? 'default' : 'secondary'}>
+                      {item.visibility.charAt(0).toUpperCase() + item.visibility.slice(1)}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}><Edit className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(item)}><Trash2 className="h-4 w-4" /></Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEdit(item)}><Edit className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+                        {item.visibility === 'public' ? (
+                          <DropdownMenuItem onClick={() => visibilityMutation.mutate({ id: item.id, visibility: 'private' })}>
+                            <EyeOff className="mr-2 h-4 w-4" />Make Private
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem onClick={() => visibilityMutation.mutate({ id: item.id, visibility: 'public' })}>
+                            <Eye className="mr-2 h-4 w-4" />Make Public
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem onClick={() => handleDelete(item)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
             ) :
-
             <TableRow>
-                <TableCell colSpan={4} className="p-0">
+                <TableCell colSpan={5} className="p-0">
                    <EmptyState
                   icon={<Briefcase className="h-8 w-8" />}
                   title="No Portfolio Items Yet"
                   description="Highlight your awards, grants, and other activities by adding them here."
                   action={{ label: 'Add Item', onClick: handleAddNew }} />
-
                 </TableCell>
               </TableRow>
             }
@@ -284,5 +312,4 @@ export function DashboardPortfolioPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>);
-
 }

@@ -13,10 +13,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { toast } from '@/components/ui/sonner';
-import { PlusCircle, Edit, Trash2, Image as ImageIcon, BookCopy } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Image as ImageIcon, BookCopy, MoreVertical, Eye, EyeOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { EmptyState } from '@/components/EmptyState';
+import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 const publicationSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   authors: z.string().min(1, 'Authors are required'),
@@ -49,7 +51,7 @@ function PublicationForm({ publication, onFinished }: {publication?: Publication
         : api.post('/api/publications', data),
     onSuccess: () => {
       toast.success(`Publication ${publication ? 'updated' : 'added'} successfully!`);
-      queryClient.invalidateQueries({ queryKey: ['publications'] });
+      queryClient.invalidateQueries({ queryKey: ['userPublications', currentUser?.id] });
       queryClient.invalidateQueries({ queryKey: ['user', currentUser?.id] });
       onFinished();
     },
@@ -101,7 +103,6 @@ function PublicationForm({ publication, onFinished }: {publication?: Publication
                 <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden">
                   {thumbnailUrlValue ?
                 <img src={thumbnailUrlValue} alt="Cover image preview" className="object-cover w-full h-full" /> :
-
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                       <ImageIcon className="h-8 w-8" />
                     </div>
@@ -116,13 +117,11 @@ function PublicationForm({ publication, onFinished }: {publication?: Publication
                   className="hidden"
                   accept="image/png, image/jpeg, image/gif"
                   onChange={handleFileChange} />
-
                 </FormControl>
                 <Button
                 type="button"
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}>
-
                   Upload Image
                 </Button>
                 <FormDescription className="mt-2">
@@ -154,7 +153,6 @@ function PublicationForm({ publication, onFinished }: {publication?: Publication
         </DialogFooter>
       </form>
     </Form>);
-
 }
 export function DashboardPublicationsPage() {
   const [isFormOpen, setFormOpen] = useState(false);
@@ -163,32 +161,41 @@ export function DashboardPublicationsPage() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
   const userId = currentUser?.id;
-  const { data: profile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
-    queryKey: ['user', userId],
-    queryFn: () => api.get(`/api/users/${userId}`),
-    enabled: !!userId
+  const { data: userPublications, isLoading } = useQuery<Publication[]>({
+    queryKey: ['userPublications', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const user = await api.get<UserProfile>(`/api/users/${userId}`);
+      if (!user.publicationIds || user.publicationIds.length === 0) return [];
+      const publications = await Promise.all(
+        user.publicationIds.map(id => api.get<Publication>(`/api/academic-work/${id}`))
+      );
+      return publications.filter(Boolean) as Publication[];
+    },
+    enabled: !!userId,
   });
-  const { data: allPublications, isLoading: isLoadingPubs } = useQuery<Publication[]>({
-    queryKey: ['publications'],
-    queryFn: () => api.get('/api/publications')
-  });
-  const userPublications = useMemo(() => {
-    if (!profile || !allPublications) return [];
-    const userPubIds = new Set(profile.publicationIds);
-    return allPublications.filter((pub) => userPubIds.has(pub.id));
-  }, [profile, allPublications]);
-  const isLoading = isLoadingProfile || isLoadingPubs;
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/api/publications/${id}`),
     onSuccess: () => {
       toast.success('Publication deleted successfully!');
-      queryClient.invalidateQueries({ queryKey: ['publications'] });
+      queryClient.invalidateQueries({ queryKey: ['userPublications', userId] });
       queryClient.invalidateQueries({ queryKey: ['user', userId] });
     },
     onError: (error) => {
       toast.error(`Failed to delete publication: ${(error as Error).message}`);
     },
     onSettled: () => setAlertOpen(false)
+  });
+  const visibilityMutation = useMutation({
+    mutationFn: ({ id, visibility }: { id: string; visibility: 'public' | 'private' }) =>
+      api.put(`/api/publications/${id}/visibility`, { visibility }),
+    onSuccess: () => {
+      toast.success('Publication visibility updated!');
+      queryClient.invalidateQueries({ queryKey: ['userPublications', userId] });
+    },
+    onError: (error) => {
+      toast.error(`Failed to update visibility: ${(error as Error).message}`);
+    },
   });
   const handleEdit = (pub: Publication) => {
     setSelectedPub(pub);
@@ -229,6 +236,7 @@ export function DashboardPublicationsPage() {
               <TableHead>Title</TableHead>
               <TableHead>Journal</TableHead>
               <TableHead>Year</TableHead>
+              <TableHead>Visibility</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -239,30 +247,50 @@ export function DashboardPublicationsPage() {
                   <TableCell><Skeleton className="h-5 w-48" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                  <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                 </TableRow>
             ) :
-            userPublications.length > 0 ?
+            userPublications && userPublications.length > 0 ?
             userPublications.map((pub) =>
             <TableRow key={pub.id}>
                   <TableCell className="font-medium">{pub.title}</TableCell>
                   <TableCell>{pub.journal}</TableCell>
                   <TableCell>{pub.year}</TableCell>
+                  <TableCell>
+                    <Badge variant={pub.visibility === 'public' ? 'default' : 'secondary'}>
+                      {pub.visibility.charAt(0).toUpperCase() + pub.visibility.slice(1)}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(pub)}><Edit className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(pub)}><Trash2 className="h-4 w-4" /></Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEdit(pub)}><Edit className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+                        {pub.visibility === 'public' ? (
+                          <DropdownMenuItem onClick={() => visibilityMutation.mutate({ id: pub.id, visibility: 'private' })}>
+                            <EyeOff className="mr-2 h-4 w-4" />Make Private
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem onClick={() => visibilityMutation.mutate({ id: pub.id, visibility: 'public' })}>
+                            <Eye className="mr-2 h-4 w-4" />Make Public
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem onClick={() => handleDelete(pub)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
             ) :
-
             <TableRow>
-                <TableCell colSpan={4} className="p-0">
+                <TableCell colSpan={5} className="p-0">
                   <EmptyState
                   icon={<BookCopy className="h-8 w-8" />}
                   title="No Publications Yet"
                   description="Get started by adding your first publication to your portfolio."
                   action={{ label: 'Add Publication', onClick: handleAddNew }} />
-
                 </TableCell>
               </TableRow>
             }
@@ -286,5 +314,4 @@ export function DashboardPublicationsPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>);
-
 }

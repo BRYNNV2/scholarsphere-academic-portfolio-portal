@@ -14,10 +14,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { toast } from '@/components/ui/sonner';
-import { PlusCircle, Edit, Trash2, Image as ImageIcon, FlaskConical } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Image as ImageIcon, FlaskConical, MoreVertical, Eye, EyeOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { EmptyState } from '@/components/EmptyState';
+import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 const projectSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(1, 'Description is required'),
@@ -50,7 +52,7 @@ function ProjectForm({ project, onFinished }: {project?: ResearchProject;onFinis
         : api.post('/api/research', data),
     onSuccess: () => {
       toast.success(`Project ${project ? 'updated' : 'added'} successfully!`);
-      queryClient.invalidateQueries({ queryKey: ['research'] });
+      queryClient.invalidateQueries({ queryKey: ['userProjects', currentUser?.id] });
       queryClient.invalidateQueries({ queryKey: ['user', currentUser?.id] });
       onFinished();
     },
@@ -99,7 +101,6 @@ function ProjectForm({ project, onFinished }: {project?: ResearchProject;onFinis
                 <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden">
                   {thumbnailUrlValue ?
                 <img src={thumbnailUrlValue} alt="Cover image preview" className="object-cover w-full h-full" /> :
-
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                       <ImageIcon className="h-8 w-8" />
                     </div>
@@ -114,13 +115,11 @@ function ProjectForm({ project, onFinished }: {project?: ResearchProject;onFinis
                   className="hidden"
                   accept="image/png, image/jpeg, image/gif"
                   onChange={handleFileChange} />
-
                 </FormControl>
                 <Button
                 type="button"
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}>
-
                   Upload Image
                 </Button>
                 <FormDescription className="mt-2">
@@ -152,7 +151,6 @@ function ProjectForm({ project, onFinished }: {project?: ResearchProject;onFinis
         </DialogFooter>
       </form>
     </Form>);
-
 }
 export function DashboardResearchPage() {
   const [isFormOpen, setFormOpen] = useState(false);
@@ -161,32 +159,41 @@ export function DashboardResearchPage() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
   const userId = currentUser?.id;
-  const { data: profile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
-    queryKey: ['user', userId],
-    queryFn: () => api.get(`/api/users/${userId}`),
-    enabled: !!userId
+  const { data: userProjects, isLoading } = useQuery<ResearchProject[]>({
+    queryKey: ['userProjects', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const user = await api.get<UserProfile>(`/api/users/${userId}`);
+      if (!user.projectIds || user.projectIds.length === 0) return [];
+      const projects = await Promise.all(
+        user.projectIds.map(id => api.get<ResearchProject>(`/api/academic-work/${id}`))
+      );
+      return projects.filter(Boolean) as ResearchProject[];
+    },
+    enabled: !!userId,
   });
-  const { data: allProjects, isLoading: isLoadingProjs } = useQuery<ResearchProject[]>({
-    queryKey: ['research'],
-    queryFn: () => api.get('/api/research')
-  });
-  const userProjects = useMemo(() => {
-    if (!profile || !allProjects) return [];
-    const userProjIds = new Set(profile.projectIds);
-    return allProjects.filter((proj) => userProjIds.has(proj.id));
-  }, [profile, allProjects]);
-  const isLoading = isLoadingProfile || isLoadingProjs;
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/api/research/${id}`),
     onSuccess: () => {
       toast.success('Project deleted successfully!');
-      queryClient.invalidateQueries({ queryKey: ['research'] });
+      queryClient.invalidateQueries({ queryKey: ['userProjects', userId] });
       queryClient.invalidateQueries({ queryKey: ['user', userId] });
     },
     onError: (error) => {
       toast.error(`Failed to delete project: ${(error as Error).message}`);
     },
     onSettled: () => setAlertOpen(false)
+  });
+  const visibilityMutation = useMutation({
+    mutationFn: ({ id, visibility }: { id: string; visibility: 'public' | 'private' }) =>
+      api.put(`/api/research/${id}/visibility`, { visibility }),
+    onSuccess: () => {
+      toast.success('Project visibility updated!');
+      queryClient.invalidateQueries({ queryKey: ['userProjects', userId] });
+    },
+    onError: (error) => {
+      toast.error(`Failed to update visibility: ${(error as Error).message}`);
+    },
   });
   const handleEdit = (proj: ResearchProject) => {
     setSelectedProj(proj);
@@ -227,6 +234,7 @@ export function DashboardResearchPage() {
               <TableHead>Title</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Year</TableHead>
+              <TableHead>Visibility</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -237,30 +245,50 @@ export function DashboardResearchPage() {
                   <TableCell><Skeleton className="h-5 w-48" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                  <TableCell className="text-right"><Skeleton className="h-8 w-20 ml-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                 </TableRow>
             ) :
-            userProjects.length > 0 ?
+            userProjects && userProjects.length > 0 ?
             userProjects.map((proj) =>
             <TableRow key={proj.id}>
                   <TableCell className="font-medium">{proj.title}</TableCell>
                   <TableCell>{proj.role}</TableCell>
                   <TableCell>{proj.year}</TableCell>
+                  <TableCell>
+                    <Badge variant={proj.visibility === 'public' ? 'default' : 'secondary'}>
+                      {proj.visibility.charAt(0).toUpperCase() + proj.visibility.slice(1)}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(proj)}><Edit className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(proj)}><Trash2 className="h-4 w-4" /></Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEdit(proj)}><Edit className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+                        {proj.visibility === 'public' ? (
+                          <DropdownMenuItem onClick={() => visibilityMutation.mutate({ id: proj.id, visibility: 'private' })}>
+                            <EyeOff className="mr-2 h-4 w-4" />Make Private
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem onClick={() => visibilityMutation.mutate({ id: proj.id, visibility: 'public' })}>
+                            <Eye className="mr-2 h-4 w-4" />Make Public
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem onClick={() => handleDelete(proj)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
             ) :
-
             <TableRow>
-                <TableCell colSpan={4} className="p-0">
+                <TableCell colSpan={5} className="p-0">
                   <EmptyState
                   icon={<FlaskConical className="h-8 w-8" />}
                   title="No Research Projects Yet"
                   description="Showcase your work by adding your first research project."
                   action={{ label: 'Add Project', onClick: handleAddNew }} />
-
                 </TableCell>
               </TableRow>
             }
@@ -284,5 +312,4 @@ export function DashboardResearchPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>);
-
 }

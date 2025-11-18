@@ -16,6 +16,7 @@ export interface Publication {
   commentIds: string[];
   likeIds: string[];
   createdAt: number;
+  visibility: 'public' | 'private';
 }
 export interface ResearchProject {
   id: string;
@@ -30,6 +31,7 @@ export interface ResearchProject {
   commentIds: string[];
   likeIds: string[];
   createdAt: number;
+  visibility: 'public' | 'private';
 }
 export interface PortfolioItem {
   id: string;
@@ -44,6 +46,7 @@ export interface PortfolioItem {
   commentIds: string[];
   likeIds: string[];
   createdAt: number;
+  visibility: 'public' | 'private';
 }
 export type AcademicWork = Publication | ResearchProject | PortfolioItem;
 export type SavedItem = AcademicWork & { authorName: string };
