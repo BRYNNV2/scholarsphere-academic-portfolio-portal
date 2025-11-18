@@ -132,19 +132,7 @@ export function CommentsSection({ postId, authorId }: CommentsSectionProps) {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               className="mb-2" />
-              <div className="flex justify-between items-center">
-                {currentUser?.role !== 'student' ? (
-                  <RadioGroup defaultValue="public" value={visibility} onValueChange={(value: 'public' | 'private') => setVisibility(value)} className="flex items-center gap-4">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="public" id={`r1-${postId}`} />
-                      <Label htmlFor={`r1-${postId}`}>Public</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="private" id={`r2-${postId}`} />
-                      <Label htmlFor={`r2-${postId}`}>Private</Label>
-                    </div>
-                  </RadioGroup>
-                ) : <div />}
+              <div className="flex justify-end">
                 <Button type="submit" size="sm" disabled={commentMutation.isPending}>
                   {commentMutation.isPending ? 'Posting...' : 'Post Comment'}
                 </Button>
