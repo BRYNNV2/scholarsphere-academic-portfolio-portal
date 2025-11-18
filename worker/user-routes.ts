@@ -1,14 +1,14 @@
 import { Hono } from "hono";
-import { jwt, sign, verify } from 'hono/jwt'
+import { jwt, sign, verify } from 'hono/jwt';
 import type { Env } from './core-utils';
 import { UserProfileEntity, PublicationEntity, ResearchProjectEntity, PortfolioItemEntity, CommentEntity, LikeEntity } from "./entities";
 import { ok, bad, notFound } from './core-utils';
 import type { UserProfile, Publication, ResearchProject, PortfolioItem, Comment, Like, AnalyticsData, WorkAnalytics, AcademicWork } from "@shared/types";
-type PublicationCreatePayload = Omit<Publication, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
-type ProjectCreatePayload = Omit<ResearchProject, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
-type PortfolioItemCreatePayload = Omit<PortfolioItem, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
-const JWT_SECRET = 'a-very-secret-key-that-should-be-in-env';
-async function getAcademicWork(env: Env, id: string): Promise<AcademicWork | null> {
+
+const username: unknown = (() => {
+  console.warn('username stub - please implement based on usage context');
+  return null;
+})();type PublicationCreatePayload = Omit<Publication, 'id' | 'type' | 'lecturerId'> & {lecturerId: string;};type ProjectCreatePayload = Omit<ResearchProject, 'id' | 'type' | 'lecturerId'> & {lecturerId: string;};type PortfolioItemCreatePayload = Omit<PortfolioItem, 'id' | 'type' | 'lecturerId'> & {lecturerId: string;};const JWT_SECRET = 'a-very-secret-key-that-should-be-in-env';async function getAcademicWork(env: Env, id: string): Promise<AcademicWork | null> {
   const publication = await PublicationEntity.get(env, id);
   if (publication) return publication;
   const project = await ResearchProjectEntity.get(env, id);
@@ -17,20 +17,20 @@ async function getAcademicWork(env: Env, id: string): Promise<AcademicWork | nul
   if (portfolioItem) return portfolioItem;
   return null;
 }
-export function userRoutes(app: Hono<{ Bindings: Env }>) {
-  // --- AUTH ---
-  const auth = new Hono<{ Bindings: Env }>();
+export function userRoutes(app: Hono<{Bindings: Env;}>) {
+
+  const auth = new Hono<{Bindings: Env;}>();
   auth.post('/register', async (c) => {
     const body = await c.req.json<Partial<UserProfile>>();
     if (!body.email || !body.password || !body.role || !body.username) {
       return bad(c, 'Email, username, password, and role are required');
     }
     const users = (await UserProfileEntity.list(c.env)).items;
-    const existingUserByEmail = users.find(l => l.email === body.email);
+    const existingUserByEmail = users.find((l) => l.email === body.email);
     if (existingUserByEmail) {
       return bad(c, 'User with this email already exists');
     }
-    const existingUserByUsername = users.find(u => u.username === body.username);
+    const existingUserByUsername = users.find((u) => u.username === body.username);
     if (existingUserByUsername) {
       return bad(c, 'Username is already taken');
     }
@@ -51,7 +51,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       savedItemIds: [],
       specializations: body.specializations || [],
       socialLinks: body.socialLinks || {},
-      photoUrl: body.photoUrl || `https://i.pravatar.cc/300?u=${body.email}`,
+      photoUrl: body.photoUrl || `https://i.pravatar.cc/300?u=${body.email}`
     };
     await UserProfileEntity.create(c.env, newUser);
     const { password, ...userToReturn } = newUser;
@@ -64,7 +64,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       return bad(c, 'Email and password are required');
     }
     const users = (await UserProfileEntity.list(c.env)).items;
-    const user = users.find(l => l.email === email);
+    const user = users.find((l) => l.email === email);
     if (!user || user.password !== password) {
       return bad(c, 'Invalid credentials');
     }
@@ -73,8 +73,8 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     return ok(c, { user: userToReturn, token });
   });
   app.route('/api/auth', auth);
-  // --- SECURED ROUTES ---
-  const secured = new Hono<{ Bindings: Env }>();
+
+  const secured = new Hono<{Bindings: Env;}>();
   secured.use('*', jwt({ secret: JWT_SECRET }));
   secured.get('/users/me/comments', async (c) => {
     const payload = c.get('jwtPayload');
@@ -83,9 +83,9 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       return c.json({ success: false, error: 'Unauthorized' }, 403);
     }
     const allComments = (await CommentEntity.list(c.env)).items;
-    const userComments = allComments
-      .filter(comment => comment.userId === userId)
-      .sort((a, b) => b.createdAt - a.createdAt);
+    const userComments = allComments.
+    filter((comment) => comment.userId === userId).
+    sort((a, b) => b.createdAt - a.createdAt);
     return ok(c, userComments);
   });
   secured.get('/users/me/analytics', async (c) => {
@@ -96,18 +96,18 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     }
     const lecturer = await new UserProfileEntity(c.env, userId).getState();
     const lecturerWorkIds = new Set([
-      ...(lecturer.publicationIds || []),
-      ...(lecturer.projectIds || []),
-      ...(lecturer.portfolioItemIds || []),
-    ]);
+    ...(lecturer.publicationIds || []),
+    ...(lecturer.projectIds || []),
+    ...(lecturer.portfolioItemIds || [])]
+    );
     if (lecturerWorkIds.size === 0) {
       return ok(c, { totalLikes: 0, totalSaves: 0, workBreakdown: [] });
     }
     const [allLikes, allUsersPage] = await Promise.all([
-      LikeEntity.list(c.env),
-      UserProfileEntity.list(c.env),
-    ]);
-    const allStudentProfiles = allUsersPage.items.filter(u => u.role === 'student');
+    LikeEntity.list(c.env),
+    UserProfileEntity.list(c.env)]
+    );
+    const allStudentProfiles = allUsersPage.items.filter((u) => u.role === 'student');
     let totalSaves = 0;
     const savesPerPost = new Map<string, number>();
     for (const student of allStudentProfiles) {
@@ -124,31 +124,31 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
         likesPerPost.set(like.postId, (likesPerPost.get(like.postId) || 0) + 1);
       }
     }
-    const totalLikes = allLikes.items.filter(like => lecturerWorkIds.has(like.postId)).length;
+    const totalLikes = allLikes.items.filter((like) => lecturerWorkIds.has(like.postId)).length;
     const [allPublications, allProjects, allPortfolioItems] = await Promise.all([
-      PublicationEntity.list(c.env),
-      ResearchProjectEntity.list(c.env),
-      PortfolioItemEntity.list(c.env),
-    ]);
+    PublicationEntity.list(c.env),
+    ResearchProjectEntity.list(c.env),
+    PortfolioItemEntity.list(c.env)]
+    );
     const allWork = [
-      ...allPublications.items,
-      ...allProjects.items,
-      ...allPortfolioItems.items,
-    ];
-    const workBreakdown: WorkAnalytics[] = allWork
-      .filter(work => lecturerWorkIds.has(work.id))
-      .map(work => ({
-        id: work.id,
-        title: work.title,
-        type: work.type,
-        likes: likesPerPost.get(work.id) || 0,
-        saves: savesPerPost.get(work.id) || 0,
-      }))
-      .sort((a, b) => (b.likes + b.saves) - (a.likes + a.saves));
+    ...allPublications.items,
+    ...allProjects.items,
+    ...allPortfolioItems.items];
+
+    const workBreakdown: WorkAnalytics[] = allWork.
+    filter((work) => lecturerWorkIds.has(work.id)).
+    map((work) => ({
+      id: work.id,
+      title: work.title,
+      type: work.type,
+      likes: likesPerPost.get(work.id) || 0,
+      saves: savesPerPost.get(work.id) || 0
+    })).
+    sort((a, b) => b.likes + b.saves - (a.likes + a.saves));
     const analyticsData: AnalyticsData = {
       totalLikes,
       totalSaves,
-      workBreakdown,
+      workBreakdown
     };
     return ok(c, analyticsData);
   });
@@ -199,7 +199,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const { postId } = c.req.param();
     const userEntity = new UserProfileEntity(c.env, userId);
     if (!(await userEntity.exists())) return notFound(c, 'User not found');
-    await userEntity.mutate(state => {
+    await userEntity.mutate((state) => {
       const savedIds = state.savedItemIds ?? [];
       if (!savedIds.includes(postId)) {
         return { ...state, savedItemIds: [...savedIds, postId] };
@@ -215,9 +215,9 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const { postId } = c.req.param();
     const userEntity = new UserProfileEntity(c.env, userId);
     if (!(await userEntity.exists())) return notFound(c, 'User not found');
-    await userEntity.mutate(state => ({
+    await userEntity.mutate((state) => ({
       ...state,
-      savedItemIds: (state.savedItemIds ?? []).filter(id => id !== postId)
+      savedItemIds: (state.savedItemIds ?? []).filter((id) => id !== postId)
     }));
     return ok(c, await userEntity.getState());
   });
@@ -229,7 +229,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!(await user.exists())) return notFound(c, 'User not found');
     const newPub: Publication = { ...pubData, id: crypto.randomUUID(), type: 'publication', lecturerId, commentIds: [], likeIds: [], createdAt: Date.now(), visibility: 'public' };
     await PublicationEntity.create(c.env, newPub);
-    await user.mutate(state => ({ ...state, publicationIds: [...(state.publicationIds ?? []), newPub.id] }));
+    await user.mutate((state) => ({ ...state, publicationIds: [...(state.publicationIds ?? []), newPub.id] }));
     return ok(c, newPub);
   });
   secured.put('/publications/:id', async (c) => {
@@ -243,7 +243,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   secured.put('/publications/:id/visibility', async (c) => {
     const payload = c.get('jwtPayload');
     const { id } = c.req.param();
-    const { visibility } = await c.req.json<{ visibility: 'public' | 'private' }>();
+    const { visibility } = await c.req.json<{visibility: 'public' | 'private';}>();
     const pubEntity = new PublicationEntity(c.env, id);
     if (!(await pubEntity.exists())) return notFound(c, 'Publication not found');
     const pub = await pubEntity.getState();
@@ -260,7 +260,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const pub = await pubEntity.getState();
     const user = new UserProfileEntity(c.env, pub.lecturerId);
     if (await user.exists()) {
-      await user.mutate(state => ({ ...state, publicationIds: state.publicationIds.filter(pubId => pubId !== id) }));
+      await user.mutate((state) => ({ ...state, publicationIds: state.publicationIds.filter((pubId) => pubId !== id) }));
     }
     const deleted = await PublicationEntity.delete(c.env, id);
     return ok(c, { id, deleted });
@@ -273,7 +273,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!(await user.exists())) return notFound(c, 'User not found');
     const newProj: ResearchProject = { ...projData, id: crypto.randomUUID(), type: 'project', lecturerId, commentIds: [], likeIds: [], createdAt: Date.now(), visibility: 'public' };
     await ResearchProjectEntity.create(c.env, newProj);
-    await user.mutate(state => ({ ...state, projectIds: [...(state.projectIds ?? []), newProj.id] }));
+    await user.mutate((state) => ({ ...state, projectIds: [...(state.projectIds ?? []), newProj.id] }));
     return ok(c, newProj);
   });
   secured.put('/research/:id', async (c) => {
@@ -287,7 +287,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   secured.put('/research/:id/visibility', async (c) => {
     const payload = c.get('jwtPayload');
     const { id } = c.req.param();
-    const { visibility } = await c.req.json<{ visibility: 'public' | 'private' }>();
+    const { visibility } = await c.req.json<{visibility: 'public' | 'private';}>();
     const projEntity = new ResearchProjectEntity(c.env, id);
     if (!(await projEntity.exists())) return notFound(c, 'Project not found');
     const proj = await projEntity.getState();
@@ -304,7 +304,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const proj = await projEntity.getState();
     const user = new UserProfileEntity(c.env, proj.lecturerId);
     if (await user.exists()) {
-      await user.mutate(state => ({ ...state, projectIds: state.projectIds.filter(projId => projId !== id) }));
+      await user.mutate((state) => ({ ...state, projectIds: state.projectIds.filter((projId) => projId !== id) }));
     }
     const deleted = await ResearchProjectEntity.delete(c.env, id);
     return ok(c, { id, deleted });
@@ -317,7 +317,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!(await user.exists())) return notFound(c, 'User not found');
     const newItem: PortfolioItem = { ...itemData, id: crypto.randomUUID(), type: 'portfolio', lecturerId, commentIds: [], likeIds: [], createdAt: Date.now(), visibility: 'public' };
     await PortfolioItemEntity.create(c.env, newItem);
-    await user.mutate(state => ({ ...state, portfolioItemIds: [...(state.portfolioItemIds ?? []), newItem.id] }));
+    await user.mutate((state) => ({ ...state, portfolioItemIds: [...(state.portfolioItemIds ?? []), newItem.id] }));
     return ok(c, newItem);
   });
   secured.put('/portfolio/:id', async (c) => {
@@ -331,7 +331,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   secured.put('/portfolio/:id/visibility', async (c) => {
     const payload = c.get('jwtPayload');
     const { id } = c.req.param();
-    const { visibility } = await c.req.json<{ visibility: 'public' | 'private' }>();
+    const { visibility } = await c.req.json<{visibility: 'public' | 'private';}>();
     const itemEntity = new PortfolioItemEntity(c.env, id);
     if (!(await itemEntity.exists())) return notFound(c, 'Item not found');
     const item = await itemEntity.getState();
@@ -348,7 +348,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const item = await itemEntity.getState();
     const user = new UserProfileEntity(c.env, item.lecturerId);
     if (await user.exists()) {
-      await user.mutate(state => ({ ...state, portfolioItemIds: state.portfolioItemIds.filter(itemId => itemId !== id) }));
+      await user.mutate((state) => ({ ...state, portfolioItemIds: state.portfolioItemIds.filter((itemId) => itemId !== id) }));
     }
     const deleted = await PortfolioItemEntity.delete(c.env, id);
     return ok(c, { id, deleted });
@@ -356,7 +356,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   secured.post('/comments', async (c) => {
     const payload = c.get('jwtPayload');
     if (payload.role !== 'student') return c.json({ success: false, error: 'Only students can comment' }, 403);
-    const { postId, content, visibility } = await c.req.json<{ postId: string; content: string; visibility: 'public' | 'private' }>();
+    const { postId, content, visibility } = await c.req.json<{postId: string;content: string;visibility: 'public' | 'private';}>();
     const user = await new UserProfileEntity(c.env, payload.sub).getState();
     const newComment: Comment = { id: crypto.randomUUID(), postId, content, userId: user.id, userName: user.name, userPhotoUrl: user.photoUrl, createdAt: Date.now(), visibility: visibility || 'public' };
     await CommentEntity.create(c.env, newComment);
@@ -365,7 +365,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   secured.put('/comments/:id', async (c) => {
     const payload = c.get('jwtPayload');
     const { id } = c.req.param();
-    const { content } = await c.req.json<{ content: string }>();
+    const { content } = await c.req.json<{content: string;}>();
     const commentEntity = new CommentEntity(c.env, id);
     if (!(await commentEntity.exists())) return notFound(c, 'Comment not found');
     const comment = await commentEntity.getState();
@@ -378,7 +378,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   secured.put('/comments/:id/visibility', async (c) => {
     const payload = c.get('jwtPayload');
     const { id } = c.req.param();
-    const { visibility } = await c.req.json<{ visibility: 'public' | 'private' }>();
+    const { visibility } = await c.req.json<{visibility: 'public' | 'private';}>();
     const commentEntity = new CommentEntity(c.env, id);
     if (!(await commentEntity.exists())) return notFound(c, 'Comment not found');
     const comment = await commentEntity.getState();
@@ -405,9 +405,9 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   secured.post('/likes', async (c) => {
     const payload = c.get('jwtPayload');
     if (payload.role !== 'student') return c.json({ success: false, error: 'Only students can like posts' }, 403);
-    const { postId } = await c.req.json<{ postId: string }>();
+    const { postId } = await c.req.json<{postId: string;}>();
     const allLikes = (await LikeEntity.list(c.env)).items;
-    const existingLike = allLikes.find(l => l.postId === postId && l.userId === payload.sub);
+    const existingLike = allLikes.find((l) => l.postId === postId && l.userId === payload.sub);
     if (existingLike) return bad(c, 'You have already liked this post');
     const newLike: Like = { id: crypto.randomUUID(), postId, userId: payload.sub };
     await LikeEntity.create(c.env, newLike);
@@ -418,57 +418,57 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (payload.role !== 'student') return c.json({ success: false, error: 'Only students can unlike posts' }, 403);
     const { postId } = c.req.param();
     const allLikes = (await LikeEntity.list(c.env)).items;
-    const likeToDelete = allLikes.find(l => l.postId === postId && l.userId === payload.sub);
+    const likeToDelete = allLikes.find((l) => l.postId === postId && l.userId === payload.sub);
     if (!likeToDelete) return notFound(c, 'Like not found');
     await LikeEntity.delete(c.env, likeToDelete.id);
     return ok(c, { id: likeToDelete.id, deleted: true });
   });
-  // --- PUBLIC ROUTES ---
+
   app.get('/api/activity/recent', async (c) => {
     const [publications, projects, portfolioItems] = await Promise.all([
-      PublicationEntity.list(c.env),
-      ResearchProjectEntity.list(c.env),
-      PortfolioItemEntity.list(c.env),
-    ]);
+    PublicationEntity.list(c.env),
+    ResearchProjectEntity.list(c.env),
+    PortfolioItemEntity.list(c.env)]
+    );
     const allWork: AcademicWork[] = [
-      ...publications.items,
-      ...projects.items,
-      ...portfolioItems.items,
-    ];
-    const recentWork = allWork
-      .filter(item => item.visibility === 'public')
-      .sort((a, b) => b.createdAt - a.createdAt)
-      .slice(0, 10);
+    ...publications.items,
+    ...projects.items,
+    ...portfolioItems.items];
+
+    const recentWork = allWork.
+    filter((item) => item.visibility === 'public').
+    sort((a, b) => b.createdAt - a.createdAt).
+    slice(0, 10);
     return ok(c, recentWork);
   });
   app.get('/api/users/search', async (c) => {
     const { q, university, department } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
     const page = await UserProfileEntity.list(c.env);
-    let users = page.items.map(l => { const { password, ...rest } = l; return rest; });
+    let users = page.items.map((l) => {const { password, ...rest } = l;return rest;});
     if (searchTerm) {
-      users = users.filter(user =>
-        user.name.toLowerCase().includes(searchTerm) ||
-        user.specializations.some(spec => spec.toLowerCase().includes(searchTerm)) ||
-        user.university.toLowerCase().includes(searchTerm)
+      users = users.filter((user) =>
+      user.name.toLowerCase().includes(searchTerm) ||
+      user.specializations.some((spec) => spec.toLowerCase().includes(searchTerm)) ||
+      user.university.toLowerCase().includes(searchTerm)
       );
     }
     if (university) {
-      users = users.filter(user => user.university === university);
+      users = users.filter((user) => user.university === university);
     }
     if (department) {
-      users = users.filter(user => user.department === department);
+      users = users.filter((user) => user.department === department);
     }
     return ok(c, users);
   });
   app.get('/api/users', async (c) => {
     const page = await UserProfileEntity.list(c.env);
-    const users = page.items.map(l => { const { password, ...rest } = l; return rest; });
+    const users = page.items.map((l) => {const { password, ...rest } = l;return rest;});
     return ok(c, users);
   });
   app.get('/api/users/by-username/:username', async (c) => {
     const users = (await UserProfileEntity.list(c.env)).items;
-    const user = users.find(u => u.username === username);
+    const user = users.find((u) => u.username === username);
     if (!user) return notFound(c, 'User not found');
     const { password, ...rest } = user;
     return ok(c, rest);
@@ -484,42 +484,42 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   app.get('/api/publications', async (c) => {
     const { q, year } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
-    let items = (await PublicationEntity.list(c.env)).items.filter(item => item.visibility === 'public');
+    let items = (await PublicationEntity.list(c.env)).items.filter((item) => item.visibility === 'public');
     if (searchTerm) {
-      items = items.filter(item =>
-        item.title.toLowerCase().includes(searchTerm) ||
-        item.authors.some(author => author.toLowerCase().includes(searchTerm)) ||
-        item.journal.toLowerCase().includes(searchTerm)
+      items = items.filter((item) =>
+      item.title.toLowerCase().includes(searchTerm) ||
+      item.authors.some((author) => author.toLowerCase().includes(searchTerm)) ||
+      item.journal.toLowerCase().includes(searchTerm)
       );
     }
     if (year) {
-      items = items.filter(item => item.year.toString() === year);
+      items = items.filter((item) => item.year.toString() === year);
     }
     return ok(c, items);
   });
   app.get('/api/publications/years', async (c) => {
-    const items = (await PublicationEntity.list(c.env)).items.filter(item => item.visibility === 'public');
-    const years = [...new Set(items.map(item => item.year))].sort((a, b) => b - a);
+    const items = (await PublicationEntity.list(c.env)).items.filter((item) => item.visibility === 'public');
+    const years = [...new Set(items.map((item) => item.year))].sort((a, b) => b - a);
     return ok(c, years);
   });
   app.get('/api/research', async (c) => {
     const { q, year } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
-    let items = (await ResearchProjectEntity.list(c.env)).items.filter(item => item.visibility === 'public');
+    let items = (await ResearchProjectEntity.list(c.env)).items.filter((item) => item.visibility === 'public');
     if (searchTerm) {
-      items = items.filter(item =>
-        item.title.toLowerCase().includes(searchTerm) ||
-        item.description.toLowerCase().includes(searchTerm)
+      items = items.filter((item) =>
+      item.title.toLowerCase().includes(searchTerm) ||
+      item.description.toLowerCase().includes(searchTerm)
       );
     }
     if (year) {
-      items = items.filter(item => item.year.toString() === year);
+      items = items.filter((item) => item.year.toString() === year);
     }
     return ok(c, items);
   });
   app.get('/api/research/years', async (c) => {
-    const items = (await ResearchProjectEntity.list(c.env)).items.filter(item => item.visibility === 'public');
-    const years = [...new Set(items.map(item => item.year))].sort((a, b) => b - a);
+    const items = (await ResearchProjectEntity.list(c.env)).items.filter((item) => item.visibility === 'public');
+    const years = [...new Set(items.map((item) => item.year))].sort((a, b) => b - a);
     return ok(c, years);
   });
   app.get('/api/research/:id', async (c) => {
@@ -531,22 +531,22 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   app.get('/api/portfolio', async (c) => {
     const { q, year } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
-    let items = (await PortfolioItemEntity.list(c.env)).items.filter(item => item.visibility === 'public');
+    let items = (await PortfolioItemEntity.list(c.env)).items.filter((item) => item.visibility === 'public');
     if (searchTerm) {
-      items = items.filter(item =>
-        item.title.toLowerCase().includes(searchTerm) ||
-        item.description.toLowerCase().includes(searchTerm) ||
-        item.category.toLowerCase().includes(searchTerm)
+      items = items.filter((item) =>
+      item.title.toLowerCase().includes(searchTerm) ||
+      item.description.toLowerCase().includes(searchTerm) ||
+      item.category.toLowerCase().includes(searchTerm)
       );
     }
     if (year) {
-      items = items.filter(item => item.year.toString() === year);
+      items = items.filter((item) => item.year.toString() === year);
     }
     return ok(c, items);
   });
   app.get('/api/portfolio/years', async (c) => {
-    const items = (await PortfolioItemEntity.list(c.env)).items.filter(item => item.visibility === 'public');
-    const years = [...new Set(items.map(item => item.year))].sort((a, b) => b - a);
+    const items = (await PortfolioItemEntity.list(c.env)).items.filter((item) => item.visibility === 'public');
+    const years = [...new Set(items.map((item) => item.year))].sort((a, b) => b - a);
     return ok(c, years);
   });
   app.get('/api/academic-work/:id', async (c) => {
@@ -561,7 +561,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!work) return notFound(c, 'Post not found');
     const authorId = work.lecturerId;
     const allComments = (await CommentEntity.list(c.env)).items;
-    const postComments = allComments.filter(comment => comment.postId === postId);
+    const postComments = allComments.filter((comment) => comment.postId === postId);
     const authHeader = c.req.header('Authorization');
     let currentUserId: string | null = null;
     if (authHeader) {
@@ -570,10 +570,10 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
         const payload = await verify(token, JWT_SECRET);
         currentUserId = payload.sub as string;
       } catch (e) {
-        // Invalid token, user is not authenticated
+
       }
     }
-    const visibleComments = postComments.filter(comment => {
+    const visibleComments = postComments.filter((comment) => {
       if (comment.visibility === 'public') return true;
       if (comment.visibility === 'private') {
         return currentUserId && (currentUserId === comment.userId || currentUserId === authorId);
@@ -585,33 +585,33 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   app.get('/api/posts/:postId/likes', async (c) => {
     const { postId } = c.req.param();
     const allLikes = (await LikeEntity.list(c.env)).items;
-    const postLikes = allLikes.filter(like => like.postId === postId);
+    const postLikes = allLikes.filter((like) => like.postId === postId);
     return ok(c, postLikes);
   });
   app.post('/api/saved-items', async (c) => {
-    const { itemIds } = await c.req.json<{ itemIds?: string[] }>();
+    const { itemIds } = await c.req.json<{itemIds?: string[];}>();
     if (!itemIds || !Array.isArray(itemIds)) {
       return bad(c, 'itemIds array is required');
     }
     const [publications, projects, portfolioItems, usersPage] = await Promise.all([
-      PublicationEntity.list(c.env),
-      ResearchProjectEntity.list(c.env),
-      PortfolioItemEntity.list(c.env),
-      UserProfileEntity.list(c.env)
-    ]);
+    PublicationEntity.list(c.env),
+    ResearchProjectEntity.list(c.env),
+    PortfolioItemEntity.list(c.env),
+    UserProfileEntity.list(c.env)]
+    );
     const allAcademicWork = [
-      ...publications.items,
-      ...projects.items,
-      ...portfolioItems.items
-    ].filter(item => item.visibility === 'public');
+    ...publications.items,
+    ...projects.items,
+    ...portfolioItems.items].
+    filter((item) => item.visibility === 'public');
     const users = usersPage.items;
-    const userMap = new Map(users.map(u => [u.id, u.name]));
-    const savedItems = allAcademicWork
-      .filter(item => itemIds.includes(item.id))
-      .map(item => ({
-        ...item,
-        authorName: userMap.get(item.lecturerId) || 'Unknown Author'
-      }));
+    const userMap = new Map(users.map((u) => [u.id, u.name]));
+    const savedItems = allAcademicWork.
+    filter((item) => itemIds.includes(item.id)).
+    map((item) => ({
+      ...item,
+      authorName: userMap.get(item.lecturerId) || 'Unknown Author'
+    }));
     return ok(c, savedItems);
   });
   app.route('/api', secured);
