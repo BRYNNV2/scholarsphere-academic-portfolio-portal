@@ -193,7 +193,7 @@ export function PortfolioPage() {
                         </CardContent>
                       </div>
                     </div>
-                    <CommentsSection postId={item.id} />
+                    <CommentsSection postId={item.id} authorId={user.id} />
                   </Card>
               )}
               </CardContent>
@@ -230,7 +230,7 @@ export function PortfolioPage() {
                         </CardContent>
                       </div>
                     </div>
-                    <CommentsSection postId={pub.id} />
+                    <CommentsSection postId={pub.id} authorId={user.id} />
                   </Card>
               )}
               </CardContent>
@@ -267,7 +267,7 @@ export function PortfolioPage() {
                         </CardContent>
                       </div>
                     </div>
-                    <CommentsSection postId={proj.id} />
+                    <CommentsSection postId={proj.id} authorId={user.id} />
                   </Card>
               )}
               </CardContent>

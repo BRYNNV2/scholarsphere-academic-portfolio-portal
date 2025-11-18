@@ -8,6 +8,15 @@ type PublicationCreatePayload = Omit<Publication, 'id' | 'type' | 'lecturerId'> 
 type ProjectCreatePayload = Omit<ResearchProject, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
 type PortfolioItemCreatePayload = Omit<PortfolioItem, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
 const JWT_SECRET = 'a-very-secret-key-that-should-be-in-env';
+async function getAcademicWork(env: Env, id: string): Promise<AcademicWork | null> {
+  const publication = await PublicationEntity.get(env, id);
+  if (publication) return publication;
+  const project = await ResearchProjectEntity.get(env, id);
+  if (project) return project;
+  const portfolioItem = await PortfolioItemEntity.get(env, id);
+  if (portfolioItem) return portfolioItem;
+  return null;
+}
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
   // --- AUTH ---
   const auth = new Hono<{ Bindings: Env }>();
@@ -308,9 +317,9 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   secured.post('/comments', async (c) => {
     const payload = c.get('jwtPayload');
     if (payload.role !== 'student') return c.json({ success: false, error: 'Only students can comment' }, 403);
-    const { postId, content } = await c.req.json<{ postId: string; content: string }>();
+    const { postId, content, visibility } = await c.req.json<{ postId: string; content: string; visibility: 'public' | 'private' }>();
     const user = await new UserProfileEntity(c.env, payload.sub).getState();
-    const newComment: Comment = { id: crypto.randomUUID(), postId, content, userId: user.id, userName: user.name, userPhotoUrl: user.photoUrl, createdAt: Date.now() };
+    const newComment: Comment = { id: crypto.randomUUID(), postId, content, userId: user.id, userName: user.name, userPhotoUrl: user.photoUrl, createdAt: Date.now(), visibility: visibility || 'public' };
     await CommentEntity.create(c.env, newComment);
     return ok(c, newComment);
   });
@@ -463,19 +472,36 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   });
   app.get('/api/academic-work/:id', async (c) => {
     const { id } = c.req.param();
-    const publication = await PublicationEntity.get(c.env, id);
-    if (publication) return ok(c, publication);
-    const project = await ResearchProjectEntity.get(c.env, id);
-    if (project) return ok(c, project);
-    const portfolioItem = await PortfolioItemEntity.get(c.env, id);
-    if (portfolioItem) return ok(c, portfolioItem);
-    return notFound(c, 'Academic work not found');
+    const work = await getAcademicWork(c.env, id);
+    if (!work) return notFound(c, 'Academic work not found');
+    return ok(c, work);
   });
   app.get('/api/posts/:postId/comments', async (c) => {
     const { postId } = c.req.param();
+    const work = await getAcademicWork(c.env, postId);
+    if (!work) return notFound(c, 'Post not found');
+    const authorId = work.lecturerId;
     const allComments = (await CommentEntity.list(c.env)).items;
-    const postComments = allComments.filter(comment => comment.postId === postId).sort((a, b) => b.createdAt - a.createdAt);
-    return ok(c, postComments);
+    const postComments = allComments.filter(comment => comment.postId === postId);
+    const authHeader = c.req.header('Authorization');
+    let currentUserId: string | null = null;
+    if (authHeader) {
+      const token = authHeader.split(' ')[1];
+      try {
+        const payload = await jwt.verify(token, JWT_SECRET);
+        currentUserId = payload.sub as string;
+      } catch (e) {
+        // Invalid token, user is not authenticated
+      }
+    }
+    const visibleComments = postComments.filter(comment => {
+      if (comment.visibility === 'public') return true;
+      if (comment.visibility === 'private') {
+        return currentUserId && (currentUserId === comment.userId || currentUserId === authorId);
+      }
+      return false;
+    });
+    return ok(c, visibleComments.sort((a, b) => b.createdAt - a.createdAt));
   });
   app.get('/api/posts/:postId/likes', async (c) => {
     const { postId } = c.req.param();

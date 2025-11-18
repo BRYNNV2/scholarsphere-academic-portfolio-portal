@@ -78,6 +78,7 @@ export interface Comment {
   userPhotoUrl: string;
   content: string;
   createdAt: number; // timestamp
+  visibility: 'public' | 'private';
 }
 export interface Like {
   id: string;

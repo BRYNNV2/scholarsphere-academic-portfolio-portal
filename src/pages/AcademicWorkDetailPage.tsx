@@ -162,7 +162,7 @@ export function AcademicWorkDetailPage() {
                 </Button>
               }
             </CardContent>
-            <CommentsSection postId={item.id} />
+            <CommentsSection postId={item.id} authorId={item.lecturerId} />
           </Card>
         </article>
       </div>

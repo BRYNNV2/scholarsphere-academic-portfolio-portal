@@ -6,17 +6,22 @@ import { useAuthStore } from '@/stores/auth-store';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Heart, MessageSquare } from 'lucide-react';
+import { Heart, MessageSquare, Lock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { Label } from './ui/label';
+import { Badge } from './ui/badge';
 interface CommentsSectionProps {
   postId: string;
+  authorId: string;
 }
-export function CommentsSection({ postId }: CommentsSectionProps) {
+export function CommentsSection({ postId, authorId }: CommentsSectionProps) {
   const queryClient = useQueryClient();
   const [comment, setComment] = useState('');
+  const [visibility, setVisibility] = useState<'public' | 'private'>('public');
   const currentUser = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { data: comments, isLoading: isLoadingComments } = useQuery<Comment[]>({
@@ -38,9 +43,10 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
     }
   });
   const commentMutation = useMutation({
-    mutationFn: (content: string) => api.post('/api/comments', { postId, content }),
+    mutationFn: (data: { content: string; visibility: 'public' | 'private' }) => api.post('/api/comments', { postId, ...data }),
     onSuccess: () => {
       setComment('');
+      setVisibility('public');
       queryClient.invalidateQueries({ queryKey: ['comments', postId] });
       toast.success('Comment posted!');
     },
@@ -51,7 +57,7 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!comment.trim()) return;
-    commentMutation.mutate(comment.trim());
+    commentMutation.mutate({ content: comment.trim(), visibility });
   };
   const canInteract = isAuthenticated && currentUser?.role === 'student';
   return (
@@ -78,10 +84,21 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             className="mb-2" />
-
-            <Button type="submit" size="sm" disabled={commentMutation.isPending}>
-              {commentMutation.isPending ? 'Posting...' : 'Post Comment'}
-            </Button>
+            <div className="flex justify-between items-center">
+              <RadioGroup defaultValue="public" value={visibility} onValueChange={(value: 'public' | 'private') => setVisibility(value)} className="flex items-center gap-4">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="public" id="r1" />
+                  <Label htmlFor="r1">Public</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="private" id="r2" />
+                  <Label htmlFor="r2">Private</Label>
+                </div>
+              </RadioGroup>
+              <Button type="submit" size="sm" disabled={commentMutation.isPending}>
+                {commentMutation.isPending ? 'Posting...' : 'Post Comment'}
+              </Button>
+            </div>
           </div>
         </form>
       }
@@ -105,15 +122,18 @@ export function CommentsSection({ postId }: CommentsSectionProps) {
                 <div className="flex items-center gap-2 text-sm">
                   <span className="font-semibold">{c.userName}</span>
                   <span className="text-muted-foreground">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}</span>
+                  {c.visibility === 'private' && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <Lock className="h-3 w-3" /> Private
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground">{c.content}</p>
               </div>
             </div>
         ) :
-
         <p className="text-sm text-muted-foreground">No comments yet.</p>
         }
       </div>
     </div>);
-
 }

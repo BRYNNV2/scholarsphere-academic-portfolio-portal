@@ -112,6 +112,7 @@ export class CommentEntity extends IndexedEntity<Comment> {
     userPhotoUrl: "",
     content: "",
     createdAt: 0,
+    visibility: 'public',
   };
 }
 // Like ENTITY
