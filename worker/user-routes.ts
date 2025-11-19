@@ -487,6 +487,51 @@ export function userRoutes(app: Hono<{Bindings: Env;}>) {
     const { password, ...rest } = state;
     return ok(c, rest);
   });
+  app.get('/api/users/:id/publications', async (c) => {
+    const { id } = c.req.param();
+    const userEntity = new UserProfileEntity(c.env, id);
+    if (!(await userEntity.exists())) return notFound(c, 'User not found');
+    const user = await userEntity.getState();
+    if (!user.publicationIds || user.publicationIds.length === 0) {
+      return ok(c, []);
+    }
+    const userPublicationIds = new Set(user.publicationIds);
+    const allPublications = (await PublicationEntity.list(c.env)).items;
+    const userPublications = allPublications.filter(
+      (p) => userPublicationIds.has(p.id) && p.visibility === 'public'
+    );
+    return ok(c, userPublications);
+  });
+  app.get('/api/users/:id/projects', async (c) => {
+    const { id } = c.req.param();
+    const userEntity = new UserProfileEntity(c.env, id);
+    if (!(await userEntity.exists())) return notFound(c, 'User not found');
+    const user = await userEntity.getState();
+    if (!user.projectIds || user.projectIds.length === 0) {
+      return ok(c, []);
+    }
+    const userProjectIds = new Set(user.projectIds);
+    const allProjects = (await ResearchProjectEntity.list(c.env)).items;
+    const userProjects = allProjects.filter(
+      (p) => userProjectIds.has(p.id) && p.visibility === 'public'
+    );
+    return ok(c, userProjects);
+  });
+  app.get('/api/users/:id/portfolio', async (c) => {
+    const { id } = c.req.param();
+    const userEntity = new UserProfileEntity(c.env, id);
+    if (!(await userEntity.exists())) return notFound(c, 'User not found');
+    const user = await userEntity.getState();
+    if (!user.portfolioItemIds || user.portfolioItemIds.length === 0) {
+      return ok(c, []);
+    }
+    const userPortfolioItemIds = new Set(user.portfolioItemIds);
+    const allPortfolioItems = (await PortfolioItemEntity.list(c.env)).items;
+    const userPortfolioItems = allPortfolioItems.filter(
+      (p) => userPortfolioItemIds.has(p.id) && p.visibility === 'public'
+    );
+    return ok(c, userPortfolioItems);
+  });
   app.get('/api/publications', async (c) => {
     const { q, year } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
