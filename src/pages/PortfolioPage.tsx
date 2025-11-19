@@ -78,16 +78,19 @@ export function PortfolioPage() {
     }
   }, [user]);
   const { data: publications, isLoading: isLoadingPubs } = useQuery<Publication[]>({
-    queryKey: ['publications'],
-    queryFn: () => api.get('/api/publications')
+    queryKey: ['publications', user?.id],
+    queryFn: () => api.get(`/api/users/${user.id}/publications`),
+    enabled: !!user?.id
   });
   const { data: projects, isLoading: isLoadingProjs } = useQuery<ResearchProject[]>({
-    queryKey: ['projects'],
-    queryFn: () => api.get('/api/projects')
+    queryKey: ['projects', user?.id],
+    queryFn: () => api.get(`/api/users/${user.id}/projects`),
+    enabled: !!user?.id
   });
   const { data: portfolioItems, isLoading: isLoadingPortfolio } = useQuery<PortfolioItem[]>({
-    queryKey: ['portfolio'],
-    queryFn: () => api.get('/api/portfolio')
+    queryKey: ['portfolio', user?.id],
+    queryFn: () => api.get(`/api/users/${user.id}/portfolio`),
+    enabled: !!user?.id
   });
   const isLoading = isLoadingUser || isLoadingPubs || isLoadingProjs || isLoadingPortfolio;
   if (isLoading) {
@@ -105,9 +108,9 @@ export function PortfolioPage() {
         </div>
       </PublicLayout>);
   }
-  const userPublications = publications?.filter((p) => user.publicationIds.includes(p.id)) ?? [];
-  const userProjects = projects?.filter((p) => user.projectIds.includes(p.id)) ?? [];
-  const userPortfolioItems = portfolioItems?.filter((p) => user.portfolioItemIds.includes(p.id)) ?? [];
+  const userPublications = publications ?? [];
+  const userProjects = projects ?? [];
+  const userPortfolioItems = portfolioItems ?? [];
   return (
     <PublicLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
