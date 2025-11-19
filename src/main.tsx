@@ -34,6 +34,7 @@ import { DashboardProfileRouterPage } from './pages/dashboard/DashboardProfileRo
 import { ReportProblemPage } from './pages/dashboard/ReportProblemPage';
 import { SupportPage } from './pages/dashboard/SupportPage';
 import { TermsAndPoliciesPage } from './pages/dashboard/TermsAndPoliciesPage';
+import { ContactPage } from './pages/ContactPage';
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
@@ -89,6 +90,11 @@ const router = createBrowserRouter([
   {
     path: "/privacy-policy",
     element: <PrivacyPolicyPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/contact",
+    element: <ContactPage />,
     errorElement: <RouteErrorBoundary />,
   },
   {

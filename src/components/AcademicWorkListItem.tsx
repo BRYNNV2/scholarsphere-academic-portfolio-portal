@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Bookmark, Book, FlaskConical, Briefcase } from 'lucide-react';
+import { ExternalLink, Bookmark, Book, FlaskConical, Briefcase, Heart, MessageSquare } from 'lucide-react';
 import { AcademicWork, UserProfile } from '@shared/types';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useAuthStore } from '@/stores/auth-store';
@@ -108,16 +108,28 @@ export function AcademicWorkListItem({ item }: AcademicWorkListItemProps) {
               </div>
             </div>
             <div className="flex justify-between items-end mt-2">
-              {(item.type === 'project' || item.type === 'portfolio') && (
-                <p className="text-sm text-muted-foreground flex-grow pr-4">
-                  {item.description.length > 100 ? `${item.description.substring(0, 100)}...` : item.description}
-                </p>
-              )}
-              {item.url &&
-                <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 flex-shrink-0 ml-auto">
-                  View Details <ExternalLink className="h-4 w-4" />
-                </a>
-              }
+              <div className="flex-grow pr-4">
+                {(item.type === 'project' || item.type === 'portfolio') && (
+                  <p className="text-sm text-muted-foreground">
+                    {item.description.length > 100 ? `${item.description.substring(0, 100)}...` : item.description}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground flex-shrink-0 ml-auto">
+                <div className="flex items-center gap-1" title={`${item.likeIds.length} likes`}>
+                  <Heart className="h-4 w-4" />
+                  <span>{item.likeIds.length}</span>
+                </div>
+                <div className="flex items-center gap-1" title={`${item.commentIds.length} comments`}>
+                  <MessageSquare className="h-4 w-4" />
+                  <span>{item.commentIds.length}</span>
+                </div>
+                {item.url &&
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1">
+                    View Details <ExternalLink className="h-4 w-4" />
+                  </a>
+                }
+              </div>
             </div>
           </CardContent>
         </div>
