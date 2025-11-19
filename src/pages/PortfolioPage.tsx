@@ -4,48 +4,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, Building, Book, FlaskConical, ExternalLink, Twitter, Linkedin, Github, Briefcase, Bookmark } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Mail, Building, Twitter, Linkedin, Github, Briefcase, Book, FlaskConical } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { api } from "../lib/api-client-fixed";
 import { UserProfile, Publication, ResearchProject, PortfolioItem } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { CommentsSection } from '@/components/CommentsSection';
-import { useAuthStore } from '@/stores/auth-store';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useEffect } from 'react';
-function SaveButton({ itemId }: {itemId: string;}) {
-  const queryClient = useQueryClient();
-  const currentUser = useAuthStore((state) => state.user);
-  const updateUser = useAuthStore((state) => state.updateUser);
-  const canSave = currentUser?.role === 'student';
-  const isSaved = (currentUser?.savedItemIds ?? []).includes(itemId);
-  const saveMutation = useMutation({
-    mutationFn: () => isSaved ?
-    api.delete(`/api/users/me/save/${itemId}`) :
-    api.post(`/api/users/me/save/${itemId}`),
-    onSuccess: (updatedProfile: UserProfile) => {
-      toast.success(isSaved ? 'Item unsaved!' : 'Item saved for later!');
-      queryClient.invalidateQueries({ queryKey: ['user', currentUser?.id] });
-      updateUser(updatedProfile);
-    },
-    onError: (error) => {
-      toast.error((error as Error).message);
-    }
-  });
-  if (!canSave) return null;
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => saveMutation.mutate()}
-      disabled={saveMutation.isPending}>
-      <Bookmark className={cn("mr-2 h-4 w-4", isSaved && "fill-primary text-primary")} />
-      {isSaved ? 'Saved' : 'Save'}
-    </Button>);
-}
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AcademicWorkListItem } from '@/components/AcademicWorkListItem';
+import { EmptyState } from '@/components/EmptyState';
 function PortfolioPageSkeleton() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
@@ -161,121 +129,54 @@ export function PortfolioPage() {
             <CardHeader><CardTitle>Biography</CardTitle></CardHeader>
             <CardContent><p className="text-muted-foreground whitespace-pre-wrap">{user.bio}</p></CardContent>
           </Card>
-          {userPortfolioItems.length > 0 &&
-          <Card>
-              <CardHeader>
-                <CardTitle className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><Briefcase /> Portfolio</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {userPortfolioItems.map((item) =>
-              <Card key={item.id} className="overflow-hidden">
-                    <div className="flex flex-col sm:flex-row">
-                      <div className="sm:w-1/3 md:w-1/4">
-                        <AspectRatio ratio={16 / 9} className="bg-muted">
-                          {item.thumbnailUrl ?
-                      <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" /> :
-                      <div className="flex items-center justify-center h-full text-muted-foreground">
-                              <Briefcase className="h-10 w-10" />
-                            </div>
-                      }
-                        </AspectRatio>
-                      </div>
-                      <div className="flex-1">
-                        <CardContent className="p-6">
-                          <div className="flex justify-between items-start gap-4">
-                            <div>
-                              <h3 className="font-semibold text-lg">{item.title}</h3>
-                              <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
-                            </div>
-                            <div className="flex-shrink-0"><SaveButton itemId={item.id} /></div>
-                          </div>
-                          <div className="flex justify-between items-end mt-2">
-                            <p className="text-sm text-muted-foreground">{item.year} &middot; <Badge variant="outline" className="ml-1">{item.category}</Badge></p>
-                            {item.url && <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">View Details <ExternalLink className="h-4 w-4" /></a>}
-                          </div>
-                        </CardContent>
-                      </div>
-                    </div>
-                    <CommentsSection postId={item.id} authorId={user.id} />
-                  </Card>
-              )}
-              </CardContent>
-            </Card>
-          }
-          {userPublications.length > 0 &&
-          <Card>
-              <CardHeader>
-                <CardTitle className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><Book /> Publications</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {userPublications.map((pub) =>
-              <Card key={pub.id} className="overflow-hidden">
-                     <div className="flex flex-col sm:flex-row">
-                      <div className="sm:w-1/3 md:w-1/4">
-                        <AspectRatio ratio={16 / 9} className="bg-muted">
-                          {pub.thumbnailUrl ?
-                      <img src={pub.thumbnailUrl} alt={pub.title} className="object-cover w-full h-full" /> :
-                      <div className="flex items-center justify-center h-full text-muted-foreground">
-                              <Book className="h-10 w-10" />
-                            </div>
-                      }
-                        </AspectRatio>
-                      </div>
-                      <div className="flex-1">
-                        <CardContent className="p-6">
-                          <div className="flex justify-between items-start gap-4">
-                            <h3 className="font-semibold text-lg flex-grow">{pub.title}</h3>
-                            <div className="flex-shrink-0"><SaveButton itemId={pub.id} /></div>
-                          </div>
-                          <p className="text-sm text-muted-foreground mt-1">{pub.authors.join(', ')}</p>
-                          <p className="text-sm text-muted-foreground mt-1"><em>{pub.journal}</em>, {pub.year}</p>
-                          {pub.url && <a href={pub.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">View Publication <ExternalLink className="h-4 w-4" /></a>}
-                        </CardContent>
-                      </div>
-                    </div>
-                    <CommentsSection postId={pub.id} authorId={user.id} />
-                  </Card>
-              )}
-              </CardContent>
-            </Card>
-          }
-          {userProjects.length > 0 &&
-          <Card>
-              <CardHeader>
-                <CardTitle className="text-3xl font-display font-bold text-foreground flex items-center gap-3"><FlaskConical /> Research Projects</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {userProjects.map((proj) =>
-              <Card key={proj.id} className="overflow-hidden">
-                    <div className="flex flex-col sm:flex-row">
-                      <div className="sm:w-1/3 md:w-1/4">
-                        <AspectRatio ratio={16 / 9} className="bg-muted">
-                          {proj.thumbnailUrl ?
-                      <img src={proj.thumbnailUrl} alt={proj.title} className="object-cover w-full h-full" /> :
-                      <div className="flex items-center justify-center h-full text-muted-foreground">
-                              <FlaskConical className="h-10 w-10" />
-                            </div>
-                      }
-                        </AspectRatio>
-                      </div>
-                      <div className="flex-1">
-                        <CardContent className="p-6">
-                          <div className="flex justify-between items-start gap-4">
-                            <h3 className="font-semibold text-lg flex-grow">{proj.title}</h3>
-                            <div className="flex-shrink-0"><SaveButton itemId={proj.id} /></div>
-                          </div>
-                          <p className="text-sm text-muted-foreground mt-1"><strong>Role:</strong> {proj.role} ({proj.year})</p>
-                          <p className="text-sm text-muted-foreground mt-2">{proj.description}</p>
-                          {proj.url && <a href={proj.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-2">Learn More <ExternalLink className="h-4 w-4" /></a>}
-                        </CardContent>
-                      </div>
-                    </div>
-                    <CommentsSection postId={proj.id} authorId={user.id} />
-                  </Card>
-              )}
-              </CardContent>
-            </Card>
-          }
+          <div>
+            <Tabs defaultValue="publications" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="publications">Publications ({userPublications.length})</TabsTrigger>
+                <TabsTrigger value="research">Research ({userProjects.length})</TabsTrigger>
+                <TabsTrigger value="portfolio">Portfolio ({userPortfolioItems.length})</TabsTrigger>
+              </TabsList>
+              <TabsContent value="publications" className="mt-6">
+                {userPublications.length > 0 ? (
+                  <div className="space-y-4">
+                    {userPublications.map((item) => <AcademicWorkListItem key={item.id} item={item} />)}
+                  </div>
+                ) : (
+                  <EmptyState
+                    icon={<Book className="h-8 w-8" />}
+                    title="No Publications"
+                    description={`${user.name} has not added any publications yet.`}
+                  />
+                )}
+              </TabsContent>
+              <TabsContent value="research" className="mt-6">
+                {userProjects.length > 0 ? (
+                  <div className="space-y-4">
+                    {userProjects.map((item) => <AcademicWorkListItem key={item.id} item={item} />)}
+                  </div>
+                ) : (
+                  <EmptyState
+                    icon={<FlaskConical className="h-8 w-8" />}
+                    title="No Research Projects"
+                    description={`${user.name} has not added any research projects yet.`}
+                  />
+                )}
+              </TabsContent>
+              <TabsContent value="portfolio" className="mt-6">
+                {userPortfolioItems.length > 0 ? (
+                  <div className="space-y-4">
+                    {userPortfolioItems.map((item) => <AcademicWorkListItem key={item.id} item={item} />)}
+                  </div>
+                ) : (
+                  <EmptyState
+                    icon={<Briefcase className="h-8 w-8" />}
+                    title="No Portfolio Items"
+                    description={`${user.name} has not added any portfolio items yet.`}
+                  />
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
       </div>
     </PublicLayout>);
