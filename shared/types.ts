@@ -67,6 +67,7 @@ export interface UserProfile {
   projectIds: string[];
   portfolioItemIds: string[];
   savedItemIds: string[];
+  visibility?: 'public' | 'private';
   socialLinks?: {
     twitter?: string;
     linkedin?: string;

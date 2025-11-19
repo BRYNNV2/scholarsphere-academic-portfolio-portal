@@ -576,7 +576,7 @@ export function userRoutes(app: Hono<{Bindings: Env;}>) {
         const payload = await verify(token, JWT_SECRET);
         currentUserId = payload.sub as string;
       } catch (e) {
-
+        // ignore, token is invalid or expired, user is not logged in
       }
     }
     const visibleComments = postComments.filter((comment) => {
