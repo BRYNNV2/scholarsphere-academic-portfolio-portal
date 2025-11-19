@@ -51,7 +51,8 @@ export function userRoutes(app: Hono<{Bindings: Env;}>) {
       savedItemIds: [],
       specializations: body.specializations || [],
       socialLinks: body.socialLinks || {},
-      photoUrl: body.photoUrl || `https://i.pravatar.cc/300?u=${body.email}`
+      photoUrl: body.photoUrl || `https://i.pravatar.cc/300?u=${body.email}`,
+      visibility: 'public'
     };
     await UserProfileEntity.create(c.env, newUser);
     const { password, ...userToReturn } = newUser;
@@ -445,7 +446,9 @@ export function userRoutes(app: Hono<{Bindings: Env;}>) {
     const { q, university, department } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
     const page = await UserProfileEntity.list(c.env);
-    let users = page.items.map((l) => {const { password, ...rest } = l;return rest;});
+    let users = page.items.
+      filter((user) => user.visibility === 'public').
+      map((l) => {const { password, ...rest } = l;return rest;});
     if (searchTerm) {
       users = users.filter((user) =>
       user.name.toLowerCase().includes(searchTerm) ||
@@ -463,13 +466,16 @@ export function userRoutes(app: Hono<{Bindings: Env;}>) {
   });
   app.get('/api/users', async (c) => {
     const page = await UserProfileEntity.list(c.env);
-    const users = page.items.map((l) => {const { password, ...rest } = l;return rest;});
+    const users = page.items.
+      filter((user) => user.visibility === 'public').
+      map((l) => {const { password, ...rest } = l;return rest;});
     return ok(c, users);
   });
   app.get('/api/users/by-username/:username', async (c) => {
+    const { username: reqUsername } = c.req.param();
     const users = (await UserProfileEntity.list(c.env)).items;
-    const user = users.find((u) => u.username === username);
-    if (!user) return notFound(c, 'User not found');
+    const user = users.find((u) => u.username === reqUsername);
+    if (!user || user.visibility !== 'public') return notFound(c, 'User not found');
     const { password, ...rest } = user;
     return ok(c, rest);
   });
