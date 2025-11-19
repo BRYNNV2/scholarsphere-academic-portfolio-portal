@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { api } from "../../lib/api-client-fixed";
 import { PortfolioItem, UserProfile } from '@shared/types';
 import { useAuthStore } from '@/stores/auth-store';
+import { resizeImage } from '@/lib/image-utils';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -20,7 +21,6 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { EmptyState } from '@/components/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { resizeImage } from '@/lib/image-utils';
 const portfolioItemSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   category: z.string().min(1, 'Category is required'),

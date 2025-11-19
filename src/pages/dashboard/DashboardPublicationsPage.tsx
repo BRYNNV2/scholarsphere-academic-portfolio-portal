@@ -20,6 +20,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { resizeImage } from '@/lib/image-utils';
+
 const publicationSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   authors: z.string().min(1, 'Authors are required'),
