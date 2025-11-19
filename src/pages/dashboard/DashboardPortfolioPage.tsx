@@ -20,6 +20,7 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { EmptyState } from '@/components/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { resizeImage } from '@/lib/image-utils';
 const portfolioItemSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   category: z.string().min(1, 'Category is required'),
@@ -68,27 +69,24 @@ function PortfolioItemForm({ item, onFinished }: {item?: PortfolioItem;onFinishe
       mutation.mutate({ ...payload, lecturerId: currentUser?.id, commentIds: [], likeIds: [] });
     }
   };
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const MAX_FILE_SIZE = 2 * 1024 * 1024;
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // Allow larger original files, e.g., 5MB
     if (file.size > MAX_FILE_SIZE) {
-      toast.error('File is too large. Maximum size is 2MB.');
+      toast.error('File is too large. Maximum size is 5MB.');
       return;
     }
     if (!file.type.startsWith('image/')) {
       toast.error('Invalid file type. Please select an image.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      form.setValue('thumbnailUrl', result, { shouldValidate: true, shouldDirty: true });
-    };
-    reader.onerror = () => {
-      toast.error('Failed to read file.');
-    };
-    reader.readAsDataURL(file);
+    try {
+      const resizedDataUrl = await resizeImage(file, 800, 800); // Resize to max 800x800
+      form.setValue('thumbnailUrl', resizedDataUrl, { shouldValidate: true, shouldDirty: true });
+    } catch (error) {
+      toast.error(`Failed to process image: ${(error as Error).message}`);
+    }
   };
   return (
     <Form {...form}>
@@ -123,7 +121,7 @@ function PortfolioItemForm({ item, onFinished }: {item?: PortfolioItem;onFinishe
                   Upload Image
                 </Button>
                 <FormDescription className="mt-2">
-                  Optional. Max file size: 2MB.
+                  Optional. Max file size: 5MB.
                 </FormDescription>
                 <FormMessage />
               </div>

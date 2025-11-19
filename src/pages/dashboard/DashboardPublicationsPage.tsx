@@ -19,6 +19,7 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { EmptyState } from '@/components/EmptyState';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { resizeImage } from '@/lib/image-utils';
 const publicationSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   authors: z.string().min(1, 'Authors are required'),
@@ -70,10 +71,10 @@ function PublicationForm({ publication, onFinished }: {publication?: Publication
       mutation.mutate({ ...payload, lecturerId: currentUser?.id, commentIds: [], likeIds: [] });
     }
   };
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    const MAX_FILE_SIZE = 2 * 1024 * 1024;
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
     if (file.size > MAX_FILE_SIZE) {
       toast.error('File is too large. Maximum size is 2MB.');
       return;
@@ -82,15 +83,12 @@ function PublicationForm({ publication, onFinished }: {publication?: Publication
       toast.error('Invalid file type. Please select an image.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      form.setValue('thumbnailUrl', result, { shouldValidate: true, shouldDirty: true });
-    };
-    reader.onerror = () => {
-      toast.error('Failed to read file.');
-    };
-    reader.readAsDataURL(file);
+    try {
+      const resizedDataUrl = await resizeImage(file, 800, 800, 0.7);
+      form.setValue('thumbnailUrl', resizedDataUrl, { shouldValidate: true, shouldDirty: true });
+    } catch (error) {
+      toast.error(`Failed to process image: ${(error as Error).message}`);
+    }
   };
   return (
     <Form {...form}>
