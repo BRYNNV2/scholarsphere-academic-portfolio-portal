@@ -3,6 +3,7 @@ export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
 }
+
 export interface Publication {
   id: string;
   type: 'publication';
@@ -17,6 +18,7 @@ export interface Publication {
   likeIds: string[];
   createdAt: number;
 }
+
 export interface ResearchProject {
   id: string;
   type: 'project' | 'research';
@@ -31,6 +33,7 @@ export interface ResearchProject {
   likeIds: string[];
   createdAt: number;
 }
+
 export interface PortfolioItem {
   id: string;
   type: 'portfolio';
@@ -45,10 +48,12 @@ export interface PortfolioItem {
   likeIds: string[];
   createdAt: number;
 }
+
 export type AcademicWork = Publication | ResearchProject | PortfolioItem;
 export type SavedItem = AcademicWork & { authorName: string };
+
 export interface UserProfile {
-  id:string;
+  id: string;
   name: string;
   role: 'lecturer' | 'student';
   title: string; // e.g., "Professor of Computer Science"
@@ -62,6 +67,7 @@ export interface UserProfile {
   publicationIds: string[];
   projectIds: string[];
   portfolioItemIds: string[];
+  courseIds: string[];
   savedItemIds: string[];
   socialLinks?: {
     twitter?: string;
@@ -69,6 +75,7 @@ export interface UserProfile {
     github?: string;
   };
 }
+
 export interface Comment {
   id: string;
   postId: string; // ID of the Publication, ResearchProject, or PortfolioItem
@@ -78,11 +85,13 @@ export interface Comment {
   content: string;
   createdAt: number; // timestamp
 }
+
 export interface Like {
   id: string;
   postId: string;
   userId: string;
 }
+
 export interface WorkAnalytics {
   id: string;
   title: string;
@@ -90,8 +99,33 @@ export interface WorkAnalytics {
   likes: number;
   saves: number;
 }
+
 export interface AnalyticsData {
   totalLikes: number;
   totalSaves: number;
   workBreakdown: WorkAnalytics[];
+}
+
+export interface Course {
+  id: string;
+  lecturerId: string;
+  title: string;
+  code: string;
+  semester: string;
+  year: number;
+  description: string;
+  studentProjectIds: string[];
+  createdAt: number;
+}
+
+export interface StudentProject {
+  id: string;
+  courseId: string;
+  lecturerId: string;
+  title: string;
+  students: string[]; // Names of students
+  description: string;
+  thumbnailUrl?: string;
+  url?: string;
+  createdAt: number;
 }

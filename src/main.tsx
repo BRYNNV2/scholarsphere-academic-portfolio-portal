@@ -34,7 +34,11 @@ import { DashboardProfileRouterPage } from './pages/dashboard/DashboardProfileRo
 import { ReportProblemPage } from './pages/dashboard/ReportProblemPage';
 import { SupportPage } from './pages/dashboard/SupportPage';
 import { TermsAndPoliciesPage } from './pages/dashboard/TermsAndPoliciesPage';
+import { CoursesPage } from './pages/dashboard/CoursesPage';
+import { CoursesDirectoryPage } from './pages/CoursesDirectoryPage';
+
 const queryClient = new QueryClient();
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -74,6 +78,11 @@ const router = createBrowserRouter([
   {
     path: "/portfolio",
     element: <PortfolioDirectoryPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/courses",
+    element: <CoursesDirectoryPage />,
     errorElement: <RouteErrorBoundary />,
   },
   {
@@ -121,6 +130,10 @@ const router = createBrowserRouter([
         element: <DashboardPortfolioPage />,
       },
       {
+        path: "courses",
+        element: <CoursesPage />,
+      },
+      {
         path: "settings",
         element: <DashboardSettingsPage />,
       },
@@ -139,6 +152,7 @@ const router = createBrowserRouter([
     ]
   },
 ]);
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>

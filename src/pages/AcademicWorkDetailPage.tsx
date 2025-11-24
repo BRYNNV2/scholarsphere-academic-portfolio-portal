@@ -47,7 +47,7 @@ function AcademicWorkDetailPageSkeleton() {
 
 }
 export function AcademicWorkDetailPage() {
-  const { id } = useParams<{id: string;}>();
+  const { id } = useParams<{ id: string; }>();
   const { data: item, isLoading: isLoadingItem, isError } = useQuery<AcademicWork>({
     queryKey: ['academic-work', id],
     queryFn: () => api.get(`/api/academic-work/${id}`),
@@ -60,10 +60,10 @@ export function AcademicWorkDetailPage() {
   });
   const getIcon = (type: AcademicWork['type']) => {
     switch (type) {
-      case 'publication':return <Book className="h-10 w-10" />;
-      case 'project':return <FlaskConical className="h-10 w-10" />;
-      case 'portfolio':return <Briefcase className="h-10 w-10" />;
-      default:return null;
+      case 'publication': return <Book className="h-10 w-10" />;
+      case 'project': return <FlaskConical className="h-10 w-10" />;
+      case 'portfolio': return <Briefcase className="h-10 w-10" />;
+      default: return null;
     }
   };
   const renderItemDetails = (item: AcademicWork) => {
@@ -129,7 +129,7 @@ export function AcademicWorkDetailPage() {
           <header className="mb-8">
             <h1 className="text-4xl md:text-5xl font-display font-bold text-foreground tracking-tight">{item.title}</h1>
             {author &&
-            <div className="mt-6 flex items-center gap-4">
+              <div className="mt-6 flex items-center gap-4">
                 <Avatar className="h-16 w-16">
                   <AvatarImage src={author.photoUrl} alt={author.name} />
                   <AvatarFallback>{author.name.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
@@ -146,9 +146,9 @@ export function AcademicWorkDetailPage() {
           <Card className="overflow-hidden">
             <AspectRatio ratio={16 / 9} className="bg-muted">
               {item.thumbnailUrl ?
-              <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" /> :
+                <img src={item.thumbnailUrl} alt={item.title} className="object-cover w-full h-full" /> :
 
-              <div className="flex items-center justify-center h-full text-muted-foreground">
+                <div className="flex items-center justify-center h-full text-muted-foreground">
                   {getIcon(item.type)}
                 </div>
               }
@@ -156,14 +156,14 @@ export function AcademicWorkDetailPage() {
             <CardContent className="p-6 md:p-8 space-y-4">
               {renderItemDetails(item)}
               {item.url &&
-              <Button asChild className="mt-6">
+                <Button asChild className="mt-6">
                   <a href={item.url} target="_blank" rel="noopener noreferrer">
                     View Source <ExternalLink className="ml-2 h-4 w-4" />
                   </a>
                 </Button>
               }
             </CardContent>
-            <CommentsSection postId={item.id} />
+            <CommentsSection postId={item.id} postOwnerId={item.lecturerId} />
           </Card>
         </article>
       </div>

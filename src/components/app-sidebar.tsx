@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Home, User, BookCopy, FlaskConical, BookOpenCheck, Globe, LogOut, Settings, Briefcase, ShieldQuestion, MessageSquareWarning, FileText } from "lucide-react";
+import { Home, User, BookCopy, FlaskConical, BookOpenCheck, Globe, LogOut, Settings, Briefcase, ShieldQuestion, MessageSquareWarning, FileText, GraduationCap } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -11,16 +11,20 @@ import {
   SidebarGroupHeader,
 } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/stores/auth-store";
+
 export function AppSidebar(): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
+
   const handleLogout = () => {
     logout();
     navigate('/');
   };
+
   const isActive = (path: string) => location.pathname === path;
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -45,6 +49,7 @@ export function AppSidebar(): JSX.Element {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
+
         {user?.role === 'lecturer' && (
           <SidebarGroup>
             <SidebarGroupHeader>Portfolio Management</SidebarGroupHeader>
@@ -64,9 +69,15 @@ export function AppSidebar(): JSX.Element {
                   <Briefcase /> <span>Portfolio</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton isActive={isActive("/dashboard/courses")} onClick={() => navigate('/dashboard/courses')}>
+                  <GraduationCap /> <span>Courses</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
         )}
+
         {user?.role === 'student' && (
           <SidebarGroup>
             <SidebarGroupHeader>Support & About</SidebarGroupHeader>
@@ -89,6 +100,7 @@ export function AppSidebar(): JSX.Element {
             </SidebarMenu>
           </SidebarGroup>
         )}
+
         <SidebarGroup className="mt-auto">
           <SidebarGroupHeader>Account</SidebarGroupHeader>
           <SidebarMenu>

@@ -1,5 +1,6 @@
 import { ApiResponse } from "../../shared/types";
 import { useAuthStore } from "@/stores/auth-store";
+
 // This promise ensures that the Zustand store is hydrated from localStorage before any API calls are made.
 // This is crucial for ensuring the auth token is available on initial page load.
 const hydrationPromise = new Promise<void>(resolve => {
@@ -12,26 +13,38 @@ const hydrationPromise = new Promise<void>(resolve => {
     });
   }
 });
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   await hydrationPromise;
   const token = useAuthStore.getState().token;
   const headers = new Headers(options.headers);
+
   if (!headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
+
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
+    // console.log('[API] Token found, adding Authorization header');
   }
+
+  // console.log(`[API] ${options.method || 'GET'} ${path}`);
+
   const res = await fetch(path, { ...options, headers });
+
   if (res.status === 204) { // No Content
     return undefined as T;
   }
+
   const json = (await res.json()) as ApiResponse<T>;
+
   if (!res.ok || !json.success || json.data === undefined) {
     throw new Error(json.error || 'Request failed');
   }
+
   return json.data;
 }
+
 export const api = {
   get: <T>(path: string): Promise<T> => {
     return request<T>(path, { method: 'GET' });
@@ -52,5 +65,6 @@ export const api = {
     return request<T>(path, { method: 'DELETE' });
   },
 };
+
 // Per client request, the `get` method is also the default export for convenience.
 export default api.get;

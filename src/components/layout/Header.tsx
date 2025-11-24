@@ -12,19 +12,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 export function Header() {
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+
   const handleLogout = () => {
     logout();
     navigate('/');
   };
+
   const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
-    `text-sm font-medium transition-colors hover:text-primary ${
-      isActive ? 'text-primary' : 'text-muted-foreground'
+    `text-sm font-medium transition-colors hover:text-primary ${isActive ? 'text-primary' : 'text-muted-foreground'
     }`;
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -33,6 +36,7 @@ export function Header() {
             <BookOpenCheck className="h-7 w-7 text-primary" />
             <span className="font-bold text-lg">ScholarSphere</span>
           </Link>
+
           <nav className="hidden md:flex items-center space-x-6">
             <NavLink to="/" className={navLinkClasses}>
               Home
@@ -49,7 +53,11 @@ export function Header() {
             <NavLink to="/portfolio" className={navLinkClasses}>
               Portfolio
             </NavLink>
+            <NavLink to="/courses" className={navLinkClasses}>
+              Courses
+            </NavLink>
           </nav>
+
           <div className="flex items-center gap-2">
             <ThemeToggle className="relative top-0 right-0" />
             {isAuthenticated && user ? (

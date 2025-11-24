@@ -1,7 +1,8 @@
 import { IndexedEntity } from "./core-utils";
-import type { UserProfile, Publication, ResearchProject, PortfolioItem, Comment, Like } from "@shared/types";
+import type { UserProfile, Publication, ResearchProject, PortfolioItem, Comment, Like, Course, StudentProject } from "@shared/types";
 import { MOCK_PUBLICATIONS, MOCK_PROJECTS, MOCK_PORTFOLIO_ITEMS } from "@shared/mock-data";
 import { Env } from "./core-utils";
+
 // UserProfile ENTITY
 export class UserProfileEntity extends IndexedEntity<UserProfile> {
   static readonly entityName = "user";
@@ -21,11 +22,13 @@ export class UserProfileEntity extends IndexedEntity<UserProfile> {
     publicationIds: [],
     projectIds: [],
     portfolioItemIds: [],
+    courseIds: [],
     savedItemIds: [],
     socialLinks: {},
   };
   static seedData = [];
 }
+
 // Publication ENTITY
 export class PublicationEntity extends IndexedEntity<Publication> {
   static readonly entityName = "publication";
@@ -45,12 +48,14 @@ export class PublicationEntity extends IndexedEntity<Publication> {
     createdAt: 0,
   };
   static seedData = MOCK_PUBLICATIONS;
+
   static async get(env: Env, id: string): Promise<Publication | null> {
     const inst = new this(env, id);
     if (!(await inst.exists())) return null;
     return inst.getState();
   }
 }
+
 // ResearchProject ENTITY
 export class ResearchProjectEntity extends IndexedEntity<ResearchProject> {
   static readonly entityName = "project";
@@ -69,12 +74,14 @@ export class ResearchProjectEntity extends IndexedEntity<ResearchProject> {
     createdAt: 0,
   };
   static seedData = MOCK_PROJECTS;
+
   static async get(env: Env, id: string): Promise<ResearchProject | null> {
     const inst = new this(env, id);
     if (!(await inst.exists())) return null;
     return inst.getState();
   }
 }
+
 // PortfolioItem ENTITY
 export class PortfolioItemEntity extends IndexedEntity<PortfolioItem> {
   static readonly entityName = "portfolio";
@@ -93,12 +100,54 @@ export class PortfolioItemEntity extends IndexedEntity<PortfolioItem> {
     createdAt: 0,
   };
   static seedData = MOCK_PORTFOLIO_ITEMS;
+
   static async get(env: Env, id: string): Promise<PortfolioItem | null> {
     const inst = new this(env, id);
     if (!(await inst.exists())) return null;
     return inst.getState();
   }
 }
+
+// Course ENTITY
+export class CourseEntity extends IndexedEntity<Course> {
+  static readonly entityName = "course";
+  static readonly indexName = "courses";
+  static readonly initialState: Course = {
+    id: "",
+    lecturerId: "",
+    title: "",
+    code: "",
+    semester: "",
+    year: 0,
+    description: "",
+    studentProjectIds: [],
+    createdAt: 0,
+  };
+
+  static async get(env: Env, id: string): Promise<Course | null> {
+    const inst = new this(env, id);
+    if (!(await inst.exists())) return null;
+    return inst.getState();
+  }
+}
+
+// StudentProject ENTITY
+export class StudentProjectEntity extends IndexedEntity<StudentProject> {
+  static readonly entityName = "studentProject";
+  static readonly indexName = "studentProjects";
+  static readonly initialState: StudentProject = {
+    id: "",
+    courseId: "",
+    lecturerId: "",
+    title: "",
+    students: [],
+    description: "",
+    thumbnailUrl: "",
+    url: "",
+    createdAt: 0,
+  };
+}
+
 // Comment ENTITY
 export class CommentEntity extends IndexedEntity<Comment> {
   static readonly entityName = "comment";
@@ -113,6 +162,7 @@ export class CommentEntity extends IndexedEntity<Comment> {
     createdAt: 0,
   };
 }
+
 // Like ENTITY
 export class LikeEntity extends IndexedEntity<Like> {
   static readonly entityName = "like";

@@ -1,3 +1,10 @@
-
 # Bootstrap marker
 .bootstrap-complete
+
+# Dependencies and build
+node_modules/
+bun.lock
+dist/
+
+# Cloudflare worker local folders
+.wrangler/
