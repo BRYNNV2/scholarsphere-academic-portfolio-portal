@@ -2,14 +2,17 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { Menu } from "lucide-react"
+
 type SidebarContextProps = {
   open: boolean
   setOpen: React.Dispatch<React.SetStateAction<boolean>>
   isMobile: boolean
 }
+
 const SidebarContext = React.createContext<SidebarContextProps | undefined>(undefined)
+
 function useSidebar() {
   const context = React.useContext(SidebarContext)
   if (!context) {
@@ -17,13 +20,16 @@ function useSidebar() {
   }
   return context
 }
+
 type SidebarProviderProps = {
   children: React.ReactNode
   defaultOpen?: boolean
 }
+
 function SidebarProvider({ children, defaultOpen = false }: SidebarProviderProps) {
   const isMobile = useIsMobile()
   const [open, setOpen] = React.useState(defaultOpen)
+
   React.useEffect(() => {
     if (!isMobile) {
       setOpen(true)
@@ -31,15 +37,18 @@ function SidebarProvider({ children, defaultOpen = false }: SidebarProviderProps
       setOpen(false)
     }
   }, [isMobile])
+
   return (
     <SidebarContext.Provider value={{ open, setOpen, isMobile }}>
       {children}
     </SidebarContext.Provider>
   )
 }
+
 const Sidebar = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => {
     const { open, isMobile } = useSidebar()
+
     if (isMobile) {
       return (
         <div
@@ -49,6 +58,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEle
         />
       )
     }
+
     return (
       <div
         ref={ref}
@@ -64,6 +74,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEle
   }
 )
 Sidebar.displayName = "Sidebar"
+
 const SidebarHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => {
     return (
@@ -76,6 +87,7 @@ const SidebarHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
   }
 )
 SidebarHeader.displayName = "SidebarHeader"
+
 const SidebarContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => {
     return (
@@ -91,12 +103,14 @@ const SidebarContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTM
   }
 )
 SidebarContent.displayName = "SidebarContent"
+
 const SidebarGroup = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => {
     return <div ref={ref} className={cn("flex flex-col", className)} {...props} />
   }
 )
 SidebarGroup.displayName = "SidebarGroup"
+
 const SidebarGroupHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, children, ...props }, ref) => {
     return (
@@ -111,18 +125,21 @@ const SidebarGroupHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes
   }
 );
 SidebarGroupHeader.displayName = "SidebarGroupHeader";
+
 const SidebarMenu = React.forwardRef<HTMLUListElement, React.HTMLAttributes<HTMLUListElement>>(
   ({ className, ...props }, ref) => {
     return <ul ref={ref} className={cn("flex flex-col", className)} {...props} />
   }
 )
 SidebarMenu.displayName = "SidebarMenu"
+
 const SidebarMenuItem = React.forwardRef<HTMLLIElement, React.HTMLAttributes<HTMLLIElement>>(
   ({ className, ...props }, ref) => {
     return <li ref={ref} className={cn("list-none", className)} {...props} />
   }
 )
 SidebarMenuItem.displayName = "SidebarMenuItem"
+
 const SidebarMenuButton = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement> & { isActive?: boolean }
@@ -137,6 +154,7 @@ const SidebarMenuButton = React.forwardRef<
   )
 })
 SidebarMenuButton.displayName = "SidebarMenuButton"
+
 const SidebarInset = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => {
     const { open, isMobile } = useSidebar()
@@ -157,6 +175,7 @@ const SidebarInset = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
   }
 )
 SidebarInset.displayName = "SidebarInset"
+
 const SidebarTrigger = React.forwardRef<HTMLButtonElement, React.HTMLAttributes<HTMLButtonElement>>(
   ({ className, children, ...props }, ref) => {
     const { open, setOpen, isMobile } = useSidebar()
@@ -169,6 +188,10 @@ const SidebarTrigger = React.forwardRef<HTMLButtonElement, React.HTMLAttributes<
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-60 p-0">
+            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+            <SheetDescription className="sr-only">
+              Main navigation menu for the application.
+            </SheetDescription>
             {children}
           </SheetContent>
         </Sheet>
@@ -189,6 +212,7 @@ const SidebarTrigger = React.forwardRef<HTMLButtonElement, React.HTMLAttributes<
   }
 )
 SidebarTrigger.displayName = "SidebarTrigger"
+
 export {
   useSidebar,
   SidebarProvider,
