@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, Building, Book, FlaskConical, ExternalLink, Twitter, Linkedin, Github, Briefcase, Bookmark, BookOpen, User, Award } from 'lucide-react';
+import { Mail, Building, Book, FlaskConical, ExternalLink, Twitter, Linkedin, Github, Briefcase, Bookmark, BookOpen, User } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from "../lib/api-client-fixed";
 import { UserProfile, Publication, ResearchProject, PortfolioItem, Course, StudentProject } from '@shared/types';
@@ -15,7 +15,6 @@ import { useAuthStore } from '@/stores/auth-store';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 function SaveButton({ itemId }: { itemId: string }) {
   const queryClient = useQueryClient();
@@ -353,20 +352,27 @@ export function PortfolioPage() {
                           {courseProjects.length > 0 ? (
                             <div className="space-y-4">
                               {courseProjects.map(project => (
-                                <div key={project.id} className="flex items-start gap-3">
-                                  <div className="mt-1">
-                                    <User className="h-4 w-4 text-muted-foreground" />
-                                  </div>
-                                  <div className="flex-1">
-                                    <div className="flex items-baseline gap-2">
-                                      <h5 className="font-medium text-foreground">{project.title}</h5>
+                                <div key={project.id} className="flex items-start gap-4 p-4 border rounded-lg bg-card/50">
+                                  {project.thumbnailUrl && (
+                                    <div className="w-32 sm:w-48 flex-shrink-0">
+                                      <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden border">
+                                        <img src={project.thumbnailUrl} alt={project.title} className="object-cover w-full h-full" />
+                                      </AspectRatio>
+                                    </div>
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-baseline gap-2 flex-wrap">
+                                      <h5 className="font-semibold text-foreground text-lg">{project.title}</h5>
                                       <span className="text-xs text-muted-foreground">({course.year || new Date().getFullYear()})</span>
                                     </div>
-                                    <p className="text-sm text-muted-foreground">by {project.students.join(', ')}</p>
-                                    <p className="text-sm text-muted-foreground mt-1">{project.description}</p>
+                                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                                      <User className="h-3 w-3" />
+                                      <span>by {project.students.join(', ')}</span>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{project.description}</p>
                                     {project.url && (
-                                      <a href={project.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-1">
-                                        View File <ExternalLink className="h-3 w-3" />
+                                      <a href={project.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1 mt-3">
+                                        View Project <ExternalLink className="h-3 w-3" />
                                       </a>
                                     )}
                                   </div>

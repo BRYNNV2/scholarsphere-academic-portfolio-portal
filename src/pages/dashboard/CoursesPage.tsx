@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client-fixed';
 import { Course, StudentProject } from '@shared/types';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import { Plus, ArrowLeft, Loader2, GraduationCap, MoreHorizontal, Eye, Trash2, User, Pencil } from 'lucide-react';
+import { Plus, ArrowLeft, Loader2, GraduationCap, MoreHorizontal, Eye, Trash2, User, Pencil, Image as ImageIcon } from 'lucide-react';
 import { StudentProjectCard } from '@/components/StudentProjectCard';
 import { CourseCard } from '@/components/CourseCard';
 import { toast } from 'sonner';
@@ -36,6 +36,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Card } from '@/components/ui/card';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 const SEMESTER_COURSES: Record<string, string[]> = {
     "1": [
@@ -99,6 +100,34 @@ export function CoursesPage() {
     // Form state
     const [formSemester, setFormSemester] = useState<string>("");
     const [formTitle, setFormTitle] = useState<string>("");
+    const [thumbnailData, setThumbnailData] = useState<string>("");
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+        if (file.size > MAX_FILE_SIZE) {
+            toast.error('File is too large. Maximum size is 2MB.');
+            return;
+        }
+
+        if (!file.type.startsWith('image/')) {
+            toast.error('Invalid file type. Please select an image.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result as string;
+            setThumbnailData(result);
+        };
+        reader.onerror = () => {
+            toast.error('Failed to read file.');
+        };
+        reader.readAsDataURL(file);
+    };
 
     // Queries
     const coursesQuery = useQuery({
@@ -207,7 +236,7 @@ export function CoursesPage() {
             students: (formData.get('students') as string).split(',').map(s => s.trim()),
             description: formData.get('description') as string,
             url: formData.get('url') as string,
-            thumbnailUrl: formData.get('thumbnailUrl') as string,
+            thumbnailUrl: thumbnailData,
         });
     };
 
@@ -221,7 +250,7 @@ export function CoursesPage() {
             students: (formData.get('students') as string).split(',').map(s => s.trim()),
             description: formData.get('description') as string,
             url: formData.get('url') as string,
-            thumbnailUrl: formData.get('thumbnailUrl') as string,
+            thumbnailUrl: thumbnailData,
         });
     };
 
@@ -283,7 +312,10 @@ export function CoursesPage() {
                             <p className="text-sm text-muted-foreground">Manage final projects and assignments for this course.</p>
                         </div>
                         <div className="flex gap-2 w-full sm:w-auto">
-                            <Dialog open={isAddProjectOpen} onOpenChange={setIsAddProjectOpen}>
+                            <Dialog open={isAddProjectOpen} onOpenChange={(open) => {
+                                setIsAddProjectOpen(open);
+                                if (open) setThumbnailData("");
+                            }}>
                                 <DialogTrigger asChild>
                                     <Button className="bg-blue-900 hover:bg-blue-800 w-full sm:w-auto">
                                         <Plus className="mr-2 h-4 w-4" /> Add Project
@@ -314,8 +346,39 @@ export function CoursesPage() {
                                             <Input id="url" name="url" type="url" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="thumbnailUrl">Thumbnail URL (Optional)</label>
-                                            <Input id="thumbnailUrl" name="thumbnailUrl" type="url" />
+                                            <label htmlFor="thumbnailUrl">Project Thumbnail (Optional)</label>
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-32">
+                                                    <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden border">
+                                                        {thumbnailData ? (
+                                                            <img src={thumbnailData} alt="Thumbnail preview" className="object-cover w-full h-full" />
+                                                        ) : (
+                                                            <div className="flex items-center justify-center h-full text-muted-foreground">
+                                                                <ImageIcon className="h-8 w-8" />
+                                                            </div>
+                                                        )}
+                                                    </AspectRatio>
+                                                </div>
+                                                <div className="flex-grow">
+                                                    <Input
+                                                        type="file"
+                                                        ref={fileInputRef}
+                                                        className="hidden"
+                                                        accept="image/png, image/jpeg, image/gif"
+                                                        onChange={handleFileChange}
+                                                    />
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        onClick={() => fileInputRef.current?.click()}
+                                                    >
+                                                        Upload Image
+                                                    </Button>
+                                                    <p className="text-xs text-muted-foreground mt-2">
+                                                        Max file size: 2MB. Supported formats: PNG, JPG, GIF.
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
                                         <Button type="submit" className="w-full" disabled={createProjectMutation.isPending}>
                                             {createProjectMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -351,8 +414,39 @@ export function CoursesPage() {
                                             <Input id="edit-url" name="url" type="url" defaultValue={editingProject?.url} />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="edit-thumbnailUrl">Thumbnail URL (Optional)</label>
-                                            <Input id="edit-thumbnailUrl" name="thumbnailUrl" type="url" defaultValue={editingProject?.thumbnailUrl} />
+                                            <label htmlFor="edit-thumbnailUrl">Project Thumbnail (Optional)</label>
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-32">
+                                                    <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden border">
+                                                        {thumbnailData ? (
+                                                            <img src={thumbnailData} alt="Thumbnail preview" className="object-cover w-full h-full" />
+                                                        ) : (
+                                                            <div className="flex items-center justify-center h-full text-muted-foreground">
+                                                                <ImageIcon className="h-8 w-8" />
+                                                            </div>
+                                                        )}
+                                                    </AspectRatio>
+                                                </div>
+                                                <div className="flex-grow">
+                                                    <Input
+                                                        type="file"
+                                                        ref={fileInputRef}
+                                                        className="hidden"
+                                                        accept="image/png, image/jpeg, image/gif"
+                                                        onChange={handleFileChange}
+                                                    />
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        onClick={() => fileInputRef.current?.click()}
+                                                    >
+                                                        Change Image
+                                                    </Button>
+                                                    <p className="text-xs text-muted-foreground mt-2">
+                                                        Max file size: 2MB. Supported formats: PNG, JPG, GIF.
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
                                         <Button type="submit" className="w-full" disabled={updateProjectMutation.isPending}>
                                             {updateProjectMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -383,6 +477,7 @@ export function CoursesPage() {
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuItem onClick={() => {
                                                         setEditingProject(project);
+                                                        setThumbnailData(project.thumbnailUrl || "");
                                                         setIsEditProjectOpen(true);
                                                     }}>
                                                         <Pencil className="mr-2 h-4 w-4" /> Edit
