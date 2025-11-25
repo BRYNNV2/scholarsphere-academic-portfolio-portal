@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Plus, ArrowLeft, Loader2, GraduationCap, MoreHorizontal, Eye, Trash2, User, Pencil } from 'lucide-react';
 import { StudentProjectCard } from '@/components/StudentProjectCard';
+import { CourseCard } from '@/components/CourseCard';
 import { toast } from 'sonner';
 import {
     Table,
@@ -275,16 +276,16 @@ export function CoursesPage() {
                     </div>
                 </Card>
 
-                <Card className="p-6">
-                    <div className="flex justify-between items-center mb-6">
+                <div className="space-y-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
                             <h2 className="text-lg font-semibold">Student Projects</h2>
                             <p className="text-sm text-muted-foreground">Manage final projects and assignments for this course.</p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 w-full sm:w-auto">
                             <Dialog open={isAddProjectOpen} onOpenChange={setIsAddProjectOpen}>
                                 <DialogTrigger asChild>
-                                    <Button className="bg-blue-900 hover:bg-blue-800">
+                                    <Button className="bg-blue-900 hover:bg-blue-800 w-full sm:w-auto">
                                         <Plus className="mr-2 h-4 w-4" /> Add Project
                                     </Button>
                                 </DialogTrigger>
@@ -366,34 +367,15 @@ export function CoursesPage() {
                     {projectsQuery.isLoading ? (
                         <div className="text-center py-8">Loading projects...</div>
                     ) : projectsQuery.data && projectsQuery.data.length > 0 ? (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Student</TableHead>
-                                    <TableHead>Project Title</TableHead>
-                                    <TableHead>Year</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {projectsQuery.data.map((project) => (
-                                    <TableRow key={project.id}>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                                                    <span className="text-xs font-medium">{project.students[0]?.charAt(0)}</span>
-                                                </div>
-                                                <div className="flex flex-col">
-                                                    <span className="font-medium">{project.students.join(', ')}</span>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{project.title}</TableCell>
-                                        <TableCell>{selectedCourse.year}</TableCell>
-                                        <TableCell className="text-right">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {projectsQuery.data.map((project) => (
+                                <div key={project.id} className="h-full">
+                                    <StudentProjectCard
+                                        project={project}
+                                        actions={
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <Button variant="ghost" className="h-8 w-8 p-0 bg-background/50 hover:bg-background rounded-full">
                                                         <span className="sr-only">Open menu</span>
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
@@ -417,13 +399,13 @@ export function CoursesPage() {
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                        }
+                                    />
+                                </div>
+                            ))}
+                        </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center py-16 text-center border rounded-lg border-dashed">
+                        <Card className="flex flex-col items-center justify-center py-16 text-center border-dashed">
                             <div className="bg-muted/50 p-4 rounded-full mb-4">
                                 <User className="h-8 w-8 text-muted-foreground" />
                             </div>
@@ -434,23 +416,23 @@ export function CoursesPage() {
                             <Button onClick={() => setIsAddProjectOpen(true)} className="bg-blue-900 hover:bg-blue-800">
                                 Add Project
                             </Button>
-                        </div>
+                        </Card>
                     )}
-                </Card>
+                </div>
             </div>
         );
     }
 
     return (
         <div className="space-y-8">
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Manage Courses</h1>
                     <p className="text-muted-foreground mt-2">Add, edit, or delete the courses you teach.</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     <Select value={semesterFilter} onValueChange={setSemesterFilter}>
-                        <SelectTrigger className="w-[180px]">
+                        <SelectTrigger className="w-full sm:w-[180px]">
                             <SelectValue placeholder="Filter by Semester" />
                         </SelectTrigger>
                         <SelectContent>
@@ -462,7 +444,7 @@ export function CoursesPage() {
                     </Select>
                     <Dialog open={isAddCourseOpen} onOpenChange={setIsAddCourseOpen}>
                         <DialogTrigger asChild>
-                            <Button className="bg-blue-900 hover:bg-blue-800 text-white">
+                            <Button className="bg-blue-900 hover:bg-blue-800 text-white w-full sm:w-auto">
                                 <Plus className="mr-2 h-4 w-4" /> Add New Course
                             </Button>
                         </DialogTrigger>
@@ -547,62 +529,64 @@ export function CoursesPage() {
                 </div>
             </div>
 
-            <Card>
-                {coursesQuery.isLoading ? (
-                    <div className="p-8 text-center">Loading courses...</div>
-                ) : filteredCourses && filteredCourses.length > 0 ? (
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Code</TableHead>
-                                <TableHead>Title</TableHead>
-                                <TableHead>Semester</TableHead>
-                                <TableHead className="text-center">Projects</TableHead>
-                                <TableHead>Visibility</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredCourses.map((course) => (
-                                <TableRow key={course.id}>
-                                    <TableCell className="font-medium">{course.code}</TableCell>
-                                    <TableCell className="font-medium">{course.title}</TableCell>
-                                    <TableCell>Semester {course.semester}</TableCell>
-                                    <TableCell className="text-center">
-                                        <Badge variant="secondary" className="font-normal">
-                                            {course.studentProjectIds?.length || 0}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge className="bg-blue-900 hover:bg-blue-800">Public</Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <Button
-                                            className="bg-yellow-400 hover:bg-yellow-500 text-black font-medium h-8"
-                                            onClick={() => setSelectedCourse(course)}
-                                        >
-                                            Manage
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                ) : (
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <div className="bg-muted/50 p-4 rounded-full mb-4">
-                            <GraduationCap className="h-8 w-8 text-muted-foreground" />
+            {coursesQuery.isLoading ? (
+                <div className="p-8 text-center">Loading courses...</div>
+            ) : filteredCourses && filteredCourses.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredCourses.map((course) => (
+                        <div key={course.id} className="h-full">
+                            <CourseCard
+                                course={course}
+                                onClick={() => setSelectedCourse(course)}
+                                actions={
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground">
+                                                <span className="sr-only">Open menu</span>
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedCourse(course);
+                                                }}
+                                            >
+                                                <Pencil className="mr-2 h-4 w-4" /> Manage
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                className="text-destructive focus:text-destructive"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (confirm('Are you sure you want to delete this course?')) {
+                                                        deleteCourseMutation.mutate(course.id);
+                                                    }
+                                                }}
+                                            >
+                                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                }
+                            />
                         </div>
-                        <h3 className="text-lg font-semibold">No Courses Yet</h3>
-                        <p className="text-muted-foreground mt-2 mb-6 max-w-sm">
-                            Get started by adding your first course to manage student projects.
-                        </p>
-                        <Button onClick={() => setIsAddCourseOpen(true)} className="bg-blue-900 hover:bg-blue-800">
-                            Add Course
-                        </Button>
+                    ))}
+                </div>
+            ) : (
+                <Card className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="bg-muted/50 p-4 rounded-full mb-4">
+                        <GraduationCap className="h-8 w-8 text-muted-foreground" />
                     </div>
-                )}
-            </Card>
+                    <h3 className="text-lg font-semibold">No Courses Yet</h3>
+                    <p className="text-muted-foreground mt-2 mb-6 max-w-sm">
+                        Get started by adding your first course to manage student projects.
+                    </p>
+                    <Button onClick={() => setIsAddCourseOpen(true)} className="bg-blue-900 hover:bg-blue-800">
+                        Add Course
+                    </Button>
+                </Card>
+            )}
         </div>
     );
 }
