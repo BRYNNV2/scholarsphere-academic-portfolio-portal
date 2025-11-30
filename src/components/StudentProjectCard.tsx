@@ -1,8 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { StudentProject } from '@shared/types';
 import { ExternalLink, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface StudentProjectCardProps {
     project: StudentProject;
@@ -34,14 +35,14 @@ export function StudentProjectCard({ project, actions }: StudentProjectCardProps
                     {project.students.join(', ')}
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-3 flex-grow">{project.description}</p>
-                {project.url && (
-                    <Button variant="outline" size="sm" className="mt-auto w-full" asChild>
-                        <a href={project.url} target="_blank" rel="noopener noreferrer">
-                            View Project <ExternalLink className="ml-2 h-4 w-4" />
-                        </a>
-                    </Button>
-                )}
             </CardContent>
+            <CardFooter className="p-4 pt-0">
+                <Button asChild className="w-full">
+                    <Link to={`/work/${project.id}`}>
+                        View Project <ExternalLink className="ml-2 h-4 w-4" />
+                    </Link>
+                </Button>
+            </CardFooter>
         </Card>
     );
 }

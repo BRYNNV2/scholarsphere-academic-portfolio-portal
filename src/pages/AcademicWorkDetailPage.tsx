@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ArrowLeft, Book, Briefcase, Building, ExternalLink, FlaskConical, User } from 'lucide-react';
+import { getProfileUrl } from '@/lib/utils';
+
 const getPathForType = (type: AcademicWork['type']) => {
   switch (type) {
     case 'publication':
@@ -20,11 +22,13 @@ const getPathForType = (type: AcademicWork['type']) => {
       return 'projects';
     case 'portfolio':
       return 'portfolio';
+    case 'student-project':
+      return 'courses';
     default:
-
       return type;
   }
 };
+
 function AcademicWorkDetailPageSkeleton() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
@@ -43,9 +47,10 @@ function AcademicWorkDetailPageSkeleton() {
         <Skeleton className="h-5 w-full" />
         <Skeleton className="h-5 w-5/6" />
       </div>
-    </div>);
-
+    </div>
+  );
 }
+
 export function AcademicWorkDetailPage() {
   const { id } = useParams<{ id: string; }>();
   const { data: item, isLoading: isLoadingItem, isError } = useQuery<AcademicWork>({
@@ -58,14 +63,17 @@ export function AcademicWorkDetailPage() {
     queryFn: () => api.get(`/api/users/${item?.lecturerId}`),
     enabled: !!item?.lecturerId
   });
+
   const getIcon = (type: AcademicWork['type']) => {
     switch (type) {
       case 'publication': return <Book className="h-10 w-10" />;
       case 'project': return <FlaskConical className="h-10 w-10" />;
       case 'portfolio': return <Briefcase className="h-10 w-10" />;
+      case 'student-project': return <FlaskConical className="h-10 w-10" />;
       default: return null;
     }
   };
+
   const renderItemDetails = (item: AcademicWork) => {
     switch (item.type) {
       case 'publication':
@@ -73,14 +81,16 @@ export function AcademicWorkDetailPage() {
           <>
             <p className="text-lg text-muted-foreground">{item.authors.join(', ')}</p>
             <p className="text-md text-muted-foreground"><em>{item.journal}</em>, {item.year}</p>
-          </>);
+          </>
+        );
 
       case 'project':
         return (
           <>
             <p className="text-lg text-muted-foreground"><strong>Role:</strong> {item.role} ({item.year})</p>
             <p className="mt-6 text-lg leading-relaxed whitespace-pre-wrap">{item.description}</p>
-          </>);
+          </>
+        );
 
       case 'portfolio':
         return (
@@ -90,15 +100,28 @@ export function AcademicWorkDetailPage() {
               <p className="text-lg text-muted-foreground">{item.year}</p>
             </div>
             <p className="mt-6 text-lg leading-relaxed whitespace-pre-wrap">{item.description}</p>
-          </>);
+          </>
+        );
+
+      case 'student-project':
+        // Cast to any because StudentProject is not in AcademicWork union yet
+        const sp = item as any;
+        return (
+          <>
+            <p className="text-lg text-muted-foreground"><strong>Students:</strong> {sp.students?.join(', ')}</p>
+            <p className="mt-6 text-lg leading-relaxed whitespace-pre-wrap">{item.description}</p>
+          </>
+        );
 
       default:
         return null;
     }
   };
+
   if (isLoadingItem || isLoadingAuthor) {
     return <PublicLayout><AcademicWorkDetailPageSkeleton /></PublicLayout>;
   }
+
   if (isError || !item) {
     return (
       <PublicLayout>
@@ -109,8 +132,8 @@ export function AcademicWorkDetailPage() {
             <Link to="/">Back to Home</Link>
           </Button>
         </div>
-      </PublicLayout>);
-
+      </PublicLayout>
+    );
   }
 
   const backPath = getPathForType(item.type);
@@ -135,7 +158,7 @@ export function AcademicWorkDetailPage() {
                   <AvatarFallback>{author.name.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <Link to={`/users/${author.id}`} className="text-lg font-semibold hover:underline">{author.name}</Link>
+                  <Link to={getProfileUrl(author)} className="text-lg font-semibold hover:underline">{author.name}</Link>
                   <p className="text-muted-foreground flex items-center gap-2">
                     <Building className="h-4 w-4" /> {author.university}
                   </p>
@@ -167,6 +190,6 @@ export function AcademicWorkDetailPage() {
           </Card>
         </article>
       </div>
-    </PublicLayout>);
-
+    </PublicLayout>
+  );
 }

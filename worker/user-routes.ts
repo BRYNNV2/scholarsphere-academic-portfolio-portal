@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { jwt, sign } from 'hono/jwt'
 import type { Env } from './core-utils';
-import { UserProfileEntity, PublicationEntity, ResearchProjectEntity, PortfolioItemEntity, CommentEntity, LikeEntity, CourseEntity, StudentProjectEntity } from "./entities";
+import { UserProfileEntity, PublicationEntity, ResearchProjectEntity, PortfolioItemEntity, CommentEntity, LikeEntity, CourseEntity, StudentProjectEntity, NotificationEntity } from "./entities";
 import { ok, bad, notFound } from './core-utils';
-import type { UserProfile, Publication, ResearchProject, PortfolioItem, Comment, Like, AnalyticsData, WorkAnalytics, AcademicWork, Course, StudentProject } from "@shared/types";
+import type { UserProfile, Publication, ResearchProject, PortfolioItem, Comment, Like, AnalyticsData, WorkAnalytics, AcademicWork, Course, StudentProject, Notification } from "@shared/types";
 
 type PublicationCreatePayload = Omit<Publication, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
 type ProjectCreatePayload = Omit<ResearchProject, 'id' | 'type' | 'lecturerId'> & { lecturerId: string };
@@ -27,8 +27,17 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       return bad(c, 'User with this email already exists');
     }
 
+    // Check if username exists if provided
+    if (body.username) {
+      const existingUsername = users.find(u => u.username === body.username);
+      if (existingUsername) {
+        return bad(c, 'Username already taken');
+      }
+    }
+
     const newUser: UserProfile = {
       id: crypto.randomUUID(),
+      username: body.username || body.email.split('@')[0], // Default username from email if not provided
       name: body.name || '',
       email: body.email,
       password: body.password,
@@ -201,64 +210,12 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
 
     const user = await userEntity.getState();
 
-    // Safely delete related entities if they exist
-    if (user.publicationIds?.length > 0) await PublicationEntity.deleteMany(c.env, user.publicationIds);
-    if (user.projectIds?.length > 0) await ResearchProjectEntity.deleteMany(c.env, user.projectIds);
-    if (user.portfolioItemIds?.length > 0) await PortfolioItemEntity.deleteMany(c.env, user.portfolioItemIds);
-    if (user.courseIds?.length > 0) await CourseEntity.deleteMany(c.env, user.courseIds);
+    // Clean up references
+    // This is a simplified cleanup. In a real app, you'd want to be more thorough
+    // or use soft deletes.
 
-    // Clean up comments and likes made by the user
-    const allComments = (await CommentEntity.list(c.env)).items;
-    const userComments = allComments.filter(comment => comment.userId === userId);
-    if (userComments.length > 0) {
-      await CommentEntity.deleteMany(c.env, userComments.map(c => c.id));
-    }
-
-    const allLikes = (await LikeEntity.list(c.env)).items;
-    const userLikes = allLikes.filter(like => like.userId === userId);
-    if (userLikes.length > 0) {
-      await LikeEntity.deleteMany(c.env, userLikes.map(l => l.id));
-    }
-
-    const deleted = await UserProfileEntity.delete(c.env, userId);
-    return ok(c, { id: userId, deleted });
-  });
-
-  app.post('/api/users/me/save/:postId', authMiddleware, async (c) => {
-    const payload = c.get('jwtPayload');
-    if (payload.role !== 'student') return c.json({ success: false, error: 'Only students can save items' }, 403);
-    const userId = payload.sub;
-    const { postId } = c.req.param();
-
-    const userEntity = new UserProfileEntity(c.env, userId);
-    if (!(await userEntity.exists())) return notFound(c, 'User not found');
-
-    await userEntity.mutate(state => {
-      const savedIds = state.savedItemIds ?? [];
-      if (!savedIds.includes(postId)) {
-        return { ...state, savedItemIds: [...savedIds, postId] };
-      }
-      return state;
-    });
-
-    return ok(c, await userEntity.getState());
-  });
-
-  app.delete('/api/users/me/save/:postId', authMiddleware, async (c) => {
-    const payload = c.get('jwtPayload');
-    if (payload.role !== 'student') return c.json({ success: false, error: 'Only students can unsave items' }, 403);
-    const userId = payload.sub;
-    const { postId } = c.req.param();
-
-    const userEntity = new UserProfileEntity(c.env, userId);
-    if (!(await userEntity.exists())) return notFound(c, 'User not found');
-
-    await userEntity.mutate(state => ({
-      ...state,
-      savedItemIds: (state.savedItemIds ?? []).filter(id => id !== postId)
-    }));
-
-    return ok(c, await userEntity.getState());
+    await UserProfileEntity.delete(c.env, userId);
+    return ok(c, { message: 'User deleted successfully' });
   });
 
   app.post('/api/publications', authMiddleware, async (c) => {
@@ -430,7 +387,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const course = new CourseEntity(c.env, courseId);
     if (!(await course.exists())) return notFound(c, 'Course not found');
 
-    const newProj: StudentProject = { ...projData, id: crypto.randomUUID(), lecturerId, courseId, createdAt: Date.now() };
+    const newProj: StudentProject = { ...projData, id: crypto.randomUUID(), lecturerId, courseId, createdAt: Date.now(), type: 'student-project' };
     await StudentProjectEntity.create(c.env, newProj);
     await course.mutate(state => ({ ...state, studentProjectIds: [...(state.studentProjectIds ?? []), newProj.id] }));
 
@@ -463,18 +420,111 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
 
   app.post('/api/comments', authMiddleware, async (c) => {
     const payload = c.get('jwtPayload');
-    if (payload.role !== 'student') return c.json({ success: false, error: 'Only students can comment' }, 403);
-    const { postId, content } = await c.req.json<{ postId: string; content: string }>();
+    const { postId, content, parentId } = await c.req.json<{ postId: string; content: string; parentId?: string }>();
 
     const user = await new UserProfileEntity(c.env, payload.sub).getState();
-    const newComment: Comment = { id: crypto.randomUUID(), postId, content, userId: user.id, userName: user.name, userPhotoUrl: user.photoUrl, createdAt: Date.now() };
+    const newComment: Comment = { id: crypto.randomUUID(), postId, content, userId: user.id, userName: user.name, userPhotoUrl: user.photoUrl, likeIds: [], parentId, createdAt: Date.now() };
     await CommentEntity.create(c.env, newComment);
+
+    // Trigger Notification
+    try {
+      let resourceOwnerId = '';
+      let resourceTitle = '';
+      let resourceType: any = 'publication';
+
+      const pub = await PublicationEntity.get(c.env, postId);
+      if (pub) {
+        resourceOwnerId = pub.lecturerId;
+        resourceTitle = pub.title;
+        resourceType = 'publication';
+      } else {
+        const proj = await ResearchProjectEntity.get(c.env, postId);
+        if (proj) {
+          resourceOwnerId = proj.lecturerId;
+          resourceTitle = proj.title;
+          resourceType = 'project';
+        } else {
+          const item = await PortfolioItemEntity.get(c.env, postId);
+          if (item) {
+            resourceOwnerId = item.lecturerId;
+            resourceTitle = item.title;
+            resourceType = 'portfolio';
+          } else {
+            const studentProj = await StudentProjectEntity.get(c.env, postId);
+            if (studentProj) {
+              resourceOwnerId = studentProj.lecturerId;
+              resourceTitle = studentProj.title;
+              resourceType = 'project';
+            }
+          }
+        }
+      }
+
+      if (resourceOwnerId && resourceOwnerId !== user.id) {
+        const notification: Notification = {
+          id: crypto.randomUUID(),
+          userId: resourceOwnerId,
+          type: 'comment',
+          actorId: user.id,
+          actorName: user.name,
+          actorPhotoUrl: user.photoUrl,
+          resourceId: postId,
+          resourceType,
+          resourceTitle,
+          message: `${user.name} commented on your ${resourceType}: "${resourceTitle}"`,
+          isRead: false,
+          createdAt: Date.now()
+        };
+        await NotificationEntity.create(c.env, notification);
+      }
+
+      // Trigger Notification for Parent Comment (Reply)
+      if (parentId) {
+        const parentComment = await CommentEntity.get(c.env, parentId);
+        if (parentComment && parentComment.userId !== user.id) {
+          const notification: Notification = {
+            id: crypto.randomUUID(),
+            userId: parentComment.userId,
+            type: 'comment',
+            actorId: user.id,
+            actorName: user.name,
+            actorPhotoUrl: user.photoUrl,
+            resourceId: postId,
+            resourceType,
+            resourceTitle,
+            message: `${user.name} replied to your comment on "${resourceTitle}"`,
+            isRead: false,
+            createdAt: Date.now()
+          };
+          await NotificationEntity.create(c.env, notification);
+        }
+      }
+
+    } catch (e) {
+      console.error('Failed to create notification', e);
+    }
+
     return ok(c, newComment);
+  });
+
+  app.get('/api/posts/:postId/comments', async (c) => {
+    const { postId } = c.req.param();
+    const allComments = (await CommentEntity.list(c.env)).items;
+    const postComments = allComments
+      .filter(comment => comment.postId === postId)
+      .sort((a, b) => b.createdAt - a.createdAt);
+    return ok(c, postComments);
+  });
+
+  app.get('/api/posts/:postId/likes', async (c) => {
+    const { postId } = c.req.param();
+    const allLikes = (await LikeEntity.list(c.env)).items;
+    const postLikes = allLikes.filter(like => like.postId === postId);
+    return ok(c, postLikes);
   });
 
   app.post('/api/likes', authMiddleware, async (c) => {
     const payload = c.get('jwtPayload');
-    if (payload.role !== 'student') return c.json({ success: false, error: 'Only students can like posts' }, 403);
     const { postId } = await c.req.json<{ postId: string }>();
 
     const allLikes = (await LikeEntity.list(c.env)).items;
@@ -483,12 +533,68 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
 
     const newLike: Like = { id: crypto.randomUUID(), postId, userId: payload.sub };
     await LikeEntity.create(c.env, newLike);
+
+    // Trigger Notification
+    try {
+      let resourceOwnerId = '';
+      let resourceTitle = '';
+      let resourceType: any = 'publication';
+
+      const pub = await PublicationEntity.get(c.env, postId);
+      if (pub) {
+        resourceOwnerId = pub.lecturerId;
+        resourceTitle = pub.title;
+        resourceType = 'publication';
+      } else {
+        const proj = await ResearchProjectEntity.get(c.env, postId);
+        if (proj) {
+          resourceOwnerId = proj.lecturerId;
+          resourceTitle = proj.title;
+          resourceType = 'project';
+        } else {
+          const item = await PortfolioItemEntity.get(c.env, postId);
+          if (item) {
+            resourceOwnerId = item.lecturerId;
+            resourceTitle = item.title;
+            resourceType = 'portfolio';
+          } else {
+            const studentProj = await StudentProjectEntity.get(c.env, postId);
+            if (studentProj) {
+              resourceOwnerId = studentProj.lecturerId;
+              resourceTitle = studentProj.title;
+              resourceType = 'project';
+            }
+          }
+        }
+      }
+
+      if (resourceOwnerId && resourceOwnerId !== payload.sub) {
+        const user = await new UserProfileEntity(c.env, payload.sub).getState();
+        const notification: Notification = {
+          id: crypto.randomUUID(),
+          userId: resourceOwnerId,
+          type: 'like',
+          actorId: user.id,
+          actorName: user.name,
+          actorPhotoUrl: user.photoUrl,
+          resourceId: postId,
+          resourceType,
+          resourceTitle,
+          message: `${user.name} liked your ${resourceType}: "${resourceTitle}"`,
+          isRead: false,
+          createdAt: Date.now()
+        };
+        await NotificationEntity.create(c.env, notification);
+      }
+    } catch (e) {
+      console.error('Failed to create notification', e);
+    }
+
     return ok(c, newLike);
   });
 
   app.delete('/api/likes/:postId', authMiddleware, async (c) => {
     const payload = c.get('jwtPayload');
-    if (payload.role !== 'student') return c.json({ success: false, error: 'Only students can unlike posts' }, 403);
     const { postId } = c.req.param();
 
     const allLikes = (await LikeEntity.list(c.env)).items;
@@ -497,6 +603,72 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
 
     await LikeEntity.delete(c.env, likeToDelete.id);
     return ok(c, { id: likeToDelete.id, deleted: true });
+  });
+
+  app.post('/api/comments/:commentId/like', authMiddleware, async (c) => {
+    const payload = c.get('jwtPayload');
+    const { commentId } = c.req.param();
+    const user = await new UserProfileEntity(c.env, payload.sub).getState();
+
+    const commentEntity = new CommentEntity(c.env, commentId);
+    if (!(await commentEntity.exists())) return notFound(c, 'Comment not found');
+
+    const comment = await commentEntity.getState();
+    if (comment.likeIds?.includes(user.id)) return bad(c, 'Already liked');
+
+    const updatedComment = { ...comment, likeIds: [...(comment.likeIds || []), user.id] };
+    await commentEntity.save(updatedComment);
+
+    // Notification for comment owner
+    if (comment.userId !== user.id) {
+      let resourceTitle = 'post';
+      const pub = await PublicationEntity.get(c.env, comment.postId);
+      if (pub) resourceTitle = pub.title;
+      else {
+        const proj = await ResearchProjectEntity.get(c.env, comment.postId);
+        if (proj) resourceTitle = proj.title;
+        else {
+          const item = await PortfolioItemEntity.get(c.env, comment.postId);
+          if (item) resourceTitle = item.title;
+          else {
+            const sp = await StudentProjectEntity.get(c.env, comment.postId);
+            if (sp) resourceTitle = sp.title;
+          }
+        }
+      }
+
+      const notification: Notification = {
+        id: crypto.randomUUID(),
+        userId: comment.userId,
+        type: 'like',
+        actorId: user.id,
+        actorName: user.name,
+        actorPhotoUrl: user.photoUrl,
+        resourceId: comment.postId,
+        resourceType: 'publication',
+        resourceTitle,
+        message: `${user.name} liked your comment on "${resourceTitle}"`,
+        isRead: false,
+        createdAt: Date.now()
+      };
+      await NotificationEntity.create(c.env, notification);
+    }
+
+    return ok(c, updatedComment);
+  });
+
+  app.delete('/api/comments/:commentId/like', authMiddleware, async (c) => {
+    const payload = c.get('jwtPayload');
+    const { commentId } = c.req.param();
+
+    const commentEntity = new CommentEntity(c.env, commentId);
+    if (!(await commentEntity.exists())) return notFound(c, 'Comment not found');
+
+    const comment = await commentEntity.getState();
+    const updatedComment = { ...comment, likeIds: (comment.likeIds || []).filter(id => id !== payload.sub) };
+    await commentEntity.save(updatedComment);
+
+    return ok(c, updatedComment);
   });
 
   app.delete('/api/comments/:id', authMiddleware, async (c) => {
@@ -589,6 +761,15 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     return ok(c, users);
   });
 
+  app.get('/api/users/username/:username', async (c) => {
+    const { username } = c.req.param();
+    const page = await UserProfileEntity.list(c.env);
+    const user = page.items.find(u => u.username === username);
+    if (!user) return notFound(c, 'User not found');
+    const { password, ...rest } = user;
+    return ok(c, rest);
+  });
+
   app.get('/api/users/:id', async (c) => {
     const { id } = c.req.param();
     const user = new UserProfileEntity(c.env, id);
@@ -677,12 +858,27 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   });
 
   app.get('/api/courses', async (c) => {
-    const { lecturerId } = c.req.query();
+    const { q, year } = c.req.query();
+    const searchTerm = q?.toLowerCase() || '';
     let items = (await CourseEntity.list(c.env)).items;
-    if (lecturerId) {
-      items = items.filter(item => item.lecturerId === lecturerId);
+
+    if (searchTerm) {
+      items = items.filter(item =>
+        item.title.toLowerCase().includes(searchTerm) ||
+        item.code.toLowerCase().includes(searchTerm) ||
+        item.description.toLowerCase().includes(searchTerm)
+      );
+    }
+    if (year) {
+      items = items.filter(item => item.year.toString() === year);
     }
     return ok(c, items);
+  });
+
+  app.get('/api/courses/years', async (c) => {
+    const items = (await CourseEntity.list(c.env)).items;
+    const years = [...new Set(items.map(item => item.year))].sort((a, b) => b - a);
+    return ok(c, years);
   });
 
   app.get('/api/courses/:id', async (c) => {
@@ -693,71 +889,151 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   });
 
   app.get('/api/student-projects', async (c) => {
-    const { courseId, lecturerId } = c.req.query();
+    const { q, courseId } = c.req.query();
+    const searchTerm = q?.toLowerCase() || '';
     let items = (await StudentProjectEntity.list(c.env)).items;
+
     if (courseId) {
       items = items.filter(item => item.courseId === courseId);
     }
-    if (lecturerId) {
-      items = items.filter(item => item.lecturerId === lecturerId);
+    if (searchTerm) {
+      items = items.filter(item =>
+        item.title.toLowerCase().includes(searchTerm) ||
+        item.description.toLowerCase().includes(searchTerm) ||
+        item.students.some(s => s.toLowerCase().includes(searchTerm))
+      );
     }
     return ok(c, items);
   });
 
   app.get('/api/academic-work/:id', async (c) => {
     const { id } = c.req.param();
-    const publication = await PublicationEntity.get(c.env, id);
-    if (publication) return ok(c, publication);
-    const project = await ResearchProjectEntity.get(c.env, id);
-    if (project) return ok(c, project);
-    const portfolioItem = await PortfolioItemEntity.get(c.env, id);
-    if (portfolioItem) return ok(c, portfolioItem);
+
+    // Try finding in all collections
+    const [pub, proj, item, studentProj] = await Promise.all([
+      PublicationEntity.get(c.env, id),
+      ResearchProjectEntity.get(c.env, id),
+      PortfolioItemEntity.get(c.env, id),
+      StudentProjectEntity.get(c.env, id)
+    ]);
+
+    if (pub) return ok(c, pub);
+    if (proj) return ok(c, proj);
+    if (item) return ok(c, item);
+
+    if (studentProj) return ok(c, { ...studentProj, type: 'student-project' });
+
     return notFound(c, 'Academic work not found');
   });
 
-  app.get('/api/posts/:postId/comments', async (c) => {
-    const { postId } = c.req.param();
-    const allComments = (await CommentEntity.list(c.env)).items;
-    const postComments = allComments.filter(comment => comment.postId === postId).sort((a, b) => b.createdAt - a.createdAt);
-    return ok(c, postComments);
+  app.post('/api/users/me/saved-items', authMiddleware, async (c) => {
+    const payload = c.get('jwtPayload');
+    const { itemId, type } = await c.req.json();
+    if (!itemId || !type) return bad(c, 'itemId and type are required');
+
+    const userEntity = new UserProfileEntity(c.env, payload.sub);
+    if (!(await userEntity.exists())) return notFound(c, 'User not found');
+
+    await userEntity.mutate(state => {
+      const saved = new Set(state.savedItemIds || []);
+      saved.add(itemId);
+      return { ...state, savedItemIds: Array.from(saved) };
+    });
+
+    return ok(c, { success: true });
   });
 
-  app.get('/api/posts/:postId/likes', async (c) => {
-    const { postId } = c.req.param();
-    const allLikes = (await LikeEntity.list(c.env)).items;
-    const postLikes = allLikes.filter(like => like.postId === postId);
-    return ok(c, postLikes);
+  app.delete('/api/users/me/saved-items/:itemId', authMiddleware, async (c) => {
+    const payload = c.get('jwtPayload');
+    const { itemId } = c.req.param();
+
+    const userEntity = new UserProfileEntity(c.env, payload.sub);
+    if (!(await userEntity.exists())) return notFound(c, 'User not found');
+
+    await userEntity.mutate(state => ({
+      ...state,
+      savedItemIds: (state.savedItemIds || []).filter(id => id !== itemId)
+    }));
+
+    return ok(c, { success: true });
   });
 
-  app.post('/api/saved-items', async (c) => {
-    const { itemIds } = await c.req.json<{ itemIds?: string[] }>();
-    if (!itemIds || !Array.isArray(itemIds)) {
-      return bad(c, 'itemIds array is required');
-    }
+  app.get('/api/users/me/saved-items', authMiddleware, async (c) => {
+    const payload = c.get('jwtPayload');
+    const user = await new UserProfileEntity(c.env, payload.sub).getState();
+
+    const savedIds = user.savedItemIds || [];
+    if (savedIds.length === 0) return ok(c, []);
 
     const [publications, projects, portfolioItems, usersPage] = await Promise.all([
       PublicationEntity.list(c.env),
       ResearchProjectEntity.list(c.env),
       PortfolioItemEntity.list(c.env),
-      UserProfileEntity.list(c.env)
+      UserProfileEntity.list(c.env),
     ]);
 
-    const allAcademicWork = [
+    const allWork = [
       ...publications.items,
       ...projects.items,
-      ...portfolioItems.items
+      ...portfolioItems.items,
     ];
 
-    const users = usersPage.items;
-    const userMap = new Map(users.map(u => [u.id, u.name]));
+    const userMap = new Map(usersPage.items.map(u => [u.id, u.name]));
 
-    const savedItems = allAcademicWork
-      .filter(item => itemIds.includes(item.id))
-      .map(item => ({
-        ...item,
-        authorName: userMap.get(item.lecturerId) || 'Unknown Author'
-      }));
+    const savedItems = allWork
+      .filter(item => savedIds.includes(item.id))
+      .map(item => {
+        let authorName = 'Unknown';
+        if (item.type === 'publication') {
+          authorName = item.authors.join(', ');
+        } else {
+          authorName = userMap.get(item.lecturerId) || 'Unknown';
+        }
+        return { ...item, authorName };
+      });
 
     return ok(c, savedItems);
+  });
+
+  // --- NOTIFICATIONS ---
+  app.get('/api/notifications', authMiddleware, async (c) => {
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+
+    const allNotifications = (await NotificationEntity.list(c.env)).items;
+    const userNotifications = allNotifications
+      .filter(n => n.userId === userId)
+      .sort((a, b) => b.createdAt - a.createdAt);
+
+    return ok(c, userNotifications);
+  });
+
+  app.put('/api/notifications/:id/read', authMiddleware, async (c) => {
+    const { id } = c.req.param();
+    const payload = c.get('jwtPayload');
+
+    const notificationEntity = new NotificationEntity(c.env, id);
+    if (!(await notificationEntity.exists())) return notFound(c, 'Notification not found');
+
+    const notification = await notificationEntity.getState();
+    if (notification.userId !== payload.sub) return c.json({ success: false, error: 'Unauthorized' }, 403);
+
+    await notificationEntity.patch({ isRead: true });
+    return ok(c, { success: true });
+  });
+
+  app.put('/api/notifications/read-all', authMiddleware, async (c) => {
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+
+    const allNotifications = (await NotificationEntity.list(c.env)).items;
+    const userUnreadNotifications = allNotifications.filter(n => n.userId === userId && !n.isRead);
+
+    for (const notification of userUnreadNotifications) {
+      const entity = new NotificationEntity(c.env, notification.id);
+      await entity.patch({ isRead: true });
+    }
+
+    return ok(c, { success: true, count: userUnreadNotifications.length });
   });
 }

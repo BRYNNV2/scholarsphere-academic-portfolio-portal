@@ -213,6 +213,22 @@ const SidebarTrigger = React.forwardRef<HTMLButtonElement, React.HTMLAttributes<
 )
 SidebarTrigger.displayName = "SidebarTrigger"
 
+const SidebarMenuBadge = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "pointer-events-none inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-medium tabular-nums",
+          className
+        )}
+        {...props}
+      />
+    )
+  }
+)
+SidebarMenuBadge.displayName = "SidebarMenuBadge"
+
 export {
   useSidebar,
   SidebarProvider,
@@ -226,4 +242,5 @@ export {
   SidebarMenuButton,
   SidebarInset,
   SidebarTrigger,
+  SidebarMenuBadge,
 }

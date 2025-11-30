@@ -31,6 +31,7 @@ interface CommentsSectionProps {
 export function CommentsSection({ postId, postOwnerId }: CommentsSectionProps) {
   const queryClient = useQueryClient();
   const [comment, setComment] = useState('');
+  const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
   const currentUser = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
@@ -57,9 +58,10 @@ export function CommentsSection({ postId, postOwnerId }: CommentsSectionProps) {
   });
 
   const commentMutation = useMutation({
-    mutationFn: (content: string) => api.post('/api/comments', { postId, content }),
+    mutationFn: (content: string) => api.post('/api/comments', { postId, content, parentId: replyingTo?.id }),
     onSuccess: () => {
       setComment('');
+      setReplyingTo(null);
       queryClient.invalidateQueries({ queryKey: ['comments', postId] });
       toast.success('Comment posted!');
     },
@@ -79,13 +81,24 @@ export function CommentsSection({ postId, postOwnerId }: CommentsSectionProps) {
     }
   });
 
+  const likeCommentMutation = useMutation({
+    mutationFn: ({ commentId, hasLiked }: { commentId: string, hasLiked: boolean }) =>
+      hasLiked ? api.delete(`/api/comments/${commentId}/like`) : api.post(`/api/comments/${commentId}/like`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
+    },
+    onError: (error) => {
+      toast.error((error as Error).message);
+    }
+  });
+
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!comment.trim()) return;
     commentMutation.mutate(comment.trim());
   };
 
-  const canInteract = isAuthenticated && currentUser?.role === 'student';
+  const canInteract = isAuthenticated && !!currentUser;
 
   const canDelete = (comment: Comment) => {
     if (!currentUser) return false;
@@ -116,8 +129,14 @@ export function CommentsSection({ postId, postOwnerId }: CommentsSectionProps) {
             <AvatarFallback>{currentUser.name.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
+            {replyingTo && (
+              <div className="flex items-center justify-between bg-muted/50 p-2 rounded-md mb-2 text-sm">
+                <span>Replying to <strong>{replyingTo.userName}</strong></span>
+                <Button variant="ghost" size="sm" className="h-auto p-1" onClick={() => setReplyingTo(null)}>Cancel</Button>
+              </div>
+            )}
             <Textarea
-              placeholder="Add a comment..."
+              placeholder={replyingTo ? `Reply to ${replyingTo.userName}...` : "Add a comment..."}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               className="mb-2" />
@@ -139,46 +158,78 @@ export function CommentsSection({ postId, postOwnerId }: CommentsSectionProps) {
             </div>
           </div> :
           comments && comments.length > 0 ?
-            comments.map((c) => (
-              <div key={c.id} className="flex items-start gap-4 group">
-                <Avatar className="h-9 w-9">
-                  <AvatarImage src={c.userPhotoUrl} alt={c.userName} />
-                  <AvatarFallback>{c.userName.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="font-semibold">{c.userName}</span>
-                      <span className="text-muted-foreground">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}</span>
+            comments.map((c) => {
+              const isLiked = c.likeIds?.includes(currentUser?.id || '');
+              const likeCount = c.likeIds?.length || 0;
+
+              return (
+                <div key={c.id} className={cn("flex items-start gap-4 group", c.parentId && "pl-12")}>
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={c.userPhotoUrl} alt={c.userName} />
+                    <AvatarFallback>{c.userName.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="font-semibold">{c.userName}</span>
+                        <span className="text-muted-foreground">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}</span>
+                      </div>
+                      {canDelete(c) && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive">
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Comment?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this comment? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteCommentMutation.mutate(c.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
-                    {canDelete(c) && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive">
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Comment?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete this comment? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteCommentMutation.mutate(c.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                    <p className="text-sm text-muted-foreground mt-1">{c.content}</p>
+
+                    {/* Comment Actions */}
+                    {canInteract && (
+                      <div className="flex items-center gap-4 mt-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={cn("h-auto p-0 text-xs text-muted-foreground hover:text-foreground", isLiked && "text-red-500 hover:text-red-600")}
+                          onClick={() => likeCommentMutation.mutate({ commentId: c.id, hasLiked: !!isLiked })}
+                        >
+                          <Heart className={cn("mr-1 h-3 w-3", isLiked && "fill-current")} />
+                          {likeCount > 0 ? likeCount : 'Like'}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+                          onClick={() => {
+                            setReplyingTo(c);
+                            // Scroll to input?
+                            document.querySelector('textarea')?.focus();
+                          }}
+                        >
+                          Reply
+                        </Button>
+                      </div>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">{c.content}</p>
                 </div>
-              </div>
-            )) :
+              )
+            }) :
             <p className="text-sm text-muted-foreground">No comments yet.</p>
         }
       </div>

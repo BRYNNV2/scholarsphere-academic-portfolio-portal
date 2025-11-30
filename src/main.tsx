@@ -36,6 +36,7 @@ import { SupportPage } from './pages/dashboard/SupportPage';
 import { TermsAndPoliciesPage } from './pages/dashboard/TermsAndPoliciesPage';
 import { CoursesPage } from './pages/dashboard/CoursesPage';
 import { CoursesDirectoryPage } from './pages/CoursesDirectoryPage';
+import NotificationsPage from "./pages/dashboard/NotificationsPage";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/users/:id",
+    element: <PortfolioPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/u/:username",
     element: <PortfolioPage />,
     errorElement: <RouteErrorBoundary />,
   },
@@ -132,6 +138,10 @@ const router = createBrowserRouter([
       {
         path: "courses",
         element: <CoursesPage />,
+      },
+      {
+        path: "notifications",
+        element: <NotificationsPage />,
       },
       {
         path: "settings",

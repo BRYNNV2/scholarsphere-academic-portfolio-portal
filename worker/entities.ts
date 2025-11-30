@@ -1,5 +1,5 @@
 import { IndexedEntity } from "./core-utils";
-import type { UserProfile, Publication, ResearchProject, PortfolioItem, Comment, Like, Course, StudentProject } from "@shared/types";
+import type { UserProfile, Publication, ResearchProject, PortfolioItem, Comment, Like, Course, StudentProject, Notification } from "@shared/types";
 import { MOCK_PUBLICATIONS, MOCK_PROJECTS, MOCK_PORTFOLIO_ITEMS } from "@shared/mock-data";
 import { Env } from "./core-utils";
 
@@ -9,6 +9,7 @@ export class UserProfileEntity extends IndexedEntity<UserProfile> {
   static readonly indexName = "users";
   static readonly initialState: UserProfile = {
     id: "",
+    username: "",
     name: "",
     role: 'lecturer',
     title: "",
@@ -137,6 +138,7 @@ export class StudentProjectEntity extends IndexedEntity<StudentProject> {
   static readonly indexName = "studentProjects";
   static readonly initialState: StudentProject = {
     id: "",
+    type: 'student-project',
     courseId: "",
     lecturerId: "",
     title: "",
@@ -146,6 +148,12 @@ export class StudentProjectEntity extends IndexedEntity<StudentProject> {
     url: "",
     createdAt: 0,
   };
+
+  static async get(env: Env, id: string): Promise<StudentProject | null> {
+    const inst = new this(env, id);
+    if (!(await inst.exists())) return null;
+    return inst.getState();
+  }
 }
 
 // Comment ENTITY
@@ -159,8 +167,16 @@ export class CommentEntity extends IndexedEntity<Comment> {
     userName: "",
     userPhotoUrl: "",
     content: "",
+    likeIds: [],
+    parentId: undefined,
     createdAt: 0,
   };
+
+  static async get(env: Env, id: string): Promise<Comment | null> {
+    const inst = new this(env, id);
+    if (!(await inst.exists())) return null;
+    return inst.getState();
+  }
 }
 
 // Like ENTITY
@@ -171,5 +187,23 @@ export class LikeEntity extends IndexedEntity<Like> {
     id: "",
     postId: "",
     userId: "",
+  };
+}
+
+// Notification ENTITY
+export class NotificationEntity extends IndexedEntity<Notification> {
+  static readonly entityName = "notification";
+  static readonly indexName = "notifications";
+  static readonly initialState: Notification = {
+    id: "",
+    userId: "",
+    type: 'system',
+    actorId: "",
+    actorName: "",
+    resourceId: "",
+    resourceType: 'publication',
+    message: "",
+    isRead: false,
+    createdAt: 0,
   };
 }

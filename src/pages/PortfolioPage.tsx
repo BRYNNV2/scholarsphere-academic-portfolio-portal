@@ -73,12 +73,17 @@ function PortfolioPageSkeleton() {
 }
 
 export function PortfolioPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id, username } = useParams<{ id: string; username: string }>();
 
   const { data: user, isLoading: isLoadingUser } = useQuery<UserProfile>({
-    queryKey: ['user', id],
-    queryFn: () => api.get(`/api/users/${id}`),
-    enabled: !!id
+    queryKey: ['user', id || username],
+    queryFn: () => {
+      if (username) {
+        return api.get(`/api/users/username/${username}`);
+      }
+      return api.get(`/api/users/${id}`);
+    },
+    enabled: !!id || !!username
   });
 
   const { data: publications, isLoading: isLoadingPubs } = useQuery<Publication[]>({
@@ -97,15 +102,15 @@ export function PortfolioPage() {
   });
 
   const { data: courses, isLoading: isLoadingCourses } = useQuery<Course[]>({
-    queryKey: ['courses', id],
-    queryFn: () => api.get(`/api/courses?lecturerId=${id}`),
-    enabled: !!id
+    queryKey: ['courses', user?.id],
+    queryFn: () => api.get(`/api/courses?lecturerId=${user?.id}`),
+    enabled: !!user?.id
   });
 
   const { data: studentProjects, isLoading: isLoadingStudentProjects } = useQuery<StudentProject[]>({
-    queryKey: ['student-projects', id],
-    queryFn: () => api.get(`/api/student-projects?lecturerId=${id}`),
-    enabled: !!id
+    queryKey: ['student-projects', user?.id],
+    queryFn: () => api.get(`/api/student-projects?lecturerId=${user?.id}`),
+    enabled: !!user?.id
   });
 
   const isLoading = isLoadingUser || isLoadingPubs || isLoadingProjs || isLoadingPortfolio || isLoadingCourses || isLoadingStudentProjects;

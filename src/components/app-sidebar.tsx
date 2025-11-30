@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Home, User, BookCopy, FlaskConical, BookOpenCheck, Globe, LogOut, Settings, Briefcase, ShieldQuestion, MessageSquareWarning, FileText, GraduationCap } from "lucide-react";
+import { Home, User, BookCopy, FlaskConical, BookOpenCheck, Globe, LogOut, Settings, Briefcase, ShieldQuestion, MessageSquareWarning, FileText, GraduationCap, Bell } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -9,14 +9,29 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarGroupHeader,
+  SidebarMenuBadge,
 } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/stores/auth-store";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api-client";
+import { Notification } from "@shared/types";
 
 export function AppSidebar(): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
+
+  const { data: notifications } = useQuery<Notification[]>({
+    queryKey: ["notifications"],
+    queryFn: async () => {
+      return await api<Notification[]>("/api/notifications");
+    },
+    enabled: !!user,
+    refetchInterval: 30000, // Poll every 30 seconds
+  });
+
+  const unreadCount = notifications?.filter((n) => !n.isRead).length || 0;
 
   const handleLogout = () => {
     logout();
@@ -40,6 +55,16 @@ export function AppSidebar(): JSX.Element {
             <SidebarMenuItem>
               <SidebarMenuButton isActive={isActive("/dashboard")} onClick={() => navigate('/dashboard')}>
                 <Home /> <span>Dashboard</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton isActive={isActive("/dashboard/notifications")} onClick={() => navigate('/dashboard/notifications')}>
+                <Bell /> <span>Notifications</span>
+                {unreadCount > 0 && (
+                  <SidebarMenuBadge className="ml-auto bg-primary text-primary-foreground hover:bg-primary/90">
+                    {unreadCount}
+                  </SidebarMenuBadge>
+                )}
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>

@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 import { Bookmark, User } from 'lucide-react';
 import { RecentActivityFeed } from '@/components/RecentActivityFeed';
+
 function SmallAcademicWorkCard({ item }: { item: SavedItem }) {
   const itemUrl = `/work/${item.id}`;
   return (
@@ -23,21 +24,25 @@ function SmallAcademicWorkCard({ item }: { item: SavedItem }) {
     </Link>
   );
 }
+
 export function StudentDashboard() {
   const currentUser = useAuthStore((state) => state.user);
   const userId = currentUser?.id;
+
   const { data: profile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
     queryKey: ['user', userId],
     queryFn: () => api.get(`/api/users/${userId}`),
     enabled: !!userId,
   });
-  const savedItemIds = profile?.savedItemIds;
+
   const { data: savedItems, isLoading: isLoadingSavedItems } = useQuery<SavedItem[]>({
-    queryKey: ['saved-items', savedItemIds],
-    queryFn: () => api.post('/api/saved-items', { itemIds: savedItemIds }),
-    enabled: !!savedItemIds && savedItemIds.length > 0,
+    queryKey: ['saved-items', userId],
+    queryFn: () => api.get('/api/users/me/saved-items'),
+    enabled: !!userId,
   });
-  const isLoading = isLoadingProfile || (!!savedItemIds && savedItemIds.length > 0 && isLoadingSavedItems);
+
+  const isLoading = isLoadingProfile || isLoadingSavedItems;
+
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -49,12 +54,14 @@ export function StudentDashboard() {
       </div>
     );
   }
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Student Dashboard</h1>
         <p className="text-muted-foreground">Welcome, {currentUser?.name}! Here's your activity overview.</p>
       </div>
+
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
         <div className="lg:col-span-1 space-y-6">
           <Card>
@@ -72,6 +79,7 @@ export function StudentDashboard() {
               ) : <p className="text-sm text-muted-foreground">No saved items yet. You can save items from any directory page.</p>}
             </CardContent>
           </Card>
+
           <Card className="hover:border-primary transition-colors">
             <Link to="/dashboard/profile" className="block h-full">
               <CardHeader>
@@ -84,6 +92,7 @@ export function StudentDashboard() {
             </Link>
           </Card>
         </div>
+
         <RecentActivityFeed />
       </div>
     </div>

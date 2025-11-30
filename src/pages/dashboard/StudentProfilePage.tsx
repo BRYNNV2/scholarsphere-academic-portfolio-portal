@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from "../../lib/api-client-fixed";
 import { UserProfile } from '@shared/types';
+import { Link } from 'react-router-dom';
+import { getProfileUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,28 +15,35 @@ import { toast } from '@/components/ui/sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/stores/auth-store';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 const studentProfileSchema = z.object({
   photoUrl: z.string().optional()
 });
+
 type StudentProfileFormData = z.infer<typeof studentProfileSchema>;
+
 export function StudentProfilePage() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
   const updateUser = useAuthStore((state) => state.updateUser);
   const userId = currentUser?.id;
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { data: profile, isLoading, isError } = useQuery<UserProfile>({
     queryKey: ['user', userId],
     queryFn: () => api.get(`/api/users/${userId}`),
     enabled: !!userId
   });
+
   const form = useForm<StudentProfileFormData>({
     resolver: zodResolver(studentProfileSchema),
     defaultValues: {
       photoUrl: ''
     }
   });
+
   const photoUrlValue = form.watch('photoUrl');
+
   useEffect(() => {
     if (profile) {
       form.reset({
@@ -42,9 +51,10 @@ export function StudentProfilePage() {
       });
     }
   }, [profile, form]);
+
   const mutation = useMutation({
     mutationFn: (data: Partial<UserProfile>) =>
-    api.put<UserProfile>(`/api/users/${userId}`, data),
+      api.put<UserProfile>(`/api/users/${userId}`, data),
     onSuccess: (updatedProfile) => {
       toast.success('Profile picture updated successfully!');
       queryClient.invalidateQueries({ queryKey: ['user', userId] });
@@ -54,21 +64,26 @@ export function StudentProfilePage() {
       toast.error(`Failed to update profile: ${(error as Error).message}`);
     }
   });
+
   const onSubmit = (data: StudentProfileFormData) => {
     mutation.mutate(data);
   };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
     const MAX_FILE_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
       toast.error('File is too large. Maximum size is 2MB.');
       return;
     }
+
     if (!file.type.startsWith('image/')) {
       toast.error('Invalid file type. Please select an image.');
       return;
     }
+
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
@@ -79,6 +94,7 @@ export function StudentProfilePage() {
     };
     reader.readAsDataURL(file);
   };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -100,18 +116,26 @@ export function StudentProfilePage() {
             <Skeleton className="h-10 w-24" />
           </CardContent>
         </Card>
-      </div>);
-
+      </div>
+    );
   }
+
   if (isError || !profile) {
     return <div>Error loading profile data. Please try again later.</div>;
   }
+
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Manage Profile</h1>
-        <p className="text-muted-foreground">Update your profile picture.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Manage Profile</h1>
+          <p className="text-muted-foreground">Update your profile picture.</p>
+        </div>
+        <Button variant="outline" asChild>
+          <Link to={getProfileUrl(profile)} target="_blank">View Public Profile</Link>
+        </Button>
       </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Profile Picture</CardTitle>
@@ -123,8 +147,8 @@ export function StudentProfilePage() {
               <FormField
                 control={form.control}
                 name="photoUrl"
-                render={({ field }) =>
-                <FormItem>
+                render={({ field }) => (
+                  <FormItem>
                     <FormLabel>Your Avatar</FormLabel>
                     <div className="flex items-center gap-4">
                       <Avatar className="h-24 w-24">
@@ -134,18 +158,18 @@ export function StudentProfilePage() {
                       <div className="flex-grow">
                         <FormControl>
                           <Input
-                          type="file"
-                          ref={fileInputRef}
-                          className="hidden"
-                          accept="image/png, image/jpeg, image/gif"
-                          onChange={handleFileChange} />
-
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/png, image/jpeg, image/gif"
+                            onChange={handleFileChange}
+                          />
                         </FormControl>
                         <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => fileInputRef.current?.click()}>
-
+                          type="button"
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
                           Upload Image
                         </Button>
                         <FormDescription className="mt-2">
@@ -155,7 +179,8 @@ export function StudentProfilePage() {
                       </div>
                     </div>
                   </FormItem>
-                } />
+                )}
+              />
 
               <Button type="submit" disabled={mutation.isPending || !form.formState.isDirty}>
                 {mutation.isPending ? 'Saving...' : 'Save Changes'}
@@ -164,6 +189,6 @@ export function StudentProfilePage() {
           </Form>
         </CardContent>
       </Card>
-    </div>);
-
+    </div>
+  );
 }

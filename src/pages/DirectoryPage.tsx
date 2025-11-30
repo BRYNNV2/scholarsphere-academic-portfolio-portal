@@ -13,6 +13,7 @@ import { UserProfile } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from 'react-use';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getProfileUrl } from '@/lib/utils';
 function LecturerCardSkeleton() {
   return (
     <Card>
@@ -91,7 +92,7 @@ export function DirectoryPage() {
                 <SelectContent>
                   <SelectItem value="all">All Universities</SelectItem>
                   {availableUniversities.map((uni) =>
-                  <SelectItem key={uni} value={uni}>{uni}</SelectItem>
+                    <SelectItem key={uni} value={uni}>{uni}</SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -104,7 +105,7 @@ export function DirectoryPage() {
                 <SelectContent>
                   <SelectItem value="all">All Departments</SelectItem>
                   {availableDepartments.map((dep) =>
-                  <SelectItem key={dep} value={dep}>{dep}</SelectItem>
+                    <SelectItem key={dep} value={dep}>{dep}</SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -112,37 +113,37 @@ export function DirectoryPage() {
           </div>
           <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {isLoading ?
-            Array.from({ length: 6 }).map((_, index) => <LecturerCardSkeleton key={index} />) :
-            isError ?
-            <p className="col-span-full text-center text-destructive">Failed to load lecturers.</p> :
+              Array.from({ length: 6 }).map((_, index) => <LecturerCardSkeleton key={index} />) :
+              isError ?
+                <p className="col-span-full text-center text-destructive">Failed to load lecturers.</p> :
 
-            lecturers?.map((lecturer, index) =>
-            <motion.div
-              key={lecturer.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.05 }}>
+                lecturers?.map((lecturer, index) =>
+                  <motion.div
+                    key={lecturer.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.05 }}>
 
-                  <Link to={`/users/${lecturer.id}`} className="block h-full">
-                    <Card className="h-full transition-all hover:shadow-xl hover:-translate-y-1">
-                      <CardContent className="p-6 flex flex-col items-center text-center">
-                        <Avatar className="h-24 w-24 mb-4">
-                          <AvatarImage src={lecturer.photoUrl} alt={lecturer.name} />
-                          <AvatarFallback>{lecturer.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <h3 className="text-xl font-semibold text-foreground">{lecturer.name}</h3>
-                        <p className="text-primary">{lecturer.title}</p>
-                        <p className="text-sm text-muted-foreground mt-1">{lecturer.university}</p>
-                        <div className="mt-4 flex flex-wrap justify-center gap-2">
-                          {lecturer.specializations.slice(0, 3).map((spec) =>
-                      <Badge key={spec} variant="secondary">{spec}</Badge>
-                      )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </motion.div>
-            )
+                    <Link to={getProfileUrl(lecturer)} className="block h-full">
+                      <Card className="h-full transition-all hover:shadow-xl hover:-translate-y-1">
+                        <CardContent className="p-6 flex flex-col items-center text-center">
+                          <Avatar className="h-24 w-24 mb-4">
+                            <AvatarImage src={lecturer.photoUrl} alt={lecturer.name} />
+                            <AvatarFallback>{lecturer.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <h3 className="text-xl font-semibold text-foreground">{lecturer.name}</h3>
+                          <p className="text-primary">{lecturer.title}</p>
+                          <p className="text-sm text-muted-foreground mt-1">{lecturer.university}</p>
+                          <div className="mt-4 flex flex-wrap justify-center gap-2">
+                            {lecturer.specializations.slice(0, 3).map((spec) =>
+                              <Badge key={spec} variant="secondary">{spec}</Badge>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </motion.div>
+                )
             }
           </div>
         </div>

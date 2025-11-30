@@ -49,11 +49,25 @@ export interface PortfolioItem {
   createdAt: number;
 }
 
-export type AcademicWork = Publication | ResearchProject | PortfolioItem;
+export interface StudentProject {
+  id: string;
+  type: 'student-project';
+  courseId: string;
+  lecturerId: string;
+  title: string;
+  students: string[]; // Names of students
+  description: string;
+  thumbnailUrl?: string;
+  url?: string;
+  createdAt: number;
+}
+
+export type AcademicWork = Publication | ResearchProject | PortfolioItem | StudentProject;
 export type SavedItem = AcademicWork & { authorName: string };
 
 export interface UserProfile {
   id: string;
+  username?: string;
   name: string;
   role: 'lecturer' | 'student';
   title: string; // e.g., "Professor of Computer Science"
@@ -83,6 +97,8 @@ export interface Comment {
   userName: string;
   userPhotoUrl: string;
   content: string;
+  likeIds?: string[];
+  parentId?: string;
   createdAt: number; // timestamp
 }
 
@@ -118,14 +134,17 @@ export interface Course {
   createdAt: number;
 }
 
-export interface StudentProject {
+export interface Notification {
   id: string;
-  courseId: string;
-  lecturerId: string;
-  title: string;
-  students: string[]; // Names of students
-  description: string;
-  thumbnailUrl?: string;
-  url?: string;
+  userId: string; // The user receiving the notification
+  type: 'comment' | 'like' | 'system';
+  actorId: string; // The user who performed the action
+  actorName: string;
+  actorPhotoUrl?: string;
+  resourceId: string; // The ID of the post/resource
+  resourceType: 'publication' | 'project' | 'portfolio' | 'course';
+  resourceTitle?: string; // Optional title for context
+  message: string;
+  isRead: boolean;
   createdAt: number;
 }
