@@ -103,7 +103,7 @@ export function AcademicWorkDetailPage() {
           </>
         );
 
-      case 'student-project':
+      case 'student-project': {
         // Cast to any because StudentProject is not in AcademicWork union yet
         const sp = item as any;
         return (
@@ -112,6 +112,7 @@ export function AcademicWorkDetailPage() {
             <p className="mt-6 text-lg leading-relaxed whitespace-pre-wrap">{item.description}</p>
           </>
         );
+      }
 
       default:
         return null;
