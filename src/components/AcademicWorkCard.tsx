@@ -82,7 +82,7 @@ export function AcademicWorkCard({ item, author, index }: AcademicWorkCardProps)
             </CardTitle>
             {item.type === 'portfolio' && <Badge variant="outline">{item.category}</Badge>}
           </div>
-          {item.type !== 'publication' && <CardDescription>{item.year}</CardDescription>}
+          {item.type !== 'publication' && item.type !== 'student-project' && <CardDescription>{item.year}</CardDescription>}
         </CardHeader>
         <CardContent className="flex-grow flex flex-col">
           <div className="text-sm text-muted-foreground flex-grow">

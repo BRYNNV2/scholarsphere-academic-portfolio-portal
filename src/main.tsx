@@ -37,130 +37,136 @@ import { TermsAndPoliciesPage } from './pages/dashboard/TermsAndPoliciesPage';
 import { CoursesPage } from './pages/dashboard/CoursesPage';
 import { CoursesDirectoryPage } from './pages/CoursesDirectoryPage';
 import NotificationsPage from "./pages/dashboard/NotificationsPage";
+import { RootLayout } from './components/layout/RootLayout';
 
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: <HomePage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/login",
-    element: <LoginPage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/register",
-    element: <RegistrationPage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/directory",
-    element: <DirectoryPage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/users/:id",
-    element: <PortfolioPage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/u/:username",
-    element: <PortfolioPage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/publications",
-    element: <PublicationsPage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/projects",
-    element: <ResearchPage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/portfolio",
-    element: <PortfolioDirectoryPage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/courses",
-    element: <CoursesDirectoryPage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/work/:id",
-    element: <AcademicWorkDetailPage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/terms-of-service",
-    element: <TermsOfServicePage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/privacy-policy",
-    element: <PrivacyPolicyPage />,
-    errorElement: <RouteErrorBoundary />,
-  },
-  {
-    path: "/dashboard",
-    element: (
-      <ProtectedRoute>
-        <DashboardLayout />
-      </ProtectedRoute>
-    ),
-    errorElement: <RouteErrorBoundary />,
+    element: <RootLayout />,
     children: [
       {
-        index: true,
-        element: <DashboardPage />,
+        path: "/",
+        element: <HomePage />,
+        errorElement: <RouteErrorBoundary />,
       },
       {
-        path: "profile",
-        element: <DashboardProfileRouterPage />,
+        path: "/login",
+        element: <LoginPage />,
+        errorElement: <RouteErrorBoundary />,
       },
       {
-        path: "publications",
-        element: <DashboardPublicationsPage />,
+        path: "/register",
+        element: <RegistrationPage />,
+        errorElement: <RouteErrorBoundary />,
       },
       {
-        path: "research",
-        element: <DashboardResearchPage />,
+        path: "/directory",
+        element: <DirectoryPage />,
+        errorElement: <RouteErrorBoundary />,
       },
       {
-        path: "portfolio",
-        element: <DashboardPortfolioPage />,
+        path: "/users/:id",
+        element: <PortfolioPage />,
+        errorElement: <RouteErrorBoundary />,
       },
       {
-        path: "courses",
-        element: <CoursesPage />,
+        path: "/u/:username",
+        element: <PortfolioPage />,
+        errorElement: <RouteErrorBoundary />,
       },
       {
-        path: "notifications",
-        element: <NotificationsPage />,
+        path: "/publications",
+        element: <PublicationsPage />,
+        errorElement: <RouteErrorBoundary />,
       },
       {
-        path: "settings",
-        element: <DashboardSettingsPage />,
+        path: "/projects",
+        element: <ResearchPage />,
+        errorElement: <RouteErrorBoundary />,
       },
       {
-        path: "support",
-        element: <SupportPage />,
+        path: "/portfolio",
+        element: <PortfolioDirectoryPage />,
+        errorElement: <RouteErrorBoundary />,
       },
       {
-        path: "report-problem",
-        element: <ReportProblemPage />,
+        path: "/courses",
+        element: <CoursesDirectoryPage />,
+        errorElement: <RouteErrorBoundary />,
       },
       {
-        path: "terms-and-policies",
-        element: <TermsAndPoliciesPage />,
+        path: "/work/:id",
+        element: <AcademicWorkDetailPage />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: "/terms-of-service",
+        element: <TermsOfServicePage />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: "/privacy-policy",
+        element: <PrivacyPolicyPage />,
+        errorElement: <RouteErrorBoundary />,
+      },
+      {
+        path: "/dashboard",
+        element: (
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        ),
+        errorElement: <RouteErrorBoundary />,
+        children: [
+          {
+            index: true,
+            element: <DashboardPage />,
+          },
+          {
+            path: "profile",
+            element: <DashboardProfileRouterPage />,
+          },
+          {
+            path: "publications",
+            element: <DashboardPublicationsPage />,
+          },
+          {
+            path: "research",
+            element: <DashboardResearchPage />,
+          },
+          {
+            path: "portfolio",
+            element: <DashboardPortfolioPage />,
+          },
+          {
+            path: "courses",
+            element: <CoursesPage />,
+          },
+          {
+            path: "notifications",
+            element: <NotificationsPage />,
+          },
+          {
+            path: "settings",
+            element: <DashboardSettingsPage />,
+          },
+          {
+            path: "support",
+            element: <SupportPage />,
+          },
+          {
+            path: "report-problem",
+            element: <ReportProblemPage />,
+          },
+          {
+            path: "terms-and-policies",
+            element: <TermsAndPoliciesPage />,
+          },
+        ]
       },
     ]
-  },
+  }
 ]);
 
 createRoot(document.getElementById('root')!).render(

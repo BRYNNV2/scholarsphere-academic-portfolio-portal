@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,6 +16,7 @@ import { toast } from '@/components/ui/sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/stores/auth-store';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ImageCropper } from '@/components/ImageCropper';
 
 const profileSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -41,6 +42,8 @@ export function DashboardProfilePage() {
   const updateUser = useAuthStore((state) => state.updateUser);
   const userId = currentUser?.id;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [tempImageSrc, setTempImageSrc] = useState<string | null>(null);
 
   const { data: profile, isLoading, isError } = useQuery<UserProfile>({
     queryKey: ['user', userId],
@@ -122,12 +125,18 @@ export function DashboardProfilePage() {
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
-      form.setValue('photoUrl', result, { shouldValidate: true, shouldDirty: true });
+      setTempImageSrc(result);
+      setCropperOpen(true);
     };
     reader.onerror = () => {
       toast.error('Failed to read file.');
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = (croppedImage: string) => {
+    form.setValue('photoUrl', croppedImage, { shouldValidate: true, shouldDirty: true });
+    setCropperOpen(false);
   };
 
   if (isLoading) {
@@ -363,6 +372,14 @@ export function DashboardProfilePage() {
           </Form>
         </CardContent>
       </Card>
+
+
+      <ImageCropper
+        imageSrc={tempImageSrc}
+        open={cropperOpen}
+        onOpenChange={setCropperOpen}
+        onCropComplete={handleCropComplete}
+      />
     </div>
   );
 }
