@@ -42,7 +42,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-12 pt-8 border-t text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} ScholarSphere. Built with KINK FEBRY HAYUKK.</p>
+          <p>&copy; {new Date().getFullYear()} ScholarSphere. Built with Team Kelompok 1.</p>
         </div>
       </div>
     </footer>

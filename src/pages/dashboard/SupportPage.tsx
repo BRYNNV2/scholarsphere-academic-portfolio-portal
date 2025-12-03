@@ -59,7 +59,7 @@ export function SupportPage() {
             <div>
               <p className="font-medium">Email Support</p>
               <a href="mailto:support@scholarsphere.com" className="text-sm text-primary hover:underline">
-                support@scholarsphere.com
+                kingrembo6@gmail.com
               </a>
             </div>
           </div>
@@ -67,7 +67,7 @@ export function SupportPage() {
             <Phone className="h-5 w-5 text-muted-foreground" />
             <div>
               <p className="font-medium">Phone Support</p>
-              <p className="text-sm text-muted-foreground">(555) 123-4567</p>
+              <p className="text-sm text-muted-foreground">(+62) 895-6035-67192</p>
             </div>
           </div>
         </CardContent>

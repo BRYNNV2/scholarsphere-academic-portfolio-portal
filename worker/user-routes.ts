@@ -1036,4 +1036,32 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
 
     return ok(c, { success: true, count: userUnreadNotifications.length });
   });
+
+  app.delete('/api/notifications/:id', authMiddleware, async (c) => {
+    const { id } = c.req.param();
+    const payload = c.get('jwtPayload');
+
+    const notificationEntity = new NotificationEntity(c.env, id);
+    if (!(await notificationEntity.exists())) return notFound(c, 'Notification not found');
+
+    const notification = await notificationEntity.getState();
+    if (notification.userId !== payload.sub) return c.json({ success: false, error: 'Unauthorized' }, 403);
+
+    await NotificationEntity.delete(c.env, id);
+    return ok(c, { success: true, id });
+  });
+
+  app.delete('/api/notifications', authMiddleware, async (c) => {
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+
+    const allNotifications = (await NotificationEntity.list(c.env)).items;
+    const userNotifications = allNotifications.filter(n => n.userId === userId);
+
+    for (const notification of userNotifications) {
+      await NotificationEntity.delete(c.env, notification.id);
+    }
+
+    return ok(c, { success: true, count: userNotifications.length });
+  });
 }

@@ -43,6 +43,26 @@ export default function NotificationsPage() {
         },
     });
 
+    const deleteMutation = useMutation({
+        mutationFn: async (id: string) => {
+            await api(`/api/notifications/${id}`, { method: "DELETE" });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["notifications"] });
+            toast.success("Notification deleted");
+        },
+    });
+
+    const deleteAllMutation = useMutation({
+        mutationFn: async () => {
+            await api("/api/notifications", { method: "DELETE" });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["notifications"] });
+            toast.success("All notifications cleared");
+        },
+    });
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[50vh]">
@@ -67,20 +87,40 @@ export default function NotificationsPage() {
                         </p>
                     </div>
                 </div>
-                {unreadCount > 0 && (
-                    <Button
-                        variant="outline"
-                        onClick={() => markAllReadMutation.mutate()}
-                        disabled={markAllReadMutation.isPending}
-                    >
-                        {markAllReadMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        ) : (
-                            <Check className="h-4 w-4 mr-2" />
-                        )}
-                        Mark all as read
-                    </Button>
-                )}
+                <div className="flex gap-2">
+                    {unreadCount > 0 && (
+                        <Button
+                            variant="outline"
+                            onClick={() => markAllReadMutation.mutate()}
+                            disabled={markAllReadMutation.isPending}
+                        >
+                            {markAllReadMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : (
+                                <Check className="h-4 w-4 mr-2" />
+                            )}
+                            Mark all as read
+                        </Button>
+                    )}
+                    {notifications && notifications.length > 0 && (
+                        <Button
+                            variant="destructive"
+                            onClick={() => {
+                                if (confirm("Are you sure you want to clear all notifications?")) {
+                                    deleteAllMutation.mutate();
+                                }
+                            }}
+                            disabled={deleteAllMutation.isPending}
+                        >
+                            {deleteAllMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : (
+                                <Trash2 className="h-4 w-4 mr-2" />
+                            )}
+                            Clear all
+                        </Button>
+                    )}
+                </div>
             </div>
 
             <div className="space-y-4">
@@ -127,17 +167,28 @@ export default function NotificationsPage() {
                                         {formatDistanceToNow(notification.createdAt, { addSuffix: true })}
                                     </p>
                                 </div>
-                                {!notification.isRead && (
+                                <div className="flex gap-1">
+                                    {!notification.isRead && (
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                            onClick={() => markReadMutation.mutate(notification.id)}
+                                            title="Mark as read"
+                                        >
+                                            <div className="h-2 w-2 rounded-full bg-primary" />
+                                        </Button>
+                                    )}
                                     <Button
                                         size="icon"
                                         variant="ghost"
-                                        className="h-8 w-8 text-muted-foreground hover:text-primary"
-                                        onClick={() => markReadMutation.mutate(notification.id)}
-                                        title="Mark as read"
+                                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                        onClick={() => deleteMutation.mutate(notification.id)}
+                                        title="Delete notification"
                                     >
-                                        <div className="h-2 w-2 rounded-full bg-primary" />
+                                        <Trash2 className="h-4 w-4" />
                                     </Button>
-                                )}
+                                </div>
                             </CardContent>
                         </Card>
                     ))
