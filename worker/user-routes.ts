@@ -858,10 +858,13 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   });
 
   app.get('/api/courses', async (c) => {
-    const { q, year } = c.req.query();
+    const { q, year, lecturerId } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
     let items = (await CourseEntity.list(c.env)).items;
 
+    if (lecturerId) {
+      items = items.filter(item => item.lecturerId === lecturerId);
+    }
     if (searchTerm) {
       items = items.filter(item =>
         item.title.toLowerCase().includes(searchTerm) ||
@@ -889,10 +892,13 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   });
 
   app.get('/api/student-projects', async (c) => {
-    const { q, courseId } = c.req.query();
+    const { q, courseId, lecturerId } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
     let items = (await StudentProjectEntity.list(c.env)).items;
 
+    if (lecturerId) {
+      items = items.filter(item => item.lecturerId === lecturerId);
+    }
     if (courseId) {
       items = items.filter(item => item.courseId === courseId);
     }
