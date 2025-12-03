@@ -28,7 +28,7 @@ const profileSchema = z.object({
   photoUrl: z.string().optional(),
   specializations: z.string().min(1, 'At least one specialization is required'),
   socialLinks: z.object({
-    twitter: z.string().url().optional().or(z.literal('')),
+    instagram: z.string().url().optional().or(z.literal('')),
     linkedin: z.string().url().optional().or(z.literal('')),
     github: z.string().url().optional().or(z.literal(''))
   }).optional()
@@ -63,7 +63,7 @@ export function DashboardProfilePage() {
       photoUrl: '',
       specializations: '',
       socialLinks: {
-        twitter: '',
+        instagram: '',
         linkedin: '',
         github: ''
       }
@@ -78,7 +78,7 @@ export function DashboardProfilePage() {
         ...profile,
         specializations: profile.specializations.join(', '),
         socialLinks: {
-          twitter: profile.socialLinks?.twitter || '',
+          instagram: profile.socialLinks?.instagram || '',
           linkedin: profile.socialLinks?.linkedin || '',
           github: profile.socialLinks?.github || ''
         }
@@ -325,12 +325,12 @@ export function DashboardProfilePage() {
                 <div className="space-y-4 mt-2">
                   <FormField
                     control={form.control}
-                    name="socialLinks.twitter"
+                    name="socialLinks.instagram"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Twitter URL</FormLabel>
+                        <FormLabel>Instagram URL</FormLabel>
                         <FormControl>
-                          <Input placeholder="https://twitter.com/username" {...field} />
+                          <Input placeholder="https://instagram.com/username" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

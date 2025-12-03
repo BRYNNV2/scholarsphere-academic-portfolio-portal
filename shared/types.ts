@@ -84,7 +84,7 @@ export interface UserProfile {
   courseIds: string[];
   savedItemIds: string[];
   socialLinks?: {
-    twitter?: string;
+    instagram?: string;
     linkedin?: string;
     github?: string;
   };

@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, Building, Book, FlaskConical, ExternalLink, Twitter, Linkedin, Github, Briefcase, Bookmark, BookOpen, User } from 'lucide-react';
+import { Mail, Building, Book, FlaskConical, ExternalLink, Instagram, Linkedin, Github, Briefcase, Bookmark, BookOpen, User } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from "../lib/api-client-fixed";
 import { UserProfile, Publication, ResearchProject, PortfolioItem, Course, StudentProject } from '@shared/types';
@@ -167,9 +167,9 @@ export function PortfolioPage() {
                 ))}
               </div>
               <div className="mt-4 flex items-center gap-4">
-                {user.socialLinks?.twitter && (
-                  <a href={user.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                    <Twitter className="h-5 w-5" />
+                {user.socialLinks?.instagram && (
+                  <a href={user.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                    <Instagram className="h-5 w-5" />
                   </a>
                 )}
                 {user.socialLinks?.linkedin && (
