@@ -49,8 +49,10 @@ export function ImageCropper({ imageSrc, open, onOpenChange, onCropComplete }: I
             return '';
         }
 
-        canvas.width = pixelCrop.width;
-        canvas.height = pixelCrop.height;
+        // Set fixed dimensions for the output image to ensure it's not too large
+        const size = 400; // 400x400 pixels
+        canvas.width = size;
+        canvas.height = size;
 
         ctx.drawImage(
             image,
@@ -60,19 +62,11 @@ export function ImageCropper({ imageSrc, open, onOpenChange, onCropComplete }: I
             pixelCrop.height,
             0,
             0,
-            pixelCrop.width,
-            pixelCrop.height,
+            size,
+            size,
         );
 
-        return new Promise((resolve) => {
-            canvas.toBlob((blob) => {
-                if (!blob) {
-                    console.error('Canvas is empty');
-                    return;
-                }
-                resolve(URL.createObjectURL(blob));
-            }, 'image/jpeg');
-        });
+        return canvas.toDataURL('image/jpeg', 0.8);
     };
 
     const handleSave = async () => {
