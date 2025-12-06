@@ -11,16 +11,28 @@ import {
   SidebarGroupHeader,
   SidebarMenuBadge,
 } from "@/components/ui/sidebar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuthStore } from "@/stores/auth-store";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import { Notification } from "@shared/types";
+import { useState } from "react";
 
 export function AppSidebar(): JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
 
   const { data: notifications } = useQuery<Notification[]>({
     queryKey: ["notifications"],
@@ -34,8 +46,13 @@ export function AppSidebar(): JSX.Element {
   const unreadCount = notifications?.filter((n) => !n.isRead).length || 0;
 
   const handleLogout = () => {
+    setIsLogoutDialogOpen(true);
+  };
+
+  const confirmLogout = () => {
     logout();
     navigate('/');
+    setIsLogoutDialogOpen(false);
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -147,6 +164,21 @@ export function AppSidebar(): JSX.Element {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+
+      <AlertDialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You will be redirected to the homepage.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmLogout}>Logout</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sidebar>
   );
 }

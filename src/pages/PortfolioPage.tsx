@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, Building, Book, FlaskConical, ExternalLink, Instagram, Linkedin, Github, Briefcase, Bookmark, BookOpen, User } from 'lucide-react';
+import { Mail, Building, Book, FlaskConical, ExternalLink, Instagram, Linkedin, Github, Briefcase, Bookmark, BookOpen, User, ArrowUpDown } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from "../lib/api-client-fixed";
 import { UserProfile, Publication, ResearchProject, PortfolioItem, Course, StudentProject } from '@shared/types';
@@ -15,6 +15,8 @@ import { useAuthStore } from '@/stores/auth-store';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function SaveButton({ itemId }: { itemId: string }) {
   const queryClient = useQueryClient();
@@ -74,6 +76,7 @@ function PortfolioPageSkeleton() {
 
 export function PortfolioPage() {
   const { id, username } = useParams<{ id: string; username: string }>();
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   const { data: user, isLoading: isLoadingUser } = useQuery<UserProfile>({
     queryKey: ['user', id || username],
@@ -133,9 +136,17 @@ export function PortfolioPage() {
     );
   }
 
-  const userPublications = publications?.filter((p) => user.publicationIds?.includes(p.id)) ?? [];
-  const userProjects = projects?.filter((p) => user.projectIds?.includes(p.id)) ?? [];
-  const userPortfolioItems = portfolioItems?.filter((p) => user.portfolioItemIds?.includes(p.id)) ?? [];
+  const sortItems = <T extends { createdAt: number; year?: number }>(items: T[]) => {
+    return [...items].sort((a, b) => {
+      const dateA = a.createdAt || (a.year ? new Date(a.year, 0).getTime() : 0);
+      const dateB = b.createdAt || (b.year ? new Date(b.year, 0).getTime() : 0);
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+  };
+
+  const userPublications = sortItems(publications?.filter((p) => user.publicationIds?.includes(p.id)) ?? []);
+  const userProjects = sortItems(projects?.filter((p) => user.projectIds?.includes(p.id)) ?? []);
+  const userPortfolioItems = sortItems(portfolioItems?.filter((p) => user.portfolioItemIds?.includes(p.id)) ?? []);
   const userCourses = courses ?? [];
 
   return (
@@ -194,32 +205,47 @@ export function PortfolioPage() {
 
           {/* Tabs Section */}
           <Tabs defaultValue="courses" className="w-full">
-            <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
-              <TabsTrigger
-                value="publications"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
-              >
-                Publications ({userPublications.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="research"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
-              >
-                Research ({userProjects.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="portfolio"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
-              >
-                Portfolio ({userPortfolioItems.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="courses"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
-              >
-                Courses ({userCourses.length})
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b">
+              <TabsList className="w-full sm:w-auto justify-start rounded-none h-auto p-0 bg-transparent border-b-0">
+                <TabsTrigger
+                  value="publications"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  Publications ({userPublications.length})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="research"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  Research ({userProjects.length})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="portfolio"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  Portfolio ({userPortfolioItems.length})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="courses"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  Courses ({userCourses.length})
+                </TabsTrigger>
+              </TabsList>
+
+              <div className="flex items-center gap-2 px-4 pb-2 sm:pb-0">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Sort by:</span>
+                <Select value={sortOrder} onValueChange={(value: 'newest' | 'oldest') => setSortOrder(value)}>
+                  <SelectTrigger className="w-[140px] h-8">
+                    <SelectValue placeholder="Sort order" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
             <TabsContent value="publications" className="mt-6">
               <div className="space-y-4">

@@ -16,6 +16,7 @@ export interface Publication {
   thumbnailUrl?: string;
   commentIds: string[];
   likeIds: string[];
+  visibility?: 'public' | 'private';
   createdAt: number;
 }
 
@@ -31,6 +32,7 @@ export interface ResearchProject {
   thumbnailUrl?: string;
   commentIds: string[];
   likeIds: string[];
+  visibility?: 'public' | 'private';
   createdAt: number;
 }
 
@@ -46,6 +48,7 @@ export interface PortfolioItem {
   thumbnailUrl?: string;
   commentIds: string[];
   likeIds: string[];
+  visibility?: 'public' | 'private';
   createdAt: number;
 }
 
@@ -59,6 +62,7 @@ export interface StudentProject {
   description: string;
   thumbnailUrl?: string;
   url?: string;
+  visibility?: 'public' | 'private';
   createdAt: number;
 }
 
@@ -131,6 +135,7 @@ export interface Course {
   year: number;
   description: string;
   studentProjectIds: string[];
+  visibility?: 'public' | 'private';
   createdAt: number;
 }
 

@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { jwt, sign } from 'hono/jwt'
+import { jwt, sign, verify } from 'hono/jwt'
 import type { Env } from './core-utils';
 import { UserProfileEntity, PublicationEntity, ResearchProjectEntity, PortfolioItemEntity, CommentEntity, LikeEntity, CourseEntity, StudentProjectEntity, NotificationEntity } from "./entities";
 import { ok, bad, notFound } from './core-utils';
@@ -724,7 +724,20 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       ...portfolioItems.items,
     ];
 
+    const secret = c.env.JWT_SECRET || 'dev-fallback-secret';
+    let currentUserId: string | undefined;
+    try {
+      const token = c.req.header('Authorization')?.split(' ')[1];
+      if (token) {
+        const payload = await verify(token, secret);
+        currentUserId = payload.sub as string;
+      }
+    } catch (e) {
+      // ignore
+    }
+
     const recentWork = allWork
+      .filter(item => item.visibility !== 'private' || item.lecturerId === currentUserId)
       .sort((a, b) => b.createdAt - a.createdAt)
       .slice(0, 10);
 
@@ -784,6 +797,20 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const searchTerm = q?.toLowerCase() || '';
     let items = (await PublicationEntity.list(c.env)).items;
 
+    const secret = c.env.JWT_SECRET || 'dev-fallback-secret';
+    let currentUserId: string | undefined;
+    try {
+      const token = c.req.header('Authorization')?.split(' ')[1];
+      if (token) {
+        const payload = await verify(token, secret);
+        currentUserId = payload.sub as string;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    items = items.filter(item => item.visibility !== 'private' || item.lecturerId === currentUserId);
+
     if (searchTerm) {
       items = items.filter(item =>
         item.title.toLowerCase().includes(searchTerm) ||
@@ -807,6 +834,20 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const { q, year } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
     let items = (await ResearchProjectEntity.list(c.env)).items;
+
+    const secret = c.env.JWT_SECRET || 'dev-fallback-secret';
+    let currentUserId: string | undefined;
+    try {
+      const token = c.req.header('Authorization')?.split(' ')[1];
+      if (token) {
+        const payload = await verify(token, secret);
+        currentUserId = payload.sub as string;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    items = items.filter(item => item.visibility !== 'private' || item.lecturerId === currentUserId);
 
     if (searchTerm) {
       items = items.filter(item =>
@@ -838,6 +879,20 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const searchTerm = q?.toLowerCase() || '';
     let items = (await PortfolioItemEntity.list(c.env)).items;
 
+    const secret = c.env.JWT_SECRET || 'dev-fallback-secret';
+    let currentUserId: string | undefined;
+    try {
+      const token = c.req.header('Authorization')?.split(' ')[1];
+      if (token) {
+        const payload = await verify(token, secret);
+        currentUserId = payload.sub as string;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    items = items.filter(item => item.visibility !== 'private' || item.lecturerId === currentUserId);
+
     if (searchTerm) {
       items = items.filter(item =>
         item.title.toLowerCase().includes(searchTerm) ||
@@ -861,6 +916,20 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const { q, year, lecturerId } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
     let items = (await CourseEntity.list(c.env)).items;
+
+    const secret = c.env.JWT_SECRET || 'dev-fallback-secret';
+    let currentUserId: string | undefined;
+    try {
+      const token = c.req.header('Authorization')?.split(' ')[1];
+      if (token) {
+        const payload = await verify(token, secret);
+        currentUserId = payload.sub as string;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    items = items.filter(item => item.visibility !== 'private' || item.lecturerId === currentUserId);
 
     if (lecturerId) {
       items = items.filter(item => item.lecturerId === lecturerId);
@@ -895,6 +964,20 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const { q, courseId, lecturerId } = c.req.query();
     const searchTerm = q?.toLowerCase() || '';
     let items = (await StudentProjectEntity.list(c.env)).items;
+
+    const secret = c.env.JWT_SECRET || 'dev-fallback-secret';
+    let currentUserId: string | undefined;
+    try {
+      const token = c.req.header('Authorization')?.split(' ')[1];
+      if (token) {
+        const payload = await verify(token, secret);
+        currentUserId = payload.sub as string;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    items = items.filter(item => item.visibility !== 'private' || item.lecturerId === currentUserId);
 
     if (lecturerId) {
       items = items.filter(item => item.lecturerId === lecturerId);
@@ -1069,5 +1152,121 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     }
 
     return ok(c, { success: true, count: userNotifications.length });
+  });
+
+  // --- SAVED ITEMS ---
+
+  // Helper to fetch academic work from any entity type
+  const fetchAcademicWork = async (env: Env, id: string): Promise<AcademicWork | null> => {
+    // Try Publication
+    const pub = await PublicationEntity.get(env, id);
+    if (pub) return pub;
+
+    // Try ResearchProject
+    const proj = await ResearchProjectEntity.get(env, id);
+    if (proj) return proj;
+
+    // Try PortfolioItem
+    const port = await PortfolioItemEntity.get(env, id);
+    if (port) return port;
+
+    // Try StudentProject
+    const studentProj = await StudentProjectEntity.get(env, id);
+    if (studentProj) return studentProj;
+
+    return null;
+  };
+
+  app.post('/api/users/me/save/:id', authMiddleware, async (c) => {
+    const { id } = c.req.param();
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+
+    // Verify item exists
+    const item = await fetchAcademicWork(c.env, id);
+    if (!item) {
+      return notFound(c, 'Item not found');
+    }
+
+    const userEntity = new UserProfileEntity(c.env, userId);
+    const user = await userEntity.getState();
+
+    // Add to savedItemIds if not already present
+    if (!user.savedItemIds.includes(id)) {
+      const updatedSavedIds = [...user.savedItemIds, id];
+      await userEntity.patch({ savedItemIds: updatedSavedIds });
+
+      // Return updated user profile
+      const updatedUser = await userEntity.getState();
+      const { password, ...userToReturn } = updatedUser;
+      return ok(c, userToReturn);
+    }
+
+    const { password, ...userToReturn } = user;
+    return ok(c, userToReturn);
+  });
+
+  app.delete('/api/users/me/save/:id', authMiddleware, async (c) => {
+    const { id } = c.req.param();
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+
+    const userEntity = new UserProfileEntity(c.env, userId);
+    const user = await userEntity.getState();
+
+    // Remove from savedItemIds
+    if (user.savedItemIds.includes(id)) {
+      const updatedSavedIds = user.savedItemIds.filter(savedId => savedId !== id);
+      await userEntity.patch({ savedItemIds: updatedSavedIds });
+
+      // Return updated user profile
+      const updatedUser = await userEntity.getState();
+      const { password, ...userToReturn } = updatedUser;
+      return ok(c, userToReturn);
+    }
+
+    const { password, ...userToReturn } = user;
+    return ok(c, userToReturn);
+  });
+
+  app.get('/api/users/me/saved-items', authMiddleware, async (c) => {
+    const payload = c.get('jwtPayload');
+    const userId = payload.sub;
+
+    const userEntity = new UserProfileEntity(c.env, userId);
+    const user = await userEntity.getState();
+    const savedIds = user.savedItemIds || [];
+
+    const validItems: (AcademicWork & { authorName: string })[] = [];
+    const validIds: string[] = [];
+    let hasStaleData = false;
+
+    for (const id of savedIds) {
+      const item = await fetchAcademicWork(c.env, id);
+      if (item) {
+        validIds.push(id);
+
+        // Fetch author name
+        let authorName = 'Unknown';
+        const authorId = item.lecturerId;
+        if (authorId) {
+          const authorProfile = await UserProfileEntity.get(c.env, authorId);
+          if (authorProfile) {
+            authorName = authorProfile.name;
+          }
+        }
+
+        validItems.push({ ...item, authorName });
+      } else {
+        hasStaleData = true;
+      }
+    }
+
+    // Self-correct: Update user's saved list if stale data was found
+    if (hasStaleData) {
+      await userEntity.patch({ savedItemIds: validIds });
+    }
+
+    return ok(c, validItems);
   });
 }

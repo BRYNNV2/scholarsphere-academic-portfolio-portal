@@ -13,7 +13,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { getProfileUrl } from '@/lib/utils';
 
 export function HomePage() {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { isAuthenticated, user } = useAuthStore((state) => state);
 
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['public', 'users'],
@@ -162,21 +162,23 @@ export function HomePage() {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-muted/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-          <div className="text-center">
-            <h2 className="text-3xl font-display font-bold text-foreground">Ready to Build Your Legacy?</h2>
-            <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
-              Join ScholarSphere today and create a professional portfolio that truly represents your academic contributions and expertise.
-            </p>
-            <div className="mt-8">
-              <Button size="lg" asChild>
-                <Link to={isAuthenticated ? "/dashboard" : "/register"}>Create Your Portfolio <ArrowRight className="ml-2 h-4 w-4" /></Link>
-              </Button>
+      {(!user || user.role !== 'student') && (
+        <div className="bg-muted/40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+            <div className="text-center">
+              <h2 className="text-3xl font-display font-bold text-foreground">Ready to Build Your Legacy?</h2>
+              <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
+                Join ScholarSphere today and create a professional portfolio that truly represents your academic contributions and expertise.
+              </p>
+              <div className="mt-8">
+                <Button size="lg" asChild>
+                  <Link to={isAuthenticated ? "/dashboard" : "/register"}>Create Your Portfolio <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </PublicLayout>
   );
 }

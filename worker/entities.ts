@@ -28,6 +28,12 @@ export class UserProfileEntity extends IndexedEntity<UserProfile> {
     socialLinks: {},
   };
   static seedData = [];
+
+  static async get(env: Env, id: string): Promise<UserProfile | null> {
+    const inst = new this(env, id);
+    if (!(await inst.exists())) return null;
+    return inst.getState();
+  }
 }
 
 // Publication ENTITY
@@ -47,6 +53,7 @@ export class PublicationEntity extends IndexedEntity<Publication> {
     commentIds: [],
     likeIds: [],
     createdAt: 0,
+    visibility: 'public',
   };
   static seedData = MOCK_PUBLICATIONS;
 
@@ -73,6 +80,7 @@ export class ResearchProjectEntity extends IndexedEntity<ResearchProject> {
     commentIds: [],
     likeIds: [],
     createdAt: 0,
+    visibility: 'public',
   };
   static seedData = MOCK_PROJECTS;
 
@@ -99,6 +107,7 @@ export class PortfolioItemEntity extends IndexedEntity<PortfolioItem> {
     commentIds: [],
     likeIds: [],
     createdAt: 0,
+    visibility: 'public',
   };
   static seedData = MOCK_PORTFOLIO_ITEMS;
 
@@ -123,6 +132,7 @@ export class CourseEntity extends IndexedEntity<Course> {
     description: "",
     studentProjectIds: [],
     createdAt: 0,
+    visibility: 'public',
   };
 
   static async get(env: Env, id: string): Promise<Course | null> {
@@ -147,6 +157,7 @@ export class StudentProjectEntity extends IndexedEntity<StudentProject> {
     thumbnailUrl: "",
     url: "",
     createdAt: 0,
+    visibility: 'public',
   };
 
   static async get(env: Env, id: string): Promise<StudentProject | null> {

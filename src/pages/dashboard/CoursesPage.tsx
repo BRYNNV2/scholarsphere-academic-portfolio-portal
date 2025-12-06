@@ -7,25 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import { Plus, ArrowLeft, Loader2, GraduationCap, MoreHorizontal, Eye, Trash2, User, Pencil, Image as ImageIcon } from 'lucide-react';
+import { Plus, ArrowLeft, Loader2, GraduationCap, MoreHorizontal, EyeOff, Trash2, User, Pencil, Image as ImageIcon } from 'lucide-react';
 import { StudentProjectCard } from '@/components/StudentProjectCard';
 import { CourseCard } from '@/components/CourseCard';
 import { toast } from 'sonner';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -37,6 +27,8 @@ import {
 } from "@/components/ui/select";
 import { Card } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 const SEMESTER_COURSES: Record<string, string[]> = {
     "1": [
@@ -101,6 +93,8 @@ export function CoursesPage() {
     const [formSemester, setFormSemester] = useState<string>("");
     const [formTitle, setFormTitle] = useState<string>("");
     const [thumbnailData, setThumbnailData] = useState<string>("");
+    const [courseVisibility, setCourseVisibility] = useState<'public' | 'private'>('public');
+    const [projectVisibility, setProjectVisibility] = useState<'public' | 'private'>('public');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,6 +154,7 @@ export function CoursesPage() {
             setIsAddCourseOpen(false);
             setFormSemester("");
             setFormTitle("");
+            setCourseVisibility('public');
             toast.success('Course created successfully');
         },
     });
@@ -176,6 +171,7 @@ export function CoursesPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['student-projects', selectedCourse?.id] });
             setIsAddProjectOpen(false);
+            setProjectVisibility('public');
             toast.success('Project added successfully');
         },
     });
@@ -190,6 +186,7 @@ export function CoursesPage() {
             queryClient.invalidateQueries({ queryKey: ['student-projects', selectedCourse?.id] });
             setIsEditProjectOpen(false);
             setEditingProject(null);
+            setProjectVisibility('public');
             toast.success('Project updated successfully');
         },
     });
@@ -225,6 +222,7 @@ export function CoursesPage() {
             semester: formSemester,
             year: new Date().getFullYear(),
             description: formData.get('description') as string,
+            visibility: courseVisibility,
         });
     };
 
@@ -237,6 +235,7 @@ export function CoursesPage() {
             description: formData.get('description') as string,
             url: formData.get('url') as string,
             thumbnailUrl: thumbnailData,
+            visibility: projectVisibility,
         });
     };
 
@@ -251,6 +250,7 @@ export function CoursesPage() {
             description: formData.get('description') as string,
             url: formData.get('url') as string,
             thumbnailUrl: thumbnailData,
+            visibility: projectVisibility,
         });
     };
 
@@ -258,265 +258,6 @@ export function CoursesPage() {
         if (semesterFilter === "all") return true;
         return course.semester === semesterFilter;
     });
-
-    if (selectedCourse) {
-        return (
-            <div className="space-y-6">
-                <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer w-fit" onClick={() => setSelectedCourse(null)}>
-                    <ArrowLeft className="h-4 w-4" />
-                    <span>Back to Courses</span>
-                </div>
-
-                <Card className="p-6">
-                    <div className="flex justify-between items-start">
-                        <div className="space-y-4">
-                            <div>
-                                <h1 className="text-3xl font-bold tracking-tight">{selectedCourse.title}</h1>
-                                <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                                    <span className="font-medium text-foreground">{selectedCourse.code}</span>
-                                    <span>•</span>
-                                    <span>Semester {selectedCourse.semester} - {selectedCourse.title}</span>
-                                    <Badge className="bg-blue-900 hover:bg-blue-800">Public</Badge>
-                                </div>
-                            </div>
-                            <p className="text-muted-foreground max-w-4xl">
-                                {selectedCourse.description}
-                            </p>
-                        </div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                    className="text-destructive focus:text-destructive"
-                                    onClick={() => {
-                                        if (confirm('Are you sure you want to delete this course?')) {
-                                            deleteCourseMutation.mutate(selectedCourse.id);
-                                        }
-                                    }}
-                                >
-                                    <Trash2 className="mr-2 h-4 w-4" /> Delete Course
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </Card>
-
-                <div className="space-y-6">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div>
-                            <h2 className="text-lg font-semibold">Student Projects</h2>
-                            <p className="text-sm text-muted-foreground">Manage final projects and assignments for this course.</p>
-                        </div>
-                        <div className="flex gap-2 w-full sm:w-auto">
-                            <Dialog open={isAddProjectOpen} onOpenChange={(open) => {
-                                setIsAddProjectOpen(open);
-                                if (open) setThumbnailData("");
-                            }}>
-                                <DialogTrigger asChild>
-                                    <Button className="bg-blue-900 hover:bg-blue-800 w-full sm:w-auto">
-                                        <Plus className="mr-2 h-4 w-4" /> Add Project
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Add Student Project</DialogTitle>
-                                        <DialogDescription>
-                                            Add a new student project to this course. Fill in the details below.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <form onSubmit={handleCreateProject} className="space-y-4">
-                                        <div className="space-y-2">
-                                            <label htmlFor="title">Project Title</label>
-                                            <Input id="title" name="title" required />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label htmlFor="students">Students (comma separated)</label>
-                                            <Input id="students" name="students" placeholder="John Doe, Jane Smith" required />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label htmlFor="description">Description</label>
-                                            <Textarea id="description" name="description" required />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label htmlFor="url">Project URL (Optional)</label>
-                                            <Input id="url" name="url" type="url" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label htmlFor="thumbnailUrl">Project Thumbnail (Optional)</label>
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-32">
-                                                    <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden border">
-                                                        {thumbnailData ? (
-                                                            <img src={thumbnailData} alt="Thumbnail preview" className="object-cover w-full h-full" />
-                                                        ) : (
-                                                            <div className="flex items-center justify-center h-full text-muted-foreground">
-                                                                <ImageIcon className="h-8 w-8" />
-                                                            </div>
-                                                        )}
-                                                    </AspectRatio>
-                                                </div>
-                                                <div className="flex-grow">
-                                                    <Input
-                                                        type="file"
-                                                        ref={fileInputRef}
-                                                        className="hidden"
-                                                        accept="image/png, image/jpeg, image/gif"
-                                                        onChange={handleFileChange}
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        onClick={() => fileInputRef.current?.click()}
-                                                    >
-                                                        Upload Image
-                                                    </Button>
-                                                    <p className="text-xs text-muted-foreground mt-2">
-                                                        Max file size: 2MB. Supported formats: PNG, JPG, GIF.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <Button type="submit" className="w-full" disabled={createProjectMutation.isPending}>
-                                            {createProjectMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                            Add Project
-                                        </Button>
-                                    </form>
-                                </DialogContent>
-                            </Dialog>
-
-                            <Dialog open={isEditProjectOpen} onOpenChange={setIsEditProjectOpen}>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Edit Student Project</DialogTitle>
-                                        <DialogDescription>
-                                            Update the details of the student project.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <form onSubmit={handleUpdateProject} className="space-y-4">
-                                        <div className="space-y-2">
-                                            <label htmlFor="edit-title">Project Title</label>
-                                            <Input id="edit-title" name="title" defaultValue={editingProject?.title} required />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label htmlFor="edit-students">Students (comma separated)</label>
-                                            <Input id="edit-students" name="students" defaultValue={editingProject?.students.join(', ')} placeholder="John Doe, Jane Smith" required />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label htmlFor="edit-description">Description</label>
-                                            <Textarea id="edit-description" name="description" defaultValue={editingProject?.description} required />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label htmlFor="edit-url">Project URL (Optional)</label>
-                                            <Input id="edit-url" name="url" type="url" defaultValue={editingProject?.url} />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label htmlFor="edit-thumbnailUrl">Project Thumbnail (Optional)</label>
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-32">
-                                                    <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden border">
-                                                        {thumbnailData ? (
-                                                            <img src={thumbnailData} alt="Thumbnail preview" className="object-cover w-full h-full" />
-                                                        ) : (
-                                                            <div className="flex items-center justify-center h-full text-muted-foreground">
-                                                                <ImageIcon className="h-8 w-8" />
-                                                            </div>
-                                                        )}
-                                                    </AspectRatio>
-                                                </div>
-                                                <div className="flex-grow">
-                                                    <Input
-                                                        type="file"
-                                                        ref={fileInputRef}
-                                                        className="hidden"
-                                                        accept="image/png, image/jpeg, image/gif"
-                                                        onChange={handleFileChange}
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        onClick={() => fileInputRef.current?.click()}
-                                                    >
-                                                        Change Image
-                                                    </Button>
-                                                    <p className="text-xs text-muted-foreground mt-2">
-                                                        Max file size: 2MB. Supported formats: PNG, JPG, GIF.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <Button type="submit" className="w-full" disabled={updateProjectMutation.isPending}>
-                                            {updateProjectMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                            Update Project
-                                        </Button>
-                                    </form>
-                                </DialogContent>
-                            </Dialog>
-                        </div>
-                    </div>
-
-                    {projectsQuery.isLoading ? (
-                        <div className="text-center py-8">Loading projects...</div>
-                    ) : projectsQuery.data && projectsQuery.data.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {projectsQuery.data.map((project) => (
-                                <div key={project.id} className="h-full">
-                                    <StudentProjectCard
-                                        project={project}
-                                        actions={
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0 bg-background/50 hover:bg-background rounded-full">
-                                                        <span className="sr-only">Open menu</span>
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => {
-                                                        setEditingProject(project);
-                                                        setThumbnailData(project.thumbnailUrl || "");
-                                                        setIsEditProjectOpen(true);
-                                                    }}>
-                                                        <Pencil className="mr-2 h-4 w-4" /> Edit
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        className="text-destructive focus:text-destructive"
-                                                        onClick={() => {
-                                                            if (confirm('Are you sure you want to delete this project?')) {
-                                                                deleteProjectMutation.mutate(project.id);
-                                                            }
-                                                        }}
-                                                    >
-                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        }
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <Card className="flex flex-col items-center justify-center py-16 text-center border-dashed">
-                            <div className="bg-muted/50 p-4 rounded-full mb-4">
-                                <User className="h-8 w-8 text-muted-foreground" />
-                            </div>
-                            <h3 className="text-lg font-semibold">No Student Projects</h3>
-                            <p className="text-muted-foreground mt-2 mb-6 max-w-sm">
-                                Add the first student project for this course.
-                            </p>
-                            <Button onClick={() => setIsAddProjectOpen(true)} className="bg-blue-900 hover:bg-blue-800">
-                                Add Project
-                            </Button>
-                        </Card>
-                    )}
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-8">
@@ -553,11 +294,11 @@ export function CoursesPage() {
                             <form onSubmit={handleCreateCourse} className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label htmlFor="code">Course Code</label>
+                                        <Label htmlFor="code">Course Code</Label>
                                         <Input id="code" name="code" placeholder="e.g. CS101" required />
                                     </div>
                                     <div className="space-y-2">
-                                        <label htmlFor="title">Title</label>
+                                        <Label htmlFor="title">Title</Label>
                                         <Input
                                             id="title"
                                             name="title"
@@ -570,13 +311,13 @@ export function CoursesPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label htmlFor="description">Description</label>
+                                    <Label htmlFor="description">Description</Label>
                                     <Textarea id="description" name="description" placeholder="Brief description of the course content..." required />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label htmlFor="semester">Semester</label>
+                                        <Label htmlFor="semester">Semester</Label>
                                         <Select
                                             name="semester"
                                             required
@@ -594,7 +335,7 @@ export function CoursesPage() {
                                         </Select>
                                     </div>
                                     <div className="space-y-2">
-                                        <label htmlFor="subject">Subject</label>
+                                        <Label htmlFor="subject">Subject</Label>
                                         <Select
                                             disabled={!formSemester || !SEMESTER_COURSES[formSemester]}
                                             onValueChange={(value) => setFormTitle(value)}
@@ -611,6 +352,19 @@ export function CoursesPage() {
                                     </div>
                                 </div>
 
+                                <div className="flex items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-base">Visibility</Label>
+                                        <p className="text-sm text-muted-foreground">
+                                            {courseVisibility === 'public' ? 'Visible to everyone' : 'Only visible to you'}
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        checked={courseVisibility === 'public'}
+                                        onCheckedChange={(checked) => setCourseVisibility(checked ? 'public' : 'private')}
+                                    />
+                                </div>
+
                                 <div className="flex justify-end gap-2 pt-4">
                                     <Button type="button" variant="outline" onClick={() => setIsAddCourseOpen(false)}>Cancel</Button>
                                     <Button type="submit" disabled={createCourseMutation.isPending} className="bg-blue-900 hover:bg-blue-800">
@@ -624,63 +378,366 @@ export function CoursesPage() {
                 </div>
             </div>
 
-            {coursesQuery.isLoading ? (
-                <div className="p-8 text-center">Loading courses...</div>
-            ) : filteredCourses && filteredCourses.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredCourses.map((course) => (
-                        <div key={course.id} className="h-full">
-                            <CourseCard
-                                course={course}
-                                onClick={() => setSelectedCourse(course)}
-                                actions={
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground">
-                                                <span className="sr-only">Open menu</span>
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedCourse(course);
-                                                }}
-                                            >
-                                                <Pencil className="mr-2 h-4 w-4" /> Manage
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                className="text-destructive focus:text-destructive"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (confirm('Are you sure you want to delete this course?')) {
-                                                        deleteCourseMutation.mutate(course.id);
-                                                    }
-                                                }}
-                                            >
-                                                <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                }
-                            />
+            {selectedCourse ? (
+                <div className="space-y-6">
+                    <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer w-fit" onClick={() => setSelectedCourse(null)}>
+                        <ArrowLeft className="h-4 w-4" />
+                        <span>Back to Courses</span>
+                    </div>
+
+                    <Card className="p-6">
+                        <div className="flex justify-between items-start">
+                            <div className="space-y-4">
+                                <div>
+                                    <h1 className="text-3xl font-bold tracking-tight">{selectedCourse.title}</h1>
+                                    <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                                        <span className="font-medium text-foreground">{selectedCourse.code}</span>
+                                        <span>•</span>
+                                        <span>Semester {selectedCourse.semester} - {selectedCourse.title}</span>
+                                        <Badge className={selectedCourse.visibility === 'private' ? "bg-secondary text-secondary-foreground hover:bg-secondary/80" : "bg-blue-900 hover:bg-blue-800"}>
+                                            {selectedCourse.visibility === 'private' ? <><EyeOff className="h-3 w-3 mr-1" /> Private</> : 'Public'}
+                                        </Badge>
+                                    </div>
+                                </div>
+                                <p className="text-muted-foreground max-w-4xl">
+                                    {selectedCourse.description}
+                                </p>
+                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                        className="text-destructive focus:text-destructive"
+                                        onClick={() => {
+                                            if (confirm('Are you sure you want to delete this course?')) {
+                                                deleteCourseMutation.mutate(selectedCourse.id);
+                                            }
+                                        }}
+                                    >
+                                        <Trash2 className="mr-2 h-4 w-4" /> Delete Course
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
-                    ))}
+                    </Card>
+
+                    <div className="space-y-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div>
+                                <h2 className="text-lg font-semibold">Student Projects</h2>
+                                <p className="text-sm text-muted-foreground">Manage final projects and assignments for this course.</p>
+                            </div>
+                            <div className="flex gap-2 w-full sm:w-auto">
+                                <Dialog open={isAddProjectOpen} onOpenChange={(open) => {
+                                    setIsAddProjectOpen(open);
+                                    if (open) {
+                                        setThumbnailData("");
+                                        setProjectVisibility('public');
+                                    }
+                                }}>
+                                    <DialogTrigger asChild>
+                                        <Button className="bg-blue-900 hover:bg-blue-800 w-full sm:w-auto">
+                                            <Plus className="mr-2 h-4 w-4" /> Add Project
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Add Student Project</DialogTitle>
+                                            <DialogDescription>
+                                                Add a new student project to this course. Fill in the details below.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <form onSubmit={handleCreateProject} className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="title">Project Title</Label>
+                                                <Input id="title" name="title" required />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="students">Students (comma separated)</Label>
+                                                <Input id="students" name="students" placeholder="John Doe, Jane Smith" required />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="description">Description</Label>
+                                                <Textarea id="description" name="description" required />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="url">Project URL (Optional)</Label>
+                                                <Input id="url" name="url" type="url" />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="thumbnailUrl">Project Thumbnail (Optional)</Label>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-32">
+                                                        <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden border">
+                                                            {thumbnailData ? (
+                                                                <img src={thumbnailData} alt="Thumbnail preview" className="object-cover w-full h-full" />
+                                                            ) : (
+                                                                <div className="flex items-center justify-center h-full text-muted-foreground">
+                                                                    <ImageIcon className="h-8 w-8" />
+                                                                </div>
+                                                            )}
+                                                        </AspectRatio>
+                                                    </div>
+                                                    <div className="flex-grow">
+                                                        <Input
+                                                            type="file"
+                                                            ref={fileInputRef}
+                                                            className="hidden"
+                                                            accept="image/png, image/jpeg, image/gif"
+                                                            onChange={handleFileChange}
+                                                        />
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            onClick={() => fileInputRef.current?.click()}
+                                                        >
+                                                            Upload Image
+                                                        </Button>
+                                                        <p className="text-xs text-muted-foreground mt-2">
+                                                            Max file size: 2MB. Supported formats: PNG, JPG, GIF.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between rounded-lg border p-4">
+                                                <div className="space-y-0.5">
+                                                    <Label className="text-base">Visibility</Label>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {projectVisibility === 'public' ? 'Visible to everyone' : 'Only visible to you'}
+                                                    </p>
+                                                </div>
+                                                <Switch
+                                                    checked={projectVisibility === 'public'}
+                                                    onCheckedChange={(checked) => setProjectVisibility(checked ? 'public' : 'private')}
+                                                />
+                                            </div>
+
+                                            <Button type="submit" className="w-full" disabled={createProjectMutation.isPending}>
+                                                {createProjectMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                Add Project
+                                            </Button>
+                                        </form>
+                                    </DialogContent>
+                                </Dialog>
+
+                                <Dialog open={isEditProjectOpen} onOpenChange={setIsEditProjectOpen}>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Edit Student Project</DialogTitle>
+                                            <DialogDescription>
+                                                Update the details of the student project.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <form onSubmit={handleUpdateProject} className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="edit-title">Project Title</Label>
+                                                <Input id="edit-title" name="title" defaultValue={editingProject?.title} required />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="edit-students">Students (comma separated)</Label>
+                                                <Input id="edit-students" name="students" defaultValue={editingProject?.students.join(', ')} placeholder="John Doe, Jane Smith" required />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="edit-description">Description</Label>
+                                                <Textarea id="edit-description" name="description" defaultValue={editingProject?.description} required />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="edit-url">Project URL (Optional)</Label>
+                                                <Input id="edit-url" name="url" type="url" defaultValue={editingProject?.url} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="edit-thumbnailUrl">Project Thumbnail (Optional)</Label>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-32">
+                                                        <AspectRatio ratio={16 / 9} className="bg-muted rounded-md overflow-hidden border">
+                                                            {thumbnailData ? (
+                                                                <img src={thumbnailData} alt="Thumbnail preview" className="object-cover w-full h-full" />
+                                                            ) : (
+                                                                <div className="flex items-center justify-center h-full text-muted-foreground">
+                                                                    <ImageIcon className="h-8 w-8" />
+                                                                </div>
+                                                            )}
+                                                        </AspectRatio>
+                                                    </div>
+                                                    <div className="flex-grow">
+                                                        <Input
+                                                            type="file"
+                                                            ref={fileInputRef}
+                                                            className="hidden"
+                                                            accept="image/png, image/jpeg, image/gif"
+                                                            onChange={handleFileChange}
+                                                        />
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            onClick={() => fileInputRef.current?.click()}
+                                                        >
+                                                            Change Image
+                                                        </Button>
+                                                        <p className="text-xs text-muted-foreground mt-2">
+                                                            Max file size: 2MB. Supported formats: PNG, JPG, GIF.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between rounded-lg border p-4">
+                                                <div className="space-y-0.5">
+                                                    <Label className="text-base">Visibility</Label>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {projectVisibility === 'public' ? 'Visible to everyone' : 'Only visible to you'}
+                                                    </p>
+                                                </div>
+                                                <Switch
+                                                    checked={projectVisibility === 'public'}
+                                                    onCheckedChange={(checked) => setProjectVisibility(checked ? 'public' : 'private')}
+                                                />
+                                            </div>
+
+                                            <Button type="submit" className="w-full" disabled={updateProjectMutation.isPending}>
+                                                {updateProjectMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                Update Project
+                                            </Button>
+                                        </form>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
+                        </div>
+
+                        {projectsQuery.isLoading ? (
+                            <div className="text-center py-8">Loading projects...</div>
+                        ) : projectsQuery.data && projectsQuery.data.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {projectsQuery.data.map((project) => (
+                                    <div key={project.id} className="h-full relative group">
+                                        <StudentProjectCard
+                                            project={project}
+                                            actions={
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0 bg-background/50 hover:bg-background rounded-full">
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => {
+                                                            setEditingProject(project);
+                                                            setThumbnailData(project.thumbnailUrl || "");
+                                                            setProjectVisibility(project.visibility || 'public');
+                                                            setIsEditProjectOpen(true);
+                                                        }}>
+                                                            <Pencil className="mr-2 h-4 w-4" /> Edit
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            className="text-destructive focus:text-destructive"
+                                                            onClick={() => {
+                                                                if (confirm('Are you sure you want to delete this project?')) {
+                                                                    deleteProjectMutation.mutate(project.id);
+                                                                }
+                                                            }}
+                                                        >
+                                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            }
+                                        />
+                                        {project.visibility === 'private' && (
+                                            <div className="absolute top-2 left-2">
+                                                <Badge variant="secondary" className="text-xs shadow-sm"><EyeOff className="h-3 w-3 mr-1" /> Private</Badge>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <Card className="flex flex-col items-center justify-center py-16 text-center border-dashed">
+                                <div className="bg-muted/50 p-4 rounded-full mb-4">
+                                    <User className="h-8 w-8 text-muted-foreground" />
+                                </div>
+                                <h3 className="text-lg font-semibold">No Student Projects</h3>
+                                <p className="text-muted-foreground mt-2 mb-6 max-w-sm">
+                                    Add the first student project for this course.
+                                </p>
+                                <Button onClick={() => setIsAddProjectOpen(true)} className="bg-blue-900 hover:bg-blue-800">
+                                    Add Project
+                                </Button>
+                            </Card>
+                        )}
+                    </div>
                 </div>
             ) : (
-                <Card className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="bg-muted/50 p-4 rounded-full mb-4">
-                        <GraduationCap className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-lg font-semibold">No Courses Yet</h3>
-                    <p className="text-muted-foreground mt-2 mb-6 max-w-sm">
-                        Get started by adding your first course to manage student projects.
-                    </p>
-                    <Button onClick={() => setIsAddCourseOpen(true)} className="bg-blue-900 hover:bg-blue-800">
-                        Add Course
-                    </Button>
-                </Card>
+                <>
+                    {coursesQuery.isLoading ? (
+                        <div className="p-8 text-center">Loading courses...</div>
+                    ) : filteredCourses && filteredCourses.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredCourses.map((course) => (
+                                <div key={course.id} className="h-full relative">
+                                    <CourseCard
+                                        course={course}
+                                        onClick={() => setSelectedCourse(course)}
+                                        actions={
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground">
+                                                        <span className="sr-only">Open menu</span>
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedCourse(course);
+                                                        }}
+                                                    >
+                                                        <Pencil className="mr-2 h-4 w-4" /> Manage
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        className="text-destructive focus:text-destructive"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (confirm('Are you sure you want to delete this course?')) {
+                                                                deleteCourseMutation.mutate(course.id);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        }
+                                    />
+                                    {course.visibility === 'private' && (
+                                        <div className="absolute top-2 left-2 z-10">
+                                            <Badge variant="secondary" className="text-xs shadow-sm"><EyeOff className="h-3 w-3 mr-1" /> Private</Badge>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <Card className="flex flex-col items-center justify-center py-16 text-center">
+                            <div className="bg-muted/50 p-4 rounded-full mb-4">
+                                <GraduationCap className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                            <h3 className="text-lg font-semibold">No Courses Yet</h3>
+                            <p className="text-muted-foreground mt-2 mb-6 max-w-sm">
+                                Get started by adding your first course to manage student projects.
+                            </p>
+                            <Button onClick={() => setIsAddCourseOpen(true)} className="bg-blue-900 hover:bg-blue-800">
+                                Add Course
+                            </Button>
+                        </Card>
+                    )}
+                </>
             )}
         </div>
     );
