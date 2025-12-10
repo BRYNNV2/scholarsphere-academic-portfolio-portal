@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BookOpenCheck, Github, Twitter, Linkedin } from 'lucide-react';
+import { BookOpenCheck, Github, Instagram, Linkedin } from 'lucide-react';
 export function Footer() {
   return (
     <footer className="border-t bg-muted/40 pb-20 md:pb-0">
@@ -35,9 +35,9 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-foreground mb-4">Connect</h3>
             <div className="flex space-x-4">
-              <a href="#" className="text-muted-foreground hover:text-primary"><Github className="h-5 w-5" /></a>
-              <a href="#" className="text-muted-foreground hover:text-primary"><Twitter className="h-5 w-5" /></a>
-              <a href="#" className="text-muted-foreground hover:text-primary"><Linkedin className="h-5 w-5" /></a>
+              <a href="https://github.com/BRYNNV2" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary"><Github className="h-5 w-5" /></a>
+              <a href="https://www.instagram.com/mhmddfebry_/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary"><Instagram className="h-5 w-5" /></a>
+              <a href="https://www.linkedin.com/in/mhmdd-bryy-ab4a03280/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary"><Linkedin className="h-5 w-5" /></a>
             </div>
           </div>
         </div>
