@@ -55,12 +55,23 @@ export function DirectoryPage() {
   });
   const availableUniversities = useMemo(() => {
     if (!allLecturers) return [];
-    const universities = new Set(allLecturers.map((l) => l.university));
+    // Filter out undefined, null, or empty strings
+    const universities = new Set(
+      allLecturers
+        .map((l) => l.university)
+        .filter((u): u is string => !!u && u.trim().length > 0)
+    );
     return Array.from(universities).sort();
   }, [allLecturers]);
+
   const availableDepartments = useMemo(() => {
     if (!allLecturers) return [];
-    const departments = new Set(allLecturers.map((l) => l.department));
+    // Filter out undefined, null, or empty strings
+    const departments = new Set(
+      allLecturers
+        .map((l) => l.department)
+        .filter((d): d is string => !!d && d.trim().length > 0)
+    );
     return Array.from(departments).sort();
   }, [allLecturers]);
   return (
