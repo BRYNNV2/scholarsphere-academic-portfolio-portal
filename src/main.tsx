@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import '@/index.css'
+import './lib/i18n'; // Import i18n configuration explicitly
 import { HomePage } from '@/pages/HomePage';
 import { DirectoryPage } from '@/pages/DirectoryPage';
 import { PortfolioPage } from '@/pages/PortfolioPage';

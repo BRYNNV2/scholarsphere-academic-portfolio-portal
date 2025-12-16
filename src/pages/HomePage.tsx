@@ -11,9 +11,11 @@ import { api } from "../lib/api-client-fixed";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthStore } from '@/stores/auth-store';
 import { getProfileUrl } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 export function HomePage() {
   const { isAuthenticated, user } = useAuthStore((state) => state);
+  const { t } = useTranslation();
 
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['public', 'users'],
@@ -40,17 +42,17 @@ export function HomePage() {
             variants={fadeIn}
           >
             <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground tracking-tight">
-              Showcase Your <span className="text-primary">Academic Legacy</span>
+              {t('home.heroTitle')} <span className="text-primary">{t('home.heroTitleHighlight')}</span>
             </h1>
             <p className="mt-6 max-w-2xl mx-auto text-lg text-muted-foreground">
-              ScholarSphere provides a beautiful, centralized platform for academics to manage and display their professional portfolios with the world.
+              {t('home.heroDescription')}
             </p>
             <div className="mt-8 flex justify-center gap-4">
               <Button size="lg" asChild>
-                <Link to="/directory">Explore Directory <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/directory">{t('home.exploreDirectory')} <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link to={isAuthenticated ? "/dashboard" : "/register"}>Get Started</Link>
+                <Link to={isAuthenticated ? "/dashboard" : "/register"}>{t('common.getStarted')}</Link>
               </Button>
             </div>
           </motion.div>
@@ -61,9 +63,9 @@ export function HomePage() {
       <div className="py-16 md:py-24 bg-muted/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-display font-bold text-foreground">Why ScholarSphere?</h2>
+            <h2 className="text-3xl font-display font-bold text-foreground">{t('home.whyTitle')}</h2>
             <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
-              Everything you need to build a compelling academic presence online.
+              {t('home.whySubtitle')}
             </p>
           </div>
 
@@ -74,10 +76,10 @@ export function HomePage() {
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     <BookCopy className="h-6 w-6" />
                   </div>
-                  <CardTitle className="mt-4">Centralized Portfolio</CardTitle>
+                  <CardTitle className="mt-4">{t('home.feature1Title')}</CardTitle>
                 </CardHeader>
                 <CardContent className="text-muted-foreground">
-                  Consolidate your publications, research, and projects into one elegant, professional profile.
+                  {t('home.feature1Desc')}
                 </CardContent>
               </Card>
             </motion.div>
@@ -88,10 +90,10 @@ export function HomePage() {
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     <Globe className="h-6 w-6" />
                   </div>
-                  <CardTitle className="mt-4">Global Visibility</CardTitle>
+                  <CardTitle className="mt-4">{t('home.feature2Title')}</CardTitle>
                 </CardHeader>
                 <CardContent className="text-muted-foreground">
-                  Increase your reach and impact by making your work discoverable to a global audience of peers and institutions.
+                  {t('home.feature2Desc')}
                 </CardContent>
               </Card>
             </motion.div>
@@ -102,10 +104,10 @@ export function HomePage() {
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     <Share2 className="h-6 w-6" />
                   </div>
-                  <CardTitle className="mt-4">Effortless Management</CardTitle>
+                  <CardTitle className="mt-4">{t('home.feature3Title')}</CardTitle>
                 </CardHeader>
                 <CardContent className="text-muted-foreground">
-                  Our intuitive dashboard makes it simple to add, edit, and organize your academic achievements.
+                  {t('home.feature3Desc')}
                 </CardContent>
               </Card>
             </motion.div>
@@ -117,9 +119,9 @@ export function HomePage() {
       <div className="py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-display font-bold text-foreground">Featured Lecturers</h2>
+            <h2 className="text-3xl font-display font-bold text-foreground">{t('home.featuredLecturers')}</h2>
             <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
-              Discover the brilliant minds shaping the future of academia.
+              {t('home.featuredLecturersDesc')}
             </p>
           </div>
 
@@ -149,7 +151,7 @@ export function HomePage() {
                       <p className="text-sm text-primary">{lecturer.title}</p>
                       <p className="text-sm text-muted-foreground mt-1">{lecturer.university}</p>
                       <Button variant="outline" size="sm" className="mt-4" asChild>
-                        <Link to={getProfileUrl(lecturer)}>View Profile</Link>
+                        <Link to={getProfileUrl(lecturer)}>{t('common.viewProfile')}</Link>
                       </Button>
                     </CardContent>
                   </Card>
@@ -166,13 +168,13 @@ export function HomePage() {
         <div className="bg-muted/40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
             <div className="text-center">
-              <h2 className="text-3xl font-display font-bold text-foreground">Ready to Build Your Legacy?</h2>
+              <h2 className="text-3xl font-display font-bold text-foreground">{t('home.ctaTitle')}</h2>
               <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
-                Join ScholarSphere today and create a professional portfolio that truly represents your academic contributions and expertise.
+                {t('home.ctaDesc')}
               </p>
               <div className="mt-8">
                 <Button size="lg" asChild>
-                  <Link to={isAuthenticated ? "/dashboard" : "/register"}>Create Your Portfolio <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                  <Link to={isAuthenticated ? "/dashboard" : "/register"}>{t('home.createPortfolio')} <ArrowRight className="ml-2 h-4 w-4" /></Link>
                 </Button>
               </div>
             </div>
